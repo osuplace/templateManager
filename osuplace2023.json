@@ -1,0 +1,35 @@
+{
+    "templates": [
+        {
+            "name": "osu! logo; Bad Apple!! text; Border",
+            "sources": [
+                "https://i.imgur.com/yGHoK96.png"
+            ],
+            "x": 640,
+            "y": 656
+        },
+        {
+            "name": "bad apple video",
+            "sources": [
+                "https://i.imgur.com/ajW8tVg.png"
+            ],
+            "x": 662,
+            "y": 673,
+            "frameWidth": 40,
+            "frameHeight": 30,
+            "frameRate": 43,
+            "frameCount": 6572,
+            "startTime": 1806584400
+        }
+    ],
+    "ignoreForNow": [
+        {
+            "name": "Digital Clock",
+            "url": "https://gist.githubusercontent.com/LittleEndu/318ed120e92150b2a45690bd2de672d1/raw/clock.json"
+        },
+        {
+            "name": "self reference (cyclical import check)",
+            "url": "https://gist.githubusercontent.com/LittleEndu/5e323bf7af33a7c75ccd48b33c8d73e0/raw/osuplace_2027.json"
+        }
+    ]
+}
