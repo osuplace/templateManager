@@ -22,14 +22,14 @@
             "startTime": 1806584400
         }
     ],
-    "ignoreForNow": [
+    "whitelist": [
         {
             "name": "Digital Clock",
             "url": "https://gist.githubusercontent.com/LittleEndu/318ed120e92150b2a45690bd2de672d1/raw/clock.json"
         },
         {
             "name": "self reference (cyclical import check)",
-            "url": "https://gist.githubusercontent.com/LittleEndu/5e323bf7af33a7c75ccd48b33c8d73e0/raw/osuplace_2027.json"
+            "url": "https://raw.githubusercontent.com/osuplace/templateManager/main/osuplace2023.json"
         }
     ]
 }
