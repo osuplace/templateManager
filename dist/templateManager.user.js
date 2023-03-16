@@ -8,6 +8,7 @@
 // @grant			GM.xmlHttpRequest
 // @grant			GM.setValue
 // @grant			GM.getValue
+// @include			https://pxls.space/
 //
 // Created with love using Gorilla
 // ==/UserScript==

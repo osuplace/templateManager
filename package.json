@@ -13,6 +13,9 @@
     "@types/greasemonkey": "^4.0.4"
   },
   "gorilla": {
+    "include": [
+      "https://pxls.space/"
+    ],
     "grant": [
       "GM.xmlHttpRequest",
       "GM.setValue",
