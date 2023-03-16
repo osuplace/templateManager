@@ -154,8 +154,8 @@ export class Template {
     currentFrame: number
     currentPercentage: number
 
-    frameStartTime() {
-        return (this.startTime + (this.currentFrame) * this.frameSpeed) % this.animationDuration
+    frameStartTime(n: number | null = null) {
+        return (this.startTime + (n || this.currentFrame) * this.frameSpeed) % this.animationDuration
     }
 
     update(percentage: number, randomness: number, currentSeconds: number) {
@@ -163,15 +163,6 @@ export class Template {
         if (!this.looping && currentSeconds > this.startTime + this.frameSpeed * this.frameCount) {
             return;
         }
-
-        if (this.frameCount > 1) {
-            let framePast = currentSeconds % this.animationDuration - this.frameStartTime()
-            let framePercentage = framePast / this.frameSpeed
-            if (framePercentage < 0.5) {
-                percentage *= 0.25
-            }
-        }
-
 
         // return if image isn't loaded yet
         if (!this.imageLoader.complete || !this.imageLoader.src) {
@@ -184,8 +175,16 @@ export class Template {
             return;
         }
 
-        // update canvas if necessary
+        // set percentage for animated
         let frameIndex = this.getCurrentFrameIndex(currentSeconds)
+        if (this.frameCount > 1 && this.frameSpeed > 30) {
+            let framePast = currentSeconds % this.animationDuration - this.frameStartTime(frameIndex)
+            let framePercentage = framePast / this.frameSpeed
+            if (framePercentage < 0.5) {
+                percentage *= 0.25
+            }
+        }
+        // update canvas if necessary
         if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage) {
             console.log(`updating ${this.name}`)
             let frameData = cf.extractFrame(this.imageLoader, this.frameWidth!, this.frameHeight!, frameIndex)

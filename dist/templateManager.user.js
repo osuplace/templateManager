@@ -165,21 +165,15 @@
                 }
             }
         };
-        Template.prototype.frameStartTime = function () {
-            return (this.startTime + (this.currentFrame) * this.frameSpeed) % this.animationDuration;
+        Template.prototype.frameStartTime = function (n) {
+            if (n === void 0) { n = null; }
+            return (this.startTime + (n || this.currentFrame) * this.frameSpeed) % this.animationDuration;
         };
         Template.prototype.update = function (percentage, randomness, currentSeconds) {
             var _a;
             // return if the animation is finished
             if (!this.looping && currentSeconds > this.startTime + this.frameSpeed * this.frameCount) {
                 return;
-            }
-            if (this.frameCount > 1) {
-                var framePast = currentSeconds % this.animationDuration - this.frameStartTime();
-                var framePercentage = framePast / this.frameSpeed;
-                if (framePercentage < 0.5) {
-                    percentage *= 0.25;
-                }
             }
             // return if image isn't loaded yet
             if (!this.imageLoader.complete || !this.imageLoader.src) {
@@ -190,8 +184,16 @@
             if (!this.canvasElement.isConnected) {
                 return;
             }
-            // update canvas if necessary
+            // set percentage for animated
             var frameIndex = this.getCurrentFrameIndex(currentSeconds);
+            if (this.frameCount > 1 && this.frameSpeed > 30) {
+                var framePast = currentSeconds % this.animationDuration - this.frameStartTime(frameIndex);
+                var framePercentage = framePast / this.frameSpeed;
+                if (framePercentage < 0.5) {
+                    percentage *= 0.25;
+                }
+            }
+            // update canvas if necessary
             if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage) {
                 console.log("updating ".concat(this.name));
                 var frameData = extractFrame(this.imageLoader, this.frameWidth, this.frameHeight, frameIndex);
