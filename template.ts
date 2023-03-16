@@ -60,7 +60,7 @@ export class Template {
         this.frameHeight = params.frameHeight
         this.frameCount = params.frameCount || 1
         this.frameSpeed = params.frameRate || params.frameSpeed || Infinity
-        this.startTime = params.startTime || 1
+        this.startTime = params.startTime || 0
         this.looping = params.looping || this.frameCount > 1
         // assign from arguments
         this.mountPoint = mountPoint

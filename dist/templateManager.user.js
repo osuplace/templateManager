@@ -80,7 +80,7 @@
             this.frameHeight = params.frameHeight;
             this.frameCount = params.frameCount || 1;
             this.frameSpeed = params.frameRate || params.frameSpeed || Infinity;
-            this.startTime = params.startTime || 1;
+            this.startTime = params.startTime || 0;
             this.looping = params.looping || this.frameCount > 1;
             // assign from arguments
             this.mountPoint = mountPoint;
@@ -297,8 +297,9 @@
             return (Date.now() + averageDiff) / 1000;
         };
         TemplateManager.prototype.update = function () {
+            var cs = this.currentSeconds();
             for (var i = 0; i < this.templates.length; i++)
-                this.templates[i].update(1, this.randomness, this.currentSeconds());
+                this.templates[i].update(1, this.randomness, cs);
             if (this.templates.length < MAX_TEMPLATES) {
                 while (this.whitelist.length > 0) {
                     this.loadTemplatesFromJsonURL(this.whitelist.shift());

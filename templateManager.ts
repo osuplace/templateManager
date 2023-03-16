@@ -76,8 +76,9 @@ export class TemplateManager {
     }
 
     update() {
+        let cs = this.currentSeconds()
         for (let i = 0; i < this.templates.length; i++)
-            this.templates[i].update(1, this.randomness, this.currentSeconds());
+            this.templates[i].update(1, this.randomness, cs);
         if (this.templates.length < MAX_TEMPLATES) {
             while (this.whitelist.length > 0) {
                 this.loadTemplatesFromJsonURL(this.whitelist.shift()!)
