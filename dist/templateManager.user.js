@@ -8,7 +8,7 @@
 // @grant			GM.xmlHttpRequest
 // @grant			GM.setValue
 // @grant			GM.getValue
-// @include			https://pxls.space/
+// @match			https://pxls.space/
 //
 // Created with love using Gorilla
 // ==/UserScript==
@@ -21,6 +21,7 @@
     var UPDATE_PERIOD_MILLIS = 100;
     var SECONDS_SPENT_BLINKING = 5;
     var AMOUND_OF_BLINKING = 11;
+    var ANIMATION_DEFAULT_PERCENTAGE = 1 / 4;
 
     function negativeSafeModulo(a, b) {
         return (a % b + b) % b;
@@ -46,8 +47,8 @@
     }
     function ditherData(imageData, randomness, percentage, x, y, frameWidth, frameHeight) {
         var rv = new ImageData(frameWidth * 3, frameHeight * 3);
-        var m = Math.round(1 / percentage);
-        var r = Math.floor(randomness * m);
+        var m = Math.round(1 / percentage); // which nth pixel should be displayed
+        var r = Math.floor(randomness * m); // which nth pixel am I (everyone has different nth pixel)
         for (var i = 0; i < frameWidth; i++) {
             for (var j = 0; j < frameHeight; j++) {
                 if (negativeSafeModulo(i + x + (j + y) * 2 + r, m) !== 0) {
@@ -126,7 +127,8 @@
                 return;
             this.loading = true;
             var candidateSource = this.sources[0];
-            console.log("trying to load ".concat(candidateSource));
+            var displayName = this.name ? this.name + ': ' : '';
+            console.log("".concat(displayName, "trying to load ").concat(candidateSource));
             this.imageLoader.src = candidateSource;
         };
         Template.prototype.getCurrentFrameIndex = function (currentSeconds) {
@@ -190,13 +192,12 @@
             if (this.frameCount > 1 && this.frameSpeed > 30) {
                 var framePast = currentSeconds % this.animationDuration - this.frameStartTime(frameIndex);
                 var framePercentage = framePast / this.frameSpeed;
-                if (framePercentage < 0.5) {
-                    percentage *= 0.25;
+                if (framePercentage < 0.5 && percentage > 1 / 3) {
+                    percentage *= ANIMATION_DEFAULT_PERCENTAGE;
                 }
             }
             // update canvas if necessary
-            if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage) {
-                console.log("updating ".concat(this.name));
+            if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage || this.currentRandomness !== randomness) {
                 var frameData = extractFrame(this.imageLoader, this.frameWidth, this.frameHeight, frameIndex);
                 if (!frameData)
                     return;
@@ -208,6 +209,7 @@
             // update done
             this.currentPercentage = percentage;
             this.currentFrame = frameIndex;
+            this.currentRandomness = randomness;
             this.blinking(currentSeconds);
         };
         Template.prototype.blinking = function (currentSeconds) {
@@ -236,15 +238,25 @@
 
     var TemplateManager = /** @class */ (function () {
         function TemplateManager(mountPoint, startingUrl) {
+            var _this = this;
             this.alreadyLoaded = new Array();
             this.whitelist = new Array();
             this.blacklist = new Array();
             this.templates = new Array();
             this.responseDiffs = new Array();
             this.randomness = Math.random();
+            this.percentage = 1;
             this.mountPoint = mountPoint;
             this.startingUrl = startingUrl;
             this.loadTemplatesFromJsonURL(startingUrl);
+            window.addEventListener('keydown', function (ev) {
+                if (ev.key.match(/\d/)) {
+                    _this.percentage = 1 / parseInt(ev.key);
+                }
+                else if (ev.key === 'r') {
+                    _this.randomness = (_this.randomness + ANIMATION_DEFAULT_PERCENTAGE + _this.percentage) % 1;
+                }
+            });
         }
         TemplateManager.prototype.loadTemplatesFromJsonURL = function (url) {
             var _this = this;
@@ -293,6 +305,10 @@
                 }
             });
         };
+        TemplateManager.prototype.reload = function (url) {
+            // TODO: implement soft reloading
+            // only json should get updated, templates should only update if actually anything changed
+        };
         TemplateManager.prototype.currentSeconds = function () {
             var averageDiff = this.responseDiffs.reduce(function (a, b) { return a + b; }, 0) / (this.responseDiffs.length);
             return (Date.now() + averageDiff) / 1000;
@@ -300,7 +316,7 @@
         TemplateManager.prototype.update = function () {
             var cs = this.currentSeconds();
             for (var i = 0; i < this.templates.length; i++)
-                this.templates[i].update(1, this.randomness, cs);
+                this.templates[i].update(this.percentage, this.randomness, cs);
             if (this.templates.length < MAX_TEMPLATES) {
                 while (this.whitelist.length > 0) {
                     this.loadTemplatesFromJsonURL(this.whitelist.shift());

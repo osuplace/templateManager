@@ -1,4 +1,4 @@
-import { CACHE_BUST_PERIOD, MAX_TEMPLATES } from './constants';
+import { ANIMATION_DEFAULT_PERCENTAGE, CACHE_BUST_PERIOD, MAX_TEMPLATES } from './constants';
 import { Template, JsonParams } from './template';
 
 
@@ -13,11 +13,20 @@ export class TemplateManager {
     mountPoint: Element;
     startingUrl: string;
     randomness = Math.random();
+    percentage = 1
 
     constructor(mountPoint: Element, startingUrl: string) {
         this.mountPoint = mountPoint;
         this.startingUrl = startingUrl
         this.loadTemplatesFromJsonURL(startingUrl)
+
+        window.addEventListener('keydown', (ev: KeyboardEvent) => {
+            if (ev.key.match(/\d/)) {
+                this.percentage = 1 / parseInt(ev.key)
+            } else if (ev.key === 'r') {
+                this.randomness = (this.randomness + ANIMATION_DEFAULT_PERCENTAGE + this.percentage) % 1;
+            }
+        })
     }
 
     loadTemplatesFromJsonURL(url: string | URL) {
@@ -70,6 +79,11 @@ export class TemplateManager {
         });
     }
 
+    reload(url: string | URL) {
+        // TODO: implement soft reloading
+        // only json should get updated, templates should only update if actually anything changed
+    }
+
     currentSeconds() {
         let averageDiff = this.responseDiffs.reduce((a, b) => a + b, 0) / (this.responseDiffs.length)
         return (Date.now() + averageDiff) / 1000;
@@ -78,7 +92,7 @@ export class TemplateManager {
     update() {
         let cs = this.currentSeconds()
         for (let i = 0; i < this.templates.length; i++)
-            this.templates[i].update(1, this.randomness, cs);
+            this.templates[i].update(this.percentage, this.randomness, cs);
         if (this.templates.length < MAX_TEMPLATES) {
             while (this.whitelist.length > 0) {
                 this.loadTemplatesFromJsonURL(this.whitelist.shift()!)

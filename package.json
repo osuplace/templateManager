@@ -13,7 +13,7 @@
     "@types/greasemonkey": "^4.0.4"
   },
   "gorilla": {
-    "include": [
+    "match": [
       "https://pxls.space/"
     ],
     "grant": [

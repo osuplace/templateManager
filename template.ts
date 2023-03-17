@@ -1,6 +1,6 @@
 import * as utils from './utils';
 import * as cf from './canvasFunctions'
-import { UPDATE_PERIOD_MILLIS, SECONDS_SPENT_BLINKING, AMOUND_OF_BLINKING } from './constants';
+import { UPDATE_PERIOD_MILLIS, SECONDS_SPENT_BLINKING, AMOUND_OF_BLINKING, ANIMATION_DEFAULT_PERCENTAGE } from './constants';
 
 interface TemplateParams {
     name: string | null
@@ -17,15 +17,15 @@ interface TemplateParams {
     looping: boolean | null
 }
 
-interface ChildrenParams {
+interface NamedUrl {
     name: string | null
     url: string
 }
 
 export interface JsonParams {
     templates: TemplateParams[]
-    whitelist: ChildrenParams[]
-    blacklist: ChildrenParams[]
+    whitelist: NamedUrl[]
+    blacklist: NamedUrl[]
 }
 
 export class Template {
@@ -108,7 +108,8 @@ export class Template {
         if (this.sources.length === 0) return;
         this.loading = true
         let candidateSource = this.sources[0]
-        console.log(`trying to load ${candidateSource}`)
+        let displayName = this.name ? this.name + ': ' : ''
+        console.log(`${displayName}trying to load ${candidateSource}`)
         this.imageLoader.src = candidateSource
     }
 
@@ -153,6 +154,7 @@ export class Template {
 
     currentFrame: number
     currentPercentage: number
+    currentRandomness: number;
 
     frameStartTime(n: number | null = null) {
         return (this.startTime + (n || this.currentFrame) * this.frameSpeed) % this.animationDuration
@@ -180,13 +182,12 @@ export class Template {
         if (this.frameCount > 1 && this.frameSpeed > 30) {
             let framePast = currentSeconds % this.animationDuration - this.frameStartTime(frameIndex)
             let framePercentage = framePast / this.frameSpeed
-            if (framePercentage < 0.5) {
-                percentage *= 0.25
+            if (framePercentage < 0.5 && percentage > 1 / 3) {
+                percentage *= ANIMATION_DEFAULT_PERCENTAGE
             }
         }
         // update canvas if necessary
-        if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage) {
-            console.log(`updating ${this.name}`)
+        if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage || this.currentRandomness !== randomness) {
             let frameData = cf.extractFrame(this.imageLoader, this.frameWidth!, this.frameHeight!, frameIndex)
             if (!frameData) return;
             let ditheredData = cf.ditherData(frameData, randomness, percentage, this.x, this.y, this.frameWidth!, this.frameHeight!)
@@ -199,6 +200,7 @@ export class Template {
         // update done
         this.currentPercentage = percentage
         this.currentFrame = frameIndex
+        this.currentRandomness = randomness
         this.blinking(currentSeconds)
     }
 
