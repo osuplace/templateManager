@@ -21,7 +21,7 @@ export class TemplateManager {
         this.loadTemplatesFromJsonURL(startingUrl)
 
         window.addEventListener('keydown', (ev: KeyboardEvent) => {
-            if (ev.key.match(/\d/)) {
+            if (ev.key.match(/^\d$/)) {
                 this.percentage = 1 / parseInt(ev.key)
             } else if (ev.key === 'r') {
                 this.randomness = (this.randomness + ANIMATION_DEFAULT_PERCENTAGE + this.percentage) % 1;

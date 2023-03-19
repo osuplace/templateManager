@@ -1,6 +1,6 @@
 {
   "name": "template-manager",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Manages your templates on various canvas games",
   "main": "main.ts",
   "scripts": {
@@ -14,7 +14,10 @@
   },
   "gorilla": {
     "match": [
-      "https://pxls.space/"
+      "https://pxls.space/",
+      "https://new.reddit.com/r/place/",
+      "https://www.reddit.com/r/place/",
+      "https://garlic-bread.reddit.com/embed*"
     ],
     "grant": [
       "GM.xmlHttpRequest",

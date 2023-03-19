@@ -9,3 +9,11 @@ export function getFileStemFromUrl(url: string) {
     const fileStem = (lastDotIndex === -1) ? fileName : fileName.slice(0, lastDotIndex);
     return fileStem;
 }
+
+export function windowIsEmbedded() {
+    return window.top !== window.self
+}
+
+export async function sleep(ms: number) {
+    await new Promise(resolve => setTimeout(resolve, ms));
+}
