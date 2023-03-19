@@ -1,4 +1,4 @@
-import { MAX_RECURSION_DEPTH, UPDATE_PERIOD_MILLIS } from "./constants";
+import { UPDATE_PERIOD_MILLIS } from "./constants";
 import { TemplateManager } from "./templateManager";
 import * as utils from "./utils";
 

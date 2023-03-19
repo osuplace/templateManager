@@ -13,10 +13,11 @@
     "@types/greasemonkey": "^4.0.4"
   },
   "gorilla": {
+    "namespace": "littleendu.xyz",
     "match": [
       "https://pxls.space/",
-      "https://new.reddit.com/r/place/",
-      "https://www.reddit.com/r/place/",
+      "https://new.reddit.com/r/place/?*",
+      "https://www.reddit.com/r/place/?*",
       "https://garlic-bread.reddit.com/embed*"
     ],
     "grant": [
