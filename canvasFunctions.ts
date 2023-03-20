@@ -28,7 +28,7 @@ export function ditherData(imageData: ImageData, randomness: number, percentage:
             let middlePixelIndex = ((j * 3 + 1) * rv.width + i * 3 + 1) * 4;
             let alpha = imageData.data[imageIndex + 3]
 
-            let p = Math.ceil(m/(alpha/128))
+            let p = percentage > 0.99 ? 1 : Math.ceil(m/(alpha/200))
             if (utils.negativeSafeModulo(i + x + (j + y) * 2 + r, p) !== 0) {
                 continue
             }

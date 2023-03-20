@@ -22,7 +22,7 @@ export class TemplateManager {
 
         window.addEventListener('keydown', (ev: KeyboardEvent) => {
             if (ev.key.match(/^\d$/)) {
-                let number = parseInt(ev.key) || 1
+                let number = parseInt(ev.key) || 1.1
                 this.percentage = 1 / number
             } else if (ev.key === 'r') {
                 this.randomness = (this.randomness + ANIMATION_DEFAULT_PERCENTAGE + this.percentage) % 1;

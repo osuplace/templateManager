@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.2.1
+// @version			0.2.2
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu
 // @license			MIT
@@ -126,7 +126,7 @@
                 var imageIndex = (j * frameWidth + i) * 4;
                 var middlePixelIndex = ((j * 3 + 1) * rv.width + i * 3 + 1) * 4;
                 var alpha = imageData.data[imageIndex + 3];
-                var p = Math.ceil(m / (alpha / 128));
+                var p = percentage > 0.99 ? 1 : Math.ceil(m / (alpha / 200));
                 if (negativeSafeModulo(i + x + (j + y) * 2 + r, p) !== 0) {
                     continue;
                 }
@@ -323,7 +323,7 @@
             this.loadTemplatesFromJsonURL(startingUrl);
             window.addEventListener('keydown', function (ev) {
                 if (ev.key.match(/^\d$/)) {
-                    var number = parseInt(ev.key) || 1;
+                    var number = parseInt(ev.key) || 1.1;
                     _this.percentage = 1 / number;
                 }
                 else if (ev.key === 'r') {
