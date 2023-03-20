@@ -5,7 +5,6 @@ import { UPDATE_PERIOD_MILLIS, SECONDS_SPENT_BLINKING, AMOUND_OF_BLINKING, ANIMA
 interface TemplateParams {
     name: string | null
     sources: string[];
-    priorityMaskSources: string[];
     x: number
     y: number
     frameWidth: number | null
@@ -31,7 +30,6 @@ export interface JsonParams {
 export class Template {
     name: string | null
     sources: string[];
-    priorityMaskSources: string[];
     x: number
     y: number
     frameWidth: number | null
@@ -53,7 +51,6 @@ export class Template {
         // assign params
         this.name = params.name
         this.sources = params.sources
-        this.priorityMaskSources = params.priorityMaskSources
         this.x = params.x
         this.y = params.y
         this.frameWidth = params.frameWidth
@@ -182,7 +179,7 @@ export class Template {
         if (this.frameCount > 1 && this.frameSpeed > 30) {
             let framePast = currentSeconds % this.animationDuration - this.frameStartTime(frameIndex)
             let framePercentage = framePast / this.frameSpeed
-            if (framePercentage < 0.5 && percentage > 1 / 3) {
+            if (framePercentage < 0.5) {
                 percentage *= ANIMATION_DEFAULT_PERCENTAGE
             }
         }

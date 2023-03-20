@@ -24,16 +24,19 @@ export function ditherData(imageData: ImageData, randomness: number, percentage:
     let r = Math.floor(randomness * m) // which nth pixel am I (everyone has different nth pixel)
     for (let i = 0; i < frameWidth; i++) {
         for (let j = 0; j < frameHeight; j++) {
-            if (utils.negativeSafeModulo(i + x + (j + y) * 2 + r, m) !== 0) {
-                // TODO: use priority mask here
-                continue
-            }
             let imageIndex = (j * frameWidth + i) * 4
             let middlePixelIndex = ((j * 3 + 1) * rv.width + i * 3 + 1) * 4;
+            let alpha = imageData.data[imageIndex + 3]
+
+            let p = Math.ceil(m/(alpha/128))
+            if (utils.negativeSafeModulo(i + x + (j + y) * 2 + r, p) !== 0) {
+                continue
+            }
+
             rv.data[middlePixelIndex] = imageData.data[imageIndex];
             rv.data[middlePixelIndex + 1] = imageData.data[imageIndex + 1];
             rv.data[middlePixelIndex + 2] = imageData.data[imageIndex + 2];
-            rv.data[middlePixelIndex + 3] = imageData.data[imageIndex + 3];
+            rv.data[middlePixelIndex + 3] = alpha > 2 ? 255 : 0;
         }
     }
     return rv

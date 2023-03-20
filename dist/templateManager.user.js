@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.2.0
+// @version			0.2.1
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu
 // @license			MIT
@@ -78,7 +78,7 @@
     var UPDATE_PERIOD_MILLIS = 100;
     var SECONDS_SPENT_BLINKING = 5;
     var AMOUND_OF_BLINKING = 11;
-    var ANIMATION_DEFAULT_PERCENTAGE = 1 / 4;
+    var ANIMATION_DEFAULT_PERCENTAGE = 1 / 6;
 
     function negativeSafeModulo(a, b) {
         return (a % b + b) % b;
@@ -123,16 +123,17 @@
         var r = Math.floor(randomness * m); // which nth pixel am I (everyone has different nth pixel)
         for (var i = 0; i < frameWidth; i++) {
             for (var j = 0; j < frameHeight; j++) {
-                if (negativeSafeModulo(i + x + (j + y) * 2 + r, m) !== 0) {
-                    // TODO: use priority mask here
-                    continue;
-                }
                 var imageIndex = (j * frameWidth + i) * 4;
                 var middlePixelIndex = ((j * 3 + 1) * rv.width + i * 3 + 1) * 4;
+                var alpha = imageData.data[imageIndex + 3];
+                var p = Math.ceil(m / (alpha / 128));
+                if (negativeSafeModulo(i + x + (j + y) * 2 + r, p) !== 0) {
+                    continue;
+                }
                 rv.data[middlePixelIndex] = imageData.data[imageIndex];
                 rv.data[middlePixelIndex + 1] = imageData.data[imageIndex + 1];
                 rv.data[middlePixelIndex + 2] = imageData.data[imageIndex + 2];
-                rv.data[middlePixelIndex + 3] = imageData.data[imageIndex + 3];
+                rv.data[middlePixelIndex + 3] = alpha > 2 ? 255 : 0;
             }
         }
         return rv;
@@ -147,7 +148,6 @@
             // assign params
             this.name = params.name;
             this.sources = params.sources;
-            this.priorityMaskSources = params.priorityMaskSources;
             this.x = params.x;
             this.y = params.y;
             this.frameWidth = params.frameWidth;
@@ -264,7 +264,7 @@
             if (this.frameCount > 1 && this.frameSpeed > 30) {
                 var framePast = currentSeconds % this.animationDuration - this.frameStartTime(frameIndex);
                 var framePercentage = framePast / this.frameSpeed;
-                if (framePercentage < 0.5 && percentage > 1 / 3) {
+                if (framePercentage < 0.5) {
                     percentage *= ANIMATION_DEFAULT_PERCENTAGE;
                 }
             }
@@ -323,7 +323,8 @@
             this.loadTemplatesFromJsonURL(startingUrl);
             window.addEventListener('keydown', function (ev) {
                 if (ev.key.match(/^\d$/)) {
-                    _this.percentage = 1 / parseInt(ev.key);
+                    var number = parseInt(ev.key) || 1;
+                    _this.percentage = 1 / number;
                 }
                 else if (ev.key === 'r') {
                     _this.randomness = (_this.randomness + ANIMATION_DEFAULT_PERCENTAGE + _this.percentage) % 1;
