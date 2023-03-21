@@ -107,7 +107,14 @@ export class Template {
         let candidateSource = this.sources[0]
         let displayName = this.name ? this.name + ': ' : ''
         console.log(`${displayName}trying to load ${candidateSource}`)
-        this.imageLoader.src = candidateSource
+        GM.xmlHttpRequest({
+            method: 'GET',
+            url: candidateSource,
+            responseType: 'blob',
+            onload: (response) => {
+                this.imageLoader.src = URL.createObjectURL(response.response)
+            }
+        })
     }
 
     getCurrentFrameIndex(currentSeconds: number) {

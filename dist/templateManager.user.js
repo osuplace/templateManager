@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.2.3
+// @version			0.3
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu
 // @license			MIT
@@ -194,6 +194,7 @@
             });
         }
         Template.prototype.tryLoadSource = function () {
+            var _this = this;
             if (this.loading)
                 return;
             if (this.sources.length === 0)
@@ -202,7 +203,14 @@
             var candidateSource = this.sources[0];
             var displayName = this.name ? this.name + ': ' : '';
             console.log("".concat(displayName, "trying to load ").concat(candidateSource));
-            this.imageLoader.src = candidateSource;
+            GM.xmlHttpRequest({
+                method: 'GET',
+                url: candidateSource,
+                responseType: 'blob',
+                onload: function (response) {
+                    _this.imageLoader.src = URL.createObjectURL(response.response);
+                }
+            });
         };
         Template.prototype.getCurrentFrameIndex = function (currentSeconds) {
             if (!this.looping && this.startTime + this.frameCount * this.frameSpeed < currentSeconds)
@@ -327,8 +335,8 @@
                     var number = parseInt(ev.key) || 1.1;
                     _this.percentage = 1 / number;
                 }
-                else if (ev.key === 'r') {
-                    _this.randomness = (_this.randomness + ANIMATION_DEFAULT_PERCENTAGE + _this.percentage) % 1;
+                else if (ev.key === 'd') {
+                    _this.randomness = (_this.randomness + ANIMATION_DEFAULT_PERCENTAGE + _this.percentage * 1.5) % 1;
                 }
             });
         }
@@ -379,9 +387,15 @@
                 }
             });
         };
-        TemplateManager.prototype.reload = function (url) {
-            // TODO: implement soft reloading
-            // only json should get updated, templates should only update if actually anything changed
+        TemplateManager.prototype.reload = function () {
+            var _a;
+            // reload the templates
+            // reloading only the json is not possible because it's user input and not uniquely identifiable
+            // so everything is reloaded as if the template manager was just initialized
+            while (this.templates.length) {
+                (_a = this.templates.shift()) === null || _a === void 0 ? void 0 : _a.destroy();
+            }
+            this.loadTemplatesFromJsonURL(this.startingUrl);
         };
         TemplateManager.prototype.currentSeconds = function () {
             var averageDiff = this.responseDiffs.reduce(function (a, b) { return a + b; }, 0) / (this.responseDiffs.length);

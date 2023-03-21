@@ -24,8 +24,8 @@ export class TemplateManager {
             if (ev.key.match(/^\d$/)) {
                 let number = parseInt(ev.key) || 1.1
                 this.percentage = 1 / number
-            } else if (ev.key === 'r') {
-                this.randomness = (this.randomness + ANIMATION_DEFAULT_PERCENTAGE + this.percentage) % 1;
+            } else if (ev.key === 'd') {
+                this.randomness = (this.randomness + ANIMATION_DEFAULT_PERCENTAGE + this.percentage * 1.5) % 1;
             }
         })
     }
@@ -80,9 +80,14 @@ export class TemplateManager {
         });
     }
 
-    reload(url: string | URL) {
-        // TODO: implement soft reloading
-        // only json should get updated, templates should only update if actually anything changed
+    reload() {
+        // reload the templates
+        // reloading only the json is not possible because it's user input and not uniquely identifiable
+        // so everything is reloaded as if the template manager was just initialized
+        while (this.templates.length) {
+            this.templates.shift()?.destroy()
+        }
+        this.loadTemplatesFromJsonURL(this.startingUrl)
     }
 
     currentSeconds() {
