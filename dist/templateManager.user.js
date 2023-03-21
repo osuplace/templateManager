@@ -12,6 +12,7 @@
 // @match			https://new.reddit.com/r/place/?*
 // @match			https://www.reddit.com/r/place/?*
 // @match			https://garlic-bread.reddit.com/embed*
+// @match			https://hot-potato.reddit.com/embed*
 // @namespace		littleendu.xyz
 //
 // Created with love using Gorilla

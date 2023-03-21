@@ -18,7 +18,8 @@
       "https://pxls.space/",
       "https://new.reddit.com/r/place/?*",
       "https://www.reddit.com/r/place/?*",
-      "https://garlic-bread.reddit.com/embed*"
+      "https://garlic-bread.reddit.com/embed*",
+      "https://hot-potato.reddit.com/embed*"
     ],
     "grant": [
       "GM.xmlHttpRequest",
