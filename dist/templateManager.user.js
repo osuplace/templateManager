@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.2.2
+// @version			0.2.3
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu
 // @license			MIT
@@ -409,6 +409,7 @@
 
     var jsontemplate;
     var canvasElement;
+    var stopSearching = false;
     function findCanvas(element) {
         if (element instanceof HTMLCanvasElement) {
             console.log('found canvas', element, window.location.href);
@@ -443,6 +444,8 @@
         window.addEventListener('message', function (ev) {
             var _a;
             if (ev.data.type === 'jsonTemplate') {
+                if (ev.source && jsontemplate)
+                    stopSearching = true; // canvas is in embed, window.top can stop searching for it
                 (_a = ev.source) === null || _a === void 0 ? void 0 : _a.postMessage({ 'type': 'templateResponse', 'jsontemplate': jsontemplate });
             }
         });
@@ -463,6 +466,8 @@
                         _b.label = 1;
                     case 1:
                         if (!!canvasElement) return [3 /*break*/, 3];
+                        if (stopSearching)
+                            return [2 /*return*/];
                         return [4 /*yield*/, sleep(1000 * Math.pow(2, sleep$1))];
                     case 2:
                         _b.sent();

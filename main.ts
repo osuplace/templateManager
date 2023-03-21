@@ -4,7 +4,8 @@ import * as utils from "./utils";
 
 let jsontemplate: string;
 let canvasElement: HTMLCanvasElement;
-let canvasRunning: boolean = false;
+let stopSearching = false;
+
 
 function findCanvas(element: Element | ShadowRoot) {
     if (element instanceof HTMLCanvasElement) {
@@ -40,6 +41,8 @@ function topWindow() {
     }
     window.addEventListener('message', (ev) => {
         if (ev.data.type === 'jsonTemplate') {
+            if (ev.source && jsontemplate)
+                stopSearching = true; // canvas is in embed, window.top can stop searching for it
             ev.source?.postMessage({ 'type': 'templateResponse', 'jsontemplate': jsontemplate })
         }
     })
@@ -53,13 +56,14 @@ async function canvasWindow() {
     })
     let sleep = 0;
     while (!canvasElement) {
+        if (stopSearching) return;
         await utils.sleep(1000 * 2 ** sleep);
         sleep++;
         console.log("trying to find canvas")
         findCanvas(document.documentElement)
     }
     sleep = 0
-    while (!canvasRunning) {
+    while (true) {
         if (jsontemplate) {
             runCanvas(jsontemplate, canvasElement.parentElement!)
             break
