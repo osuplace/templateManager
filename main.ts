@@ -72,6 +72,7 @@ function runCanvas(jsontemplate: string, canvasElement: HTMLCanvasElement) {
     window.setInterval(() => {
         manager.update()
     }, UPDATE_PERIOD_MILLIS);
+    GM.setValue('jsontemplate', '')
 }
 
 console.log(`running templating script in ${window.location.href}`);

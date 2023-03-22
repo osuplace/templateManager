@@ -524,6 +524,7 @@
         window.setInterval(function () {
             manager.update();
         }, UPDATE_PERIOD_MILLIS);
+        GM.setValue('jsontemplate', '');
     }
     console.log("running templating script in ".concat(window.location.href));
     if (!windowIsEmbedded()) {
