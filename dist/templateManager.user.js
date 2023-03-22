@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.3.1
+// @version			0.3.2
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu
 // @license			MIT
@@ -9,10 +9,12 @@
 // @grant			GM.setValue
 // @grant			GM.getValue
 // @match			https://pxls.space/
-// @match			https://new.reddit.com/r/place/?*
-// @match			https://www.reddit.com/r/place/?*
+// @match			https://new.reddit.com/r/place/*
+// @match			https://www.reddit.com/r/place/*
 // @match			https://garlic-bread.reddit.com/embed*
 // @match			https://hot-potato.reddit.com/embed*
+// @match			https://www.twitch.tv/otknetwork/*
+// @match			https://9jjigdr1wlul7fbginbq7h76jg9h3s.ext-twitch.tv/*
 // @namespace		littleendu.xyz
 //
 // Created with love using Gorilla

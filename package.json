@@ -1,6 +1,6 @@
 {
   "name": "template-manager",
-  "version": "0.3.1",
+  "version": "0.3.2",
   "description": "Manages your templates on various canvas games",
   "main": "main.ts",
   "scripts": {
@@ -16,10 +16,12 @@
     "namespace": "littleendu.xyz",
     "match": [
       "https://pxls.space/",
-      "https://new.reddit.com/r/place/?*",
-      "https://www.reddit.com/r/place/?*",
+      "https://new.reddit.com/r/place/*",
+      "https://www.reddit.com/r/place/*",
       "https://garlic-bread.reddit.com/embed*",
-      "https://hot-potato.reddit.com/embed*"
+      "https://hot-potato.reddit.com/embed*",
+      "https://www.twitch.tv/otknetwork/*",
+      "https://9jjigdr1wlul7fbginbq7h76jg9h3s.ext-twitch.tv/*"
     ],
     "grant": [
       "GM.xmlHttpRequest",
