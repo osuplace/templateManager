@@ -1,4 +1,5 @@
 import { UPDATE_PERIOD_MILLIS } from "./constants";
+import * as reddit from "./reddit";
 import { TemplateManager } from "./templateManager";
 import * as utils from "./utils";
 
@@ -81,3 +82,8 @@ if (!utils.windowIsEmbedded()) {
     topWindow()
 }
 canvasWindow() 
+
+let __url = new URL(window.location.href)
+if (__url.origin.endsWith('reddit.com')) {
+    reddit.run()
+}

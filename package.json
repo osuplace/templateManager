@@ -1,6 +1,6 @@
 {
   "name": "template-manager",
-  "version": "0.3.2",
+  "version": "0.3.3",
   "description": "Manages your templates on various canvas games",
   "main": "main.ts",
   "scripts": {

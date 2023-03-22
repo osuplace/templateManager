@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.3.2
+// @version			0.3.3
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu
 // @license			MIT
@@ -82,6 +82,22 @@
     var SECONDS_SPENT_BLINKING = 5;
     var AMOUND_OF_BLINKING = 11;
     var ANIMATION_DEFAULT_PERCENTAGE = 1 / 6;
+
+    function run() {
+        var reticuleStyleSetter = setInterval(function () {
+            var _a, _b;
+            var embed = document.querySelector("mona-lisa-embed");
+            var camera = (_a = embed === null || embed === void 0 ? void 0 : embed.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector("mona-lisa-camera");
+            var preview = camera === null || camera === void 0 ? void 0 : camera.querySelector("mona-lisa-pixel-preview");
+            if (preview) {
+                clearInterval(reticuleStyleSetter);
+                var style = document.createElement('style');
+                style.innerHTML = '.pixel { clip-path: polygon(-20% -20%, 120% -20%, 100% 0%, 63% 0%, 63% 37%, 37% 37%, 37% 0%, 0% 0%, 0% 37%, 37% 37%, 37% 63%, 0% 63%, 0% 100%, 37% 100%, 37% 63%, 63% 63%, 63% 100%, 100% 100%, 100% 63%, 63% 63%, 63% 37%, 100% 37%, 100% 0%, 120% 0%, 120% 120%, -20% 120%);}';
+                console.log(preview);
+                (_b = preview === null || preview === void 0 ? void 0 : preview.shadowRoot) === null || _b === void 0 ? void 0 : _b.appendChild(style);
+            }
+        }, UPDATE_PERIOD_MILLIS);
+    }
 
     function negativeSafeModulo(a, b) {
         return (a % b + b) % b;
@@ -532,5 +548,9 @@
         topWindow();
     }
     canvasWindow();
+    var __url = new URL(window.location.href);
+    if (__url.origin.endsWith('reddit.com')) {
+        run();
+    }
 
 })();
