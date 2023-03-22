@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.3
+// @version			0.3.1
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu
 // @license			MIT
@@ -141,7 +141,7 @@
     }
 
     var Template = /** @class */ (function () {
-        function Template(params, mountPoint, priority) {
+        function Template(params, globalCanvas, priority) {
             var _this = this;
             this.imageLoader = new Image();
             this.canvasElement = document.createElement('canvas');
@@ -158,7 +158,7 @@
             this.startTime = params.startTime || 0;
             this.looping = params.looping || this.frameCount > 1;
             // assign from arguments
-            this.mountPoint = mountPoint;
+            this.globalCanvas = globalCanvas;
             this.priority = priority;
             //calulate from consts
             var period = SECONDS_SPENT_BLINKING * 1000 / AMOUND_OF_BLINKING;
@@ -228,10 +228,10 @@
             this.canvasElement.style.imageRendering = 'pixelated';
             this.canvasElement.setAttribute('priority', this.priority.toString());
             // find others and append to correct position
-            var templateElements = this.mountPoint.children;
+            var templateElements = this.globalCanvas.parentElement.children;
             var templateElementsArray = Array.from(templateElements).filter(function (element) { return element.hasAttribute('priority'); });
             if (templateElementsArray.length === 0) {
-                this.mountPoint.appendChild(this.canvasElement);
+                this.globalCanvas.parentElement.appendChild(this.canvasElement);
             }
             else {
                 // add the new template element to the array
@@ -242,10 +242,10 @@
                 var index = templateElementsArray.findIndex(function (element) { return element === _this.canvasElement; });
                 // insert the new template element at the index
                 if (index === templateElementsArray.length - 1) {
-                    this.mountPoint.appendChild(this.canvasElement);
+                    this.globalCanvas.parentElement.appendChild(this.canvasElement);
                 }
                 else {
-                    this.mountPoint.insertBefore(this.canvasElement, templateElementsArray[index + 1]);
+                    this.globalCanvas.parentElement.insertBefore(this.canvasElement, templateElementsArray[index + 1]);
                 }
             }
         };
@@ -253,8 +253,17 @@
             if (n === void 0) { n = null; }
             return (this.startTime + (n || this.currentFrame) * this.frameSpeed) % this.animationDuration;
         };
+        Template.prototype.updateStyle = function () {
+            // for canvas games where the canvas itself has css applied
+            var globalRatio = parseFloat(this.globalCanvas.style.width) / this.globalCanvas.width;
+            this.canvasElement.style.width = "".concat(this.frameWidth * globalRatio, "px");
+            this.canvasElement.style.height = "".concat(this.frameHeight * globalRatio, "px");
+            this.canvasElement.style.left = "".concat(this.x * globalRatio, "px");
+            this.canvasElement.style.top = "".concat(this.y * globalRatio, "px");
+        };
         Template.prototype.update = function (percentage, randomness, currentSeconds) {
             var _a;
+            this.updateStyle();
             // return if the animation is finished
             if (!this.looping && currentSeconds > this.startTime + this.frameSpeed * this.frameCount) {
                 return;
@@ -318,7 +327,7 @@
     }());
 
     var TemplateManager = /** @class */ (function () {
-        function TemplateManager(mountPoint, startingUrl) {
+        function TemplateManager(canvasElement, startingUrl) {
             var _this = this;
             this.alreadyLoaded = new Array();
             this.whitelist = new Array();
@@ -327,7 +336,7 @@
             this.responseDiffs = new Array();
             this.randomness = Math.random();
             this.percentage = 1;
-            this.mountPoint = mountPoint;
+            this.canvasElement = canvasElement;
             this.startingUrl = startingUrl;
             this.loadTemplatesFromJsonURL(startingUrl);
             window.addEventListener('keydown', function (ev) {
@@ -340,8 +349,9 @@
                 }
             });
         }
-        TemplateManager.prototype.loadTemplatesFromJsonURL = function (url) {
+        TemplateManager.prototype.loadTemplatesFromJsonURL = function (url, minPriority) {
             var _this = this;
+            if (minPriority === void 0) { minPriority = 0; }
             var _url = new URL(url);
             var uniqueString = "".concat(_url.origin).concat(_url.pathname);
             // exit if already loaded
@@ -380,7 +390,7 @@
                     if (json.templates) {
                         for (var i = 0; i < json.templates.length; i++) {
                             if (_this.templates.length < MAX_TEMPLATES) {
-                                _this.templates.push(new Template(json.templates[i], _this.mountPoint, _this.templates.length));
+                                _this.templates.push(new Template(json.templates[i], _this.canvasElement, minPriority + _this.templates.length));
                             }
                         }
                     }
@@ -406,8 +416,9 @@
             for (var i = 0; i < this.templates.length; i++)
                 this.templates[i].update(this.percentage, this.randomness, cs);
             if (this.templates.length < MAX_TEMPLATES) {
-                while (this.whitelist.length > 0) {
-                    this.loadTemplatesFromJsonURL(this.whitelist.shift());
+                for (var i = 0; i < this.whitelist.length; i++) {
+                    // yes this calls all whitelist all the time but the load will cancel if already loaded
+                    this.loadTemplatesFromJsonURL(this.whitelist[i], i * MAX_TEMPLATES);
                 }
             }
         };
@@ -424,7 +435,6 @@
 
     var jsontemplate;
     var canvasElement;
-    var stopSearching = false;
     function findCanvas(element) {
         if (element instanceof HTMLCanvasElement) {
             console.log('found canvas', element, window.location.href);
@@ -452,67 +462,63 @@
         return params.jsontemplate ? params.jsontemplate : null;
     }
     function topWindow() {
+        GM.setValue('canvasFound', false);
         var params = findParams(window.location.hash.substring(1)) || findParams(window.location.search.substring(1));
         if (params) {
             jsontemplate = params;
+            GM.setValue('jsontemplate', jsontemplate);
         }
-        window.addEventListener('message', function (ev) {
-            var _a;
-            if (ev.data.type === 'jsonTemplate') {
-                if (ev.source && jsontemplate)
-                    stopSearching = true; // canvas is in embed, window.top can stop searching for it
-                (_a = ev.source) === null || _a === void 0 ? void 0 : _a.postMessage({ 'type': 'templateResponse', 'jsontemplate': jsontemplate });
-            }
-        });
     }
     function canvasWindow() {
-        var _a;
+        var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
             var sleep$1;
-            return __generator(this, function (_b) {
-                switch (_b.label) {
+            return __generator(this, function (_c) {
+                switch (_c.label) {
                     case 0:
-                        window.addEventListener('message', function (ev) {
-                            if (ev.data.type === 'templateResponse') {
-                                jsontemplate = ev.data.jsontemplate;
-                            }
-                        });
                         sleep$1 = 0;
-                        _b.label = 1;
+                        _c.label = 1;
                     case 1:
-                        if (!!canvasElement) return [3 /*break*/, 3];
-                        if (stopSearching)
-                            return [2 /*return*/];
-                        return [4 /*yield*/, sleep(1000 * Math.pow(2, sleep$1))];
+                        if (!!canvasElement) return [3 /*break*/, 4];
+                        return [4 /*yield*/, GM.getValue('canvasFound')];
                     case 2:
-                        _b.sent();
+                        if ((_c.sent()) && !windowIsEmbedded()) {
+                            console.log('canvas found by iframe');
+                            return [2 /*return*/];
+                        }
+                        return [4 /*yield*/, sleep(1000 * sleep$1)];
+                    case 3:
+                        _c.sent();
                         sleep$1++;
                         console.log("trying to find canvas");
                         findCanvas(document.documentElement);
                         return [3 /*break*/, 1];
-                    case 3:
-                        sleep$1 = 0;
-                        _b.label = 4;
                     case 4:
-                        if (jsontemplate) {
-                            runCanvas(jsontemplate, canvasElement.parentElement);
-                            return [3 /*break*/, 6];
-                        }
-                        else if (windowIsEmbedded()) {
-                            (_a = window.top) === null || _a === void 0 ? void 0 : _a.postMessage({ 'type': 'jsonTemplate' });
-                        }
-                        return [4 /*yield*/, sleep(1000 * Math.pow(2, sleep$1))];
+                        GM.setValue('canvasFound', true);
+                        sleep$1 = 0;
+                        _c.label = 5;
                     case 5:
-                        _b.sent();
+                        if (!jsontemplate) return [3 /*break*/, 6];
+                        runCanvas(jsontemplate, canvasElement);
+                        return [3 /*break*/, 10];
+                    case 6:
+                        if (!windowIsEmbedded()) return [3 /*break*/, 8];
+                        return [4 /*yield*/, GM.getValue('jsontemplate')];
+                    case 7:
+                        jsontemplate = (_b = (_a = (_c.sent())) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : '';
+                        _c.label = 8;
+                    case 8: return [4 /*yield*/, sleep(1000 * sleep$1)];
+                    case 9:
+                        _c.sent();
                         sleep$1++;
-                        return [3 /*break*/, 4];
-                    case 6: return [2 /*return*/];
+                        return [3 /*break*/, 5];
+                    case 10: return [2 /*return*/];
                 }
             });
         });
     }
-    function runCanvas(jsontemplate, canvasParent) {
-        var manager = new TemplateManager(canvasParent, jsontemplate);
+    function runCanvas(jsontemplate, canvasElement) {
+        var manager = new TemplateManager(canvasElement, jsontemplate);
         window.setInterval(function () {
             manager.update();
         }, UPDATE_PERIOD_MILLIS);

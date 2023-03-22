@@ -40,14 +40,14 @@ export class Template {
     looping: boolean
     priority: number
 
-    mountPoint: Element
+    globalCanvas: HTMLCanvasElement
     imageLoader = new Image()
     canvasElement = document.createElement('canvas')
 
     blinkingPeriodMillis: number
     animationDuration: number;
 
-    constructor(params: TemplateParams, mountPoint: Element, priority: number) {
+    constructor(params: TemplateParams, globalCanvas: HTMLCanvasElement, priority: number) {
         // assign params
         this.name = params.name
         this.sources = params.sources
@@ -60,7 +60,7 @@ export class Template {
         this.startTime = params.startTime || 0
         this.looping = params.looping || this.frameCount > 1
         // assign from arguments
-        this.mountPoint = mountPoint
+        this.globalCanvas = globalCanvas
         this.priority = priority
 
         //calulate from consts
@@ -135,11 +135,11 @@ export class Template {
         this.canvasElement.setAttribute('priority', this.priority.toString())
 
         // find others and append to correct position
-        let templateElements = this.mountPoint.children;
+        let templateElements = this.globalCanvas.parentElement!.children;
         let templateElementsArray: Array<Element> = Array.from(templateElements).filter(element => element.hasAttribute('priority'));
 
         if (templateElementsArray.length === 0) {
-            this.mountPoint.appendChild(this.canvasElement);
+            this.globalCanvas.parentElement!.appendChild(this.canvasElement);
         } else {
             // add the new template element to the array
             templateElementsArray.push(this.canvasElement);
@@ -149,9 +149,9 @@ export class Template {
             let index = templateElementsArray.findIndex(element => element === this.canvasElement);
             // insert the new template element at the index
             if (index === templateElementsArray.length - 1) {
-                this.mountPoint.appendChild(this.canvasElement);
+                this.globalCanvas.parentElement!.appendChild(this.canvasElement);
             } else {
-                this.mountPoint.insertBefore(this.canvasElement, templateElementsArray[index + 1]);
+                this.globalCanvas.parentElement!.insertBefore(this.canvasElement, templateElementsArray[index + 1]);
             }
         }
     }
@@ -164,7 +164,18 @@ export class Template {
         return (this.startTime + (n || this.currentFrame) * this.frameSpeed) % this.animationDuration
     }
 
+    updateStyle() {
+        // for canvas games where the canvas itself has css applied
+        let globalRatio = parseFloat(this.globalCanvas.style.width) / this.globalCanvas.width
+        this.canvasElement.style.width = `${this.frameWidth! * globalRatio}px`
+        this.canvasElement.style.height = `${this.frameHeight! * globalRatio}px`
+        this.canvasElement.style.left = `${this.x * globalRatio}px`
+        this.canvasElement.style.top = `${this.y * globalRatio}px`
+    }
+
     update(percentage: number, randomness: number, currentSeconds: number) {
+        this.updateStyle()
+
         // return if the animation is finished
         if (!this.looping && currentSeconds > this.startTime + this.frameSpeed * this.frameCount) {
             return;

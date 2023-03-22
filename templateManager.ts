@@ -10,13 +10,13 @@ export class TemplateManager {
     templates: Array<Template> = new Array<Template>();
     responseDiffs: Array<number> = new Array<number>();
 
-    mountPoint: Element;
+    canvasElement: HTMLCanvasElement;
     startingUrl: string;
     randomness = Math.random();
     percentage = 1
 
-    constructor(mountPoint: Element, startingUrl: string) {
-        this.mountPoint = mountPoint;
+    constructor(canvasElement: HTMLCanvasElement, startingUrl: string) {
+        this.canvasElement = canvasElement;
         this.startingUrl = startingUrl
         this.loadTemplatesFromJsonURL(startingUrl)
 
@@ -30,7 +30,7 @@ export class TemplateManager {
         })
     }
 
-    loadTemplatesFromJsonURL(url: string | URL) {
+    loadTemplatesFromJsonURL(url: string | URL, minPriority = 0) {
         let _url = new URL(url);
         let uniqueString = `${_url.origin}${_url.pathname}`;
 
@@ -72,7 +72,7 @@ export class TemplateManager {
                 if (json.templates) {
                     for (let i = 0; i < json.templates.length; i++) {
                         if (this.templates.length < MAX_TEMPLATES) {
-                            this.templates.push(new Template(json.templates[i], this.mountPoint, this.templates.length));
+                            this.templates.push(new Template(json.templates[i], this.canvasElement, minPriority + this.templates.length));
                         }
                     }
                 }
@@ -94,14 +94,15 @@ export class TemplateManager {
         let averageDiff = this.responseDiffs.reduce((a, b) => a + b, 0) / (this.responseDiffs.length)
         return (Date.now() + averageDiff) / 1000;
     }
-
+ 
     update() {
         let cs = this.currentSeconds()
         for (let i = 0; i < this.templates.length; i++)
             this.templates[i].update(this.percentage, this.randomness, cs);
         if (this.templates.length < MAX_TEMPLATES) {
-            while (this.whitelist.length > 0) {
-                this.loadTemplatesFromJsonURL(this.whitelist.shift()!)
+            for (let i = 0; i < this.whitelist.length; i++) {
+                // yes this calls all whitelist all the time but the load will cancel if already loaded
+                this.loadTemplatesFromJsonURL(this.whitelist[i], i * MAX_TEMPLATES)
             }
         }
     }
