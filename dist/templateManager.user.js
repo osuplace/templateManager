@@ -480,6 +480,7 @@
         return params.jsontemplate ? params.jsontemplate : null;
     }
     function topWindow() {
+        console.log("top window code for", window.location.href);
         GM.setValue('canvasFound', false);
         var params = findParams(window.location.hash.substring(1)) || findParams(window.location.search.substring(1));
         if (params) {
@@ -488,25 +489,25 @@
         }
     }
     function canvasWindow() {
-        var _a, _b;
         return __awaiter(this, void 0, void 0, function () {
             var sleep$1;
-            return __generator(this, function (_c) {
-                switch (_c.label) {
+            return __generator(this, function (_a) {
+                switch (_a.label) {
                     case 0:
+                        console.log("canvas code for", window.location.href);
                         sleep$1 = 0;
-                        _c.label = 1;
+                        _a.label = 1;
                     case 1:
                         if (!!canvasElement) return [3 /*break*/, 4];
-                        return [4 /*yield*/, GM.getValue('canvasFound')];
+                        return [4 /*yield*/, GM.getValue('canvasFound', false)];
                     case 2:
-                        if ((_c.sent()) && !windowIsEmbedded()) {
+                        if ((_a.sent()) && !windowIsEmbedded()) {
                             console.log('canvas found by iframe');
                             return [2 /*return*/];
                         }
                         return [4 /*yield*/, sleep(1000 * sleep$1)];
                     case 3:
-                        _c.sent();
+                        _a.sent();
                         sleep$1++;
                         console.log("trying to find canvas");
                         findCanvas(document.documentElement);
@@ -514,20 +515,20 @@
                     case 4:
                         GM.setValue('canvasFound', true);
                         sleep$1 = 0;
-                        _c.label = 5;
+                        _a.label = 5;
                     case 5:
                         if (!jsontemplate) return [3 /*break*/, 6];
                         runCanvas(jsontemplate, canvasElement);
                         return [3 /*break*/, 10];
                     case 6:
                         if (!windowIsEmbedded()) return [3 /*break*/, 8];
-                        return [4 /*yield*/, GM.getValue('jsontemplate')];
+                        return [4 /*yield*/, GM.getValue('jsontemplate', '')];
                     case 7:
-                        jsontemplate = (_b = (_a = (_c.sent())) === null || _a === void 0 ? void 0 : _a.toString()) !== null && _b !== void 0 ? _b : '';
-                        _c.label = 8;
+                        jsontemplate = (_a.sent());
+                        _a.label = 8;
                     case 8: return [4 /*yield*/, sleep(1000 * sleep$1)];
                     case 9:
-                        _c.sent();
+                        _a.sent();
                         sleep$1++;
                         return [3 /*break*/, 5];
                     case 10: return [2 /*return*/];

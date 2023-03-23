@@ -35,6 +35,7 @@ function findParams(urlString: string): string | null {
 }
 
 function topWindow() {
+    console.log("top window code for", window.location.href)
     GM.setValue('canvasFound', false)
     let params = findParams(window.location.hash.substring(1)) || findParams(window.location.search.substring(1));
     if (params) {
@@ -44,9 +45,10 @@ function topWindow() {
 }
 
 async function canvasWindow() {
+    console.log("canvas code for", window.location.href)
     let sleep = 0;
     while (!canvasElement) {
-        if (await GM.getValue('canvasFound') && !utils.windowIsEmbedded()) {
+        if (await GM.getValue('canvasFound', false) && !utils.windowIsEmbedded()) {
             console.log('canvas found by iframe')
             return;}
         await utils.sleep(1000 * sleep);
@@ -61,7 +63,7 @@ async function canvasWindow() {
             runCanvas(jsontemplate, canvasElement!)
             break
         } else if (utils.windowIsEmbedded()) {
-            jsontemplate = (await GM.getValue('jsontemplate'))?.toString() ?? ''
+            jsontemplate = (await GM.getValue('jsontemplate', ''))
         }
         await utils.sleep(1000 * sleep);
         sleep++;
