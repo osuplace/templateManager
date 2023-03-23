@@ -8,7 +8,7 @@ export function run() {
         if (preview) {
             clearInterval(reticuleStyleSetter)
             let style = document.createElement('style')
-            style.innerHTML = '.pixel { clip-path: polygon(-20% -20%, 120% -20%, 100% 0%, 63% 0%, 63% 37%, 37% 37%, 37% 0%, 0% 0%, 0% 37%, 37% 37%, 37% 63%, 0% 63%, 0% 100%, 37% 100%, 37% 63%, 63% 63%, 63% 100%, 100% 100%, 100% 63%, 63% 63%, 63% 37%, 100% 37%, 100% 0%, 120% 0%, 120% 120%, -20% 120%);}'
+            style.innerHTML = '.pixel { clip-path: polygon(-20% -20%, 120% -20%, 120% 20%, 63% 20%, 63% 37%, 37% 37%, 37% 20%, 20% 20%, 20% 37%, 37% 37%, 37% 63%, 20% 63%, 20% 80%, 37% 80%, 37% 63%, 63% 63%, 63% 80%, 80% 80%, 80% 63%, 63% 63%, 63% 37%, 80% 37%, 80% 20%, 120% 20%, 120% 120%, -20% 120%);}';
             console.log(preview)
             preview?.shadowRoot?.appendChild(style);
         }
