@@ -25,7 +25,7 @@ export class TemplateManager {
                 let number = parseInt(ev.key) || 1.1
                 this.percentage = 1 / number
             } else if (ev.key === 'd') {
-                this.randomness = (this.randomness + ANIMATION_DEFAULT_PERCENTAGE + this.percentage * 1.5) % 1;
+                this.randomness = (0.1 + Math.random()) % 1;
             }
         })
     }

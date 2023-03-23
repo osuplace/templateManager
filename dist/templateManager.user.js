@@ -363,7 +363,7 @@
                     _this.percentage = 1 / number;
                 }
                 else if (ev.key === 'd') {
-                    _this.randomness = (_this.randomness + ANIMATION_DEFAULT_PERCENTAGE + _this.percentage * 1.5) % 1;
+                    _this.randomness = (0.1 + Math.random()) % 1;
                 }
             });
         }
