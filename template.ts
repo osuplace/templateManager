@@ -1,6 +1,6 @@
 import * as utils from './utils';
 import * as cf from './canvasFunctions'
-import { UPDATE_PERIOD_MILLIS, SECONDS_SPENT_BLINKING, AMOUND_OF_BLINKING, ANIMATION_DEFAULT_PERCENTAGE } from './constants';
+import { UPDATE_PERIOD_MILLIS, SECONDS_SPENT_BLINKING, AMOUNT_OF_BLINKING, ANIMATION_DEFAULT_PERCENTAGE } from './constants';
 
 interface TemplateParams {
     name: string | null
@@ -66,7 +66,7 @@ export class Template {
         this.priority = priority
 
         //calulate from consts
-        let period = SECONDS_SPENT_BLINKING * 1000 / AMOUND_OF_BLINKING;
+        let period = SECONDS_SPENT_BLINKING * 1000 / AMOUNT_OF_BLINKING;
         this.blinkingPeriodMillis = Math.floor(period / UPDATE_PERIOD_MILLIS) * UPDATE_PERIOD_MILLIS
         this.animationDuration = (this.frameCount * this.frameSpeed)
 
@@ -225,7 +225,7 @@ export class Template {
         if (this.frameSpeed === Infinity || this.frameSpeed < 30 || this.frameCount === 1) return;
 
         let frameEndTime = this.frameStartTime() + this.frameSpeed
-        let blinkTime = (currentSeconds % this.animationDuration) + (AMOUND_OF_BLINKING * this.blinkingPeriodMillis / 1000)
+        let blinkTime = (currentSeconds % this.animationDuration) + (AMOUNT_OF_BLINKING * this.blinkingPeriodMillis / 1000)
         if (blinkTime > frameEndTime) {
             let blinkDiff = blinkTime - frameEndTime
             this.canvasElement.style.opacity = Math.floor(blinkDiff / (this.blinkingPeriodMillis / 1000)) % 2 === 0 ? '0' : '1'

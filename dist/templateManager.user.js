@@ -27,7 +27,7 @@
     const CACHE_BUST_PERIOD = 1000 * 60 * 2;
     const UPDATE_PERIOD_MILLIS = 100;
     const SECONDS_SPENT_BLINKING = 5;
-    const AMOUND_OF_BLINKING = 11;
+    const AMOUNT_OF_BLINKING = 11;
     const ANIMATION_DEFAULT_PERCENTAGE = 1 / 6;
 
     function run() {
@@ -121,7 +121,7 @@
             this.globalCanvas = globalCanvas;
             this.priority = priority;
             //calulate from consts
-            let period = SECONDS_SPENT_BLINKING * 1000 / AMOUND_OF_BLINKING;
+            let period = SECONDS_SPENT_BLINKING * 1000 / AMOUNT_OF_BLINKING;
             this.blinkingPeriodMillis = Math.floor(period / UPDATE_PERIOD_MILLIS) * UPDATE_PERIOD_MILLIS;
             this.animationDuration = (this.frameCount * this.frameSpeed);
             // initialize image loader
@@ -263,7 +263,7 @@
             if (this.frameSpeed === Infinity || this.frameSpeed < 30 || this.frameCount === 1)
                 return;
             let frameEndTime = this.frameStartTime() + this.frameSpeed;
-            let blinkTime = (currentSeconds % this.animationDuration) + (AMOUND_OF_BLINKING * this.blinkingPeriodMillis / 1000);
+            let blinkTime = (currentSeconds % this.animationDuration) + (AMOUNT_OF_BLINKING * this.blinkingPeriodMillis / 1000);
             if (blinkTime > frameEndTime) {
                 let blinkDiff = blinkTime - frameEndTime;
                 this.canvasElement.style.opacity = Math.floor(blinkDiff / (this.blinkingPeriodMillis / 1000)) % 2 === 0 ? '0' : '1';
