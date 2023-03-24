@@ -80,7 +80,7 @@ export class Settings {
         }))
         this.div.appendChild(document.createElement('br'))
         this.div.appendChild(createSlider("Dither amount", "1", (n) => {
-            manager.percentage = 1 / ((n + 1) / 10)
+            manager.percentage = 1 / (n / 10 + 1)
         }))
 
         for (let c = 0; c < this.div.children.length; c++) {
