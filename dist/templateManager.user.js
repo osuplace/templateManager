@@ -23,75 +23,22 @@
 (function () {
     'use strict';
 
-    /******************************************************************************
-    Copyright (c) Microsoft Corporation.
-
-    Permission to use, copy, modify, and/or distribute this software for any
-    purpose with or without fee is hereby granted.
-
-    THE SOFTWARE IS PROVIDED "AS IS" AND THE AUTHOR DISCLAIMS ALL WARRANTIES WITH
-    REGARD TO THIS SOFTWARE INCLUDING ALL IMPLIED WARRANTIES OF MERCHANTABILITY
-    AND FITNESS. IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY SPECIAL, DIRECT,
-    INDIRECT, OR CONSEQUENTIAL DAMAGES OR ANY DAMAGES WHATSOEVER RESULTING FROM
-    LOSS OF USE, DATA OR PROFITS, WHETHER IN AN ACTION OF CONTRACT, NEGLIGENCE OR
-    OTHER TORTIOUS ACTION, ARISING OUT OF OR IN CONNECTION WITH THE USE OR
-    PERFORMANCE OF THIS SOFTWARE.
-    ***************************************************************************** */
-
-    function __awaiter(thisArg, _arguments, P, generator) {
-        function adopt(value) { return value instanceof P ? value : new P(function (resolve) { resolve(value); }); }
-        return new (P || (P = Promise))(function (resolve, reject) {
-            function fulfilled(value) { try { step(generator.next(value)); } catch (e) { reject(e); } }
-            function rejected(value) { try { step(generator["throw"](value)); } catch (e) { reject(e); } }
-            function step(result) { result.done ? resolve(result.value) : adopt(result.value).then(fulfilled, rejected); }
-            step((generator = generator.apply(thisArg, _arguments || [])).next());
-        });
-    }
-
-    function __generator(thisArg, body) {
-        var _ = { label: 0, sent: function() { if (t[0] & 1) throw t[1]; return t[1]; }, trys: [], ops: [] }, f, y, t, g;
-        return g = { next: verb(0), "throw": verb(1), "return": verb(2) }, typeof Symbol === "function" && (g[Symbol.iterator] = function() { return this; }), g;
-        function verb(n) { return function (v) { return step([n, v]); }; }
-        function step(op) {
-            if (f) throw new TypeError("Generator is already executing.");
-            while (g && (g = 0, op[0] && (_ = 0)), _) try {
-                if (f = 1, y && (t = op[0] & 2 ? y["return"] : op[0] ? y["throw"] || ((t = y["return"]) && t.call(y), 0) : y.next) && !(t = t.call(y, op[1])).done) return t;
-                if (y = 0, t) op = [op[0] & 2, t.value];
-                switch (op[0]) {
-                    case 0: case 1: t = op; break;
-                    case 4: _.label++; return { value: op[1], done: false };
-                    case 5: _.label++; y = op[1]; op = [0]; continue;
-                    case 7: op = _.ops.pop(); _.trys.pop(); continue;
-                    default:
-                        if (!(t = _.trys, t = t.length > 0 && t[t.length - 1]) && (op[0] === 6 || op[0] === 2)) { _ = 0; continue; }
-                        if (op[0] === 3 && (!t || (op[1] > t[0] && op[1] < t[3]))) { _.label = op[1]; break; }
-                        if (op[0] === 6 && _.label < t[1]) { _.label = t[1]; t = op; break; }
-                        if (t && _.label < t[2]) { _.label = t[2]; _.ops.push(op); break; }
-                        if (t[2]) _.ops.pop();
-                        _.trys.pop(); continue;
-                }
-                op = body.call(thisArg, _);
-            } catch (e) { op = [6, e]; y = 0; } finally { f = t = 0; }
-            if (op[0] & 5) throw op[1]; return { value: op[0] ? op[1] : void 0, done: true };
-        }
-    }
-
-    var MAX_TEMPLATES = 100;
-    var CACHE_BUST_PERIOD = 1000 * 60 * 2;
-    var UPDATE_PERIOD_MILLIS = 100;
-    var SECONDS_SPENT_BLINKING = 5;
-    var AMOUND_OF_BLINKING = 11;
-    var ANIMATION_DEFAULT_PERCENTAGE = 1 / 6;
+    const MAX_TEMPLATES = 100;
+    const CACHE_BUST_PERIOD = 1000 * 60 * 2;
+    const UPDATE_PERIOD_MILLIS = 100;
+    const SECONDS_SPENT_BLINKING = 5;
+    const AMOUND_OF_BLINKING = 11;
+    const ANIMATION_DEFAULT_PERCENTAGE = 1 / 6;
 
     function run() {
-        var reticuleStyleSetter = setInterval(function () {
+        let reticuleStyleSetter = setInterval(() => {
             var _a, _b;
-            var embed = document.querySelector("mona-lisa-embed");
-            var camera = (_a = embed === null || embed === void 0 ? void 0 : embed.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector("mona-lisa-camera");
-            var preview = camera === null || camera === void 0 ? void 0 : camera.querySelector("mona-lisa-pixel-preview");
+            let embed = document.querySelector("mona-lisa-embed");
+            let camera = (_a = embed === null || embed === void 0 ? void 0 : embed.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector("mona-lisa-camera");
+            let preview = camera === null || camera === void 0 ? void 0 : camera.querySelector("mona-lisa-pixel-preview");
             if (preview) {
                 clearInterval(reticuleStyleSetter);
-                var style = document.createElement('style');
+                let style = document.createElement('style');
                 style.innerHTML = '.pixel { clip-path: polygon(-20% -20%, 120% -20%, 120% 20%, 63% 20%, 63% 37%, 37% 37%, 37% 20%, 20% 20%, 20% 37%, 37% 37%, 37% 63%, 20% 63%, 20% 80%, 37% 80%, 37% 63%, 63% 63%, 63% 80%, 80% 80%, 80% 63%, 63% 63%, 63% 37%, 80% 37%, 80% 20%, 120% 20%, 120% 120%, -20% 120%);}';
                 console.log(preview);
                 (_b = preview === null || preview === void 0 ? void 0 : preview.shadowRoot) === null || _b === void 0 ? void 0 : _b.appendChild(style);
@@ -103,49 +50,45 @@
         return (a % b + b) % b;
     }
     function getFileStemFromUrl(url) {
-        var lastSlashIndex = url.lastIndexOf('/');
-        var fileName = url.slice(lastSlashIndex + 1);
-        var lastDotIndex = fileName.lastIndexOf('.');
-        var fileStem = (lastDotIndex === -1) ? fileName : fileName.slice(0, lastDotIndex);
+        const lastSlashIndex = url.lastIndexOf('/');
+        const fileName = url.slice(lastSlashIndex + 1);
+        const lastDotIndex = fileName.lastIndexOf('.');
+        const fileStem = (lastDotIndex === -1) ? fileName : fileName.slice(0, lastDotIndex);
         return fileStem;
     }
     function windowIsEmbedded() {
         return window.top !== window.self;
     }
-    function sleep(ms) {
-        return __awaiter(this, void 0, void 0, function () {
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0: return [4 /*yield*/, new Promise(function (resolve) { return setTimeout(resolve, ms); })];
-                    case 1:
-                        _a.sent();
-                        return [2 /*return*/];
-                }
-            });
-        });
+    async function sleep(ms) {
+        await new Promise(resolve => setTimeout(resolve, ms));
+    }
+    function stringToHtml(str) {
+        let div = document.createElement('div');
+        div.innerHTML = str;
+        return div.firstChild;
     }
 
     function extractFrame(image, frameWidth, frameHeight, frameIndex) {
-        var canvas = document.createElement('canvas');
-        var context = canvas.getContext('2d');
+        let canvas = document.createElement('canvas');
+        let context = canvas.getContext('2d');
         if (!context)
             return null;
-        var gridWidth = Math.round(image.naturalWidth / frameWidth);
-        var gridX = frameIndex % gridWidth;
-        var gridY = Math.floor(frameIndex / gridWidth);
+        let gridWidth = Math.round(image.naturalWidth / frameWidth);
+        let gridX = frameIndex % gridWidth;
+        let gridY = Math.floor(frameIndex / gridWidth);
         context.drawImage(image, gridX * frameWidth, gridY * frameHeight, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
         return context.getImageData(0, 0, frameWidth, frameHeight);
     }
     function ditherData(imageData, randomness, percentage, x, y, frameWidth, frameHeight) {
-        var rv = new ImageData(frameWidth * 3, frameHeight * 3);
-        var m = Math.round(1 / percentage); // which nth pixel should be displayed
-        var r = Math.floor(randomness * m); // which nth pixel am I (everyone has different nth pixel)
-        for (var i = 0; i < frameWidth; i++) {
-            for (var j = 0; j < frameHeight; j++) {
-                var imageIndex = (j * frameWidth + i) * 4;
-                var middlePixelIndex = ((j * 3 + 1) * rv.width + i * 3 + 1) * 4;
-                var alpha = imageData.data[imageIndex + 3];
-                var p = percentage > 0.99 ? 1 : Math.ceil(m / (alpha / 200));
+        let rv = new ImageData(frameWidth * 3, frameHeight * 3);
+        let m = Math.round(1 / percentage); // which nth pixel should be displayed
+        let r = Math.floor(randomness * m); // which nth pixel am I (everyone has different nth pixel)
+        for (let i = 0; i < frameWidth; i++) {
+            for (let j = 0; j < frameHeight; j++) {
+                let imageIndex = (j * frameWidth + i) * 4;
+                let middlePixelIndex = ((j * 3 + 1) * rv.width + i * 3 + 1) * 4;
+                let alpha = imageData.data[imageIndex + 3];
+                let p = percentage > 0.99 ? 1 : Math.ceil(m / (alpha / 200));
                 if (negativeSafeModulo(i + x + (j + y) * 2 + r, p) !== 0) {
                     continue;
                 }
@@ -158,9 +101,8 @@
         return rv;
     }
 
-    var Template = /** @class */ (function () {
-        function Template(params, globalCanvas, priority) {
-            var _this = this;
+    class Template {
+        constructor(params, globalCanvas, priority) {
             this.imageLoader = new Image();
             this.canvasElement = document.createElement('canvas');
             this.loading = false;
@@ -179,7 +121,7 @@
             this.globalCanvas = globalCanvas;
             this.priority = priority;
             //calulate from consts
-            var period = SECONDS_SPENT_BLINKING * 1000 / AMOUND_OF_BLINKING;
+            let period = SECONDS_SPENT_BLINKING * 1000 / AMOUND_OF_BLINKING;
             this.blinkingPeriodMillis = Math.floor(period / UPDATE_PERIOD_MILLIS) * UPDATE_PERIOD_MILLIS;
             this.animationDuration = (this.frameCount * this.frameSpeed);
             // initialize image loader
@@ -189,65 +131,62 @@
             this.imageLoader.style.left = '0';
             this.imageLoader.style.width = '1px';
             this.imageLoader.style.height = '1px';
-            this.imageLoader.style.opacity = "".concat(Number.MIN_VALUE);
+            this.imageLoader.style.opacity = `${Number.MIN_VALUE}`;
             this.imageLoader.style.pointerEvents = 'none';
-            this.imageLoader.crossOrigin = 'Anonymous';
             document.body.appendChild(this.imageLoader); // firefox doesn't seem to load images outside of DOM
             // set image loader event listeners
-            this.imageLoader.addEventListener('load', function () {
-                if (!_this.frameWidth || !_this.frameHeight) {
-                    _this.frameWidth = _this.imageLoader.naturalWidth;
-                    _this.frameHeight = _this.imageLoader.naturalHeight;
+            this.imageLoader.addEventListener('load', () => {
+                if (!this.frameWidth || !this.frameHeight) {
+                    this.frameWidth = this.imageLoader.naturalWidth;
+                    this.frameHeight = this.imageLoader.naturalHeight;
                 }
-                if (!_this.name) {
-                    _this.name = getFileStemFromUrl(_this.imageLoader.src);
+                if (!this.name) {
+                    this.name = getFileStemFromUrl(this.imageLoader.src);
                 }
-                _this.initCanvas();
-                _this.loading = false;
+                this.initCanvas();
+                this.loading = false;
             });
-            this.imageLoader.addEventListener('error', function () {
-                _this.loading = false;
+            this.imageLoader.addEventListener('error', () => {
+                this.loading = false;
                 // assume loading from this source fails
-                _this.sources.shift();
+                this.sources.shift();
             });
         }
-        Template.prototype.tryLoadSource = function () {
-            var _this = this;
+        tryLoadSource() {
             if (this.loading)
                 return;
             if (this.sources.length === 0)
                 return;
             this.loading = true;
-            var candidateSource = this.sources[0];
-            var displayName = this.name ? this.name + ': ' : '';
-            console.log("".concat(displayName, "trying to load ").concat(candidateSource));
+            let candidateSource = this.sources[0];
+            let displayName = this.name ? this.name + ': ' : '';
+            console.log(`${displayName}trying to load ${candidateSource}`);
             GM.xmlHttpRequest({
                 method: 'GET',
                 url: candidateSource,
                 responseType: 'blob',
-                onload: function (response) {
-                    _this.imageLoader.src = URL.createObjectURL(response.response);
+                onload: (response) => {
+                    this.imageLoader.src = URL.createObjectURL(response.response);
                 }
             });
-        };
-        Template.prototype.getCurrentFrameIndex = function (currentSeconds) {
+        }
+        getCurrentFrameIndex(currentSeconds) {
             if (!this.looping && this.startTime + this.frameCount * this.frameSpeed < currentSeconds)
                 return this.frameCount - 1;
             return negativeSafeModulo(Math.floor((currentSeconds - this.startTime) / this.frameSpeed), this.frameCount);
-        };
-        Template.prototype.initCanvas = function () {
-            var _this = this;
+        }
+        initCanvas() {
             this.canvasElement.style.position = 'absolute';
-            this.canvasElement.style.top = "".concat(this.y, "px");
-            this.canvasElement.style.left = "".concat(this.x, "px");
-            this.canvasElement.style.width = "".concat(this.frameWidth, "px");
-            this.canvasElement.style.height = "".concat(this.frameHeight, "px");
+            this.canvasElement.style.top = `${this.y}px`;
+            this.canvasElement.style.left = `${this.x}px`;
+            this.canvasElement.style.width = `${this.frameWidth}px`;
+            this.canvasElement.style.height = `${this.frameHeight}px`;
             this.canvasElement.style.pointerEvents = 'none';
             this.canvasElement.style.imageRendering = 'pixelated';
             this.canvasElement.setAttribute('priority', this.priority.toString());
             // find others and append to correct position
-            var templateElements = this.globalCanvas.parentElement.children;
-            var templateElementsArray = Array.from(templateElements).filter(function (element) { return element.hasAttribute('priority'); });
+            let templateElements = this.globalCanvas.parentElement.children;
+            let templateElementsArray = Array.from(templateElements).filter(element => element.hasAttribute('priority'));
             if (templateElementsArray.length === 0) {
                 this.globalCanvas.parentElement.appendChild(this.canvasElement);
             }
@@ -255,9 +194,9 @@
                 // add the new template element to the array
                 templateElementsArray.push(this.canvasElement);
                 // sort the array by priority
-                templateElementsArray.sort(function (a, b) { return parseInt(b.getAttribute('priority')) - parseInt(a.getAttribute('priority')); });
+                templateElementsArray.sort((a, b) => parseInt(b.getAttribute('priority')) - parseInt(a.getAttribute('priority')));
                 // find the index of the new template element in the sorted array
-                var index = templateElementsArray.findIndex(function (element) { return element === _this.canvasElement; });
+                let index = templateElementsArray.findIndex(element => element === this.canvasElement);
                 // insert the new template element at the index
                 if (index === templateElementsArray.length - 1) {
                     this.globalCanvas.parentElement.appendChild(this.canvasElement);
@@ -266,20 +205,19 @@
                     this.globalCanvas.parentElement.insertBefore(this.canvasElement, templateElementsArray[index + 1]);
                 }
             }
-        };
-        Template.prototype.frameStartTime = function (n) {
-            if (n === void 0) { n = null; }
-            return (this.startTime + (n || this.currentFrame) * this.frameSpeed) % this.animationDuration;
-        };
-        Template.prototype.updateStyle = function () {
+        }
+        frameStartTime(n = null) {
+            return (this.startTime + (n || this.currentFrame || 0) * this.frameSpeed) % this.animationDuration;
+        }
+        updateStyle() {
             // for canvas games where the canvas itself has css applied
-            var globalRatio = parseFloat(this.globalCanvas.style.width) / this.globalCanvas.width;
-            this.canvasElement.style.width = "".concat(this.frameWidth * globalRatio, "px");
-            this.canvasElement.style.height = "".concat(this.frameHeight * globalRatio, "px");
-            this.canvasElement.style.left = "".concat(this.x * globalRatio, "px");
-            this.canvasElement.style.top = "".concat(this.y * globalRatio, "px");
-        };
-        Template.prototype.update = function (percentage, randomness, currentSeconds) {
+            let globalRatio = parseFloat(this.globalCanvas.style.width) / this.globalCanvas.width;
+            this.canvasElement.style.width = `${this.frameWidth * globalRatio}px`;
+            this.canvasElement.style.height = `${this.frameHeight * globalRatio}px`;
+            this.canvasElement.style.left = `${this.x * globalRatio}px`;
+            this.canvasElement.style.top = `${this.y * globalRatio}px`;
+        }
+        update(percentage, randomness, currentSeconds) {
             var _a;
             this.updateStyle();
             // return if the animation is finished
@@ -296,20 +234,20 @@
                 return;
             }
             // set percentage for animated
-            var frameIndex = this.getCurrentFrameIndex(currentSeconds);
+            let frameIndex = this.getCurrentFrameIndex(currentSeconds);
             if (this.frameCount > 1 && this.frameSpeed > 30) {
-                var framePast = currentSeconds % this.animationDuration - this.frameStartTime(frameIndex);
-                var framePercentage = framePast / this.frameSpeed;
+                let framePast = currentSeconds % this.animationDuration - this.frameStartTime(frameIndex);
+                let framePercentage = framePast / this.frameSpeed;
                 if (framePercentage < 0.5) {
                     percentage *= ANIMATION_DEFAULT_PERCENTAGE;
                 }
             }
             // update canvas if necessary
             if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage || this.currentRandomness !== randomness) {
-                var frameData = extractFrame(this.imageLoader, this.frameWidth, this.frameHeight, frameIndex);
+                let frameData = extractFrame(this.imageLoader, this.frameWidth, this.frameHeight, frameIndex);
                 if (!frameData)
                     return;
-                var ditheredData = ditherData(frameData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
+                let ditheredData = ditherData(frameData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
                 this.canvasElement.width = ditheredData.width;
                 this.canvasElement.height = ditheredData.height;
                 (_a = this.canvasElement.getContext('2d')) === null || _a === void 0 ? void 0 : _a.putImageData(ditheredData, 0, 0);
@@ -319,34 +257,32 @@
             this.currentFrame = frameIndex;
             this.currentRandomness = randomness;
             this.blinking(currentSeconds);
-        };
-        Template.prototype.blinking = function (currentSeconds) {
+        }
+        blinking(currentSeconds) {
             // return if no blinking needed
             if (this.frameSpeed === Infinity || this.frameSpeed < 30 || this.frameCount === 1)
                 return;
-            var frameEndTime = this.frameStartTime() + this.frameSpeed;
-            var blinkTime = (currentSeconds % this.animationDuration) + (AMOUND_OF_BLINKING * this.blinkingPeriodMillis / 1000);
+            let frameEndTime = this.frameStartTime() + this.frameSpeed;
+            let blinkTime = (currentSeconds % this.animationDuration) + (AMOUND_OF_BLINKING * this.blinkingPeriodMillis / 1000);
             if (blinkTime > frameEndTime) {
-                var blinkDiff = blinkTime - frameEndTime;
+                let blinkDiff = blinkTime - frameEndTime;
                 this.canvasElement.style.opacity = Math.floor(blinkDiff / (this.blinkingPeriodMillis / 1000)) % 2 === 0 ? '0' : '1';
             }
             else {
                 this.canvasElement.style.opacity = '1';
             }
-        };
-        Template.prototype.destroy = function () {
+        }
+        destroy() {
             var _a, _b;
             (_a = this.imageLoader.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(this.imageLoader);
             this.imageLoader = new Image();
             (_b = this.canvasElement.parentElement) === null || _b === void 0 ? void 0 : _b.removeChild(this.canvasElement);
             this.canvasElement = document.createElement('canvas');
-        };
-        return Template;
-    }());
+        }
+    }
 
-    var TemplateManager = /** @class */ (function () {
-        function TemplateManager(canvasElement, startingUrl) {
-            var _this = this;
+    class TemplateManager {
+        constructor(canvasElement, startingUrl) {
             this.alreadyLoaded = new Array();
             this.whitelist = new Array();
             this.blacklist = new Array();
@@ -357,65 +293,64 @@
             this.canvasElement = canvasElement;
             this.startingUrl = startingUrl;
             this.loadTemplatesFromJsonURL(startingUrl);
-            window.addEventListener('keydown', function (ev) {
+            window.addEventListener('keydown', (ev) => {
                 if (ev.key.match(/^\d$/)) {
-                    var number = parseInt(ev.key) || 1.1;
-                    _this.percentage = 1 / number;
+                    let number = parseInt(ev.key) || 1.1;
+                    this.percentage = 1 / number;
                 }
                 else if (ev.key === 'd') {
-                    _this.randomness = (0.1 + Math.random()) % 1;
+                    this.randomness = (0.1 + Math.random()) % 1;
                 }
             });
         }
-        TemplateManager.prototype.loadTemplatesFromJsonURL = function (url, minPriority) {
-            var _this = this;
-            if (minPriority === void 0) { minPriority = 0; }
-            var _url = new URL(url);
-            var uniqueString = "".concat(_url.origin).concat(_url.pathname);
+        loadTemplatesFromJsonURL(url, minPriority = 0) {
+            let _url = new URL(url);
+            let uniqueString = `${_url.origin}${_url.pathname}`;
             // exit if already loaded
             // exit if blacklisted
             if (this.alreadyLoaded.includes(uniqueString) || this.blacklist.includes(uniqueString))
                 return;
             this.alreadyLoaded.push(uniqueString);
-            console.log("loading template from ".concat(_url));
+            console.log(`loading template from ${_url}`);
             // do some cache busting
             _url.searchParams.append("date", Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36));
             GM.xmlHttpRequest({
                 method: 'GET',
                 url: _url.href,
-                onload: function (response) {
+                onload: (response) => {
                     // use this request to callibrate the latency to general internet requests
-                    var responseMatch = response.responseHeaders.match(/date:(.*)\r/i);
+                    let responseMatch = response.responseHeaders.match(/date:(.*)\r/i);
                     if (responseMatch) {
-                        var responseTime = Date.parse(responseMatch[1]);
-                        _this.responseDiffs.push(responseTime - Date.now());
+                        let responseTime = Date.parse(responseMatch[1]);
+                        this.responseDiffs.push(responseTime - Date.now());
                     }
                     // parse the response
-                    var json = JSON.parse(response.responseText);
+                    let json = JSON.parse(response.responseText);
                     // read blacklist. These will never be loaded
                     if (json.blacklist) {
-                        for (var i = 0; i < json.blacklist.length; i++) {
-                            _this.blacklist.push(json.blacklist[i].url);
+                        for (let i = 0; i < json.blacklist.length; i++) {
+                            this.blacklist.push(json.blacklist[i].url);
                         }
                     }
                     // read whitelist. These will be loaded later
                     if (json.whitelist) {
-                        for (var i = 0; i < json.whitelist.length; i++) {
-                            _this.whitelist.push(json.whitelist[i].url);
+                        for (let i = 0; i < json.whitelist.length; i++) {
+                            this.whitelist.push(json.whitelist[i].url);
                         }
                     }
                     // read templates
                     if (json.templates) {
-                        for (var i = 0; i < json.templates.length; i++) {
-                            if (_this.templates.length < MAX_TEMPLATES) {
-                                _this.templates.push(new Template(json.templates[i], _this.canvasElement, minPriority + _this.templates.length));
+                        for (let i = 0; i < json.templates.length; i++) {
+                            if (this.templates.length < MAX_TEMPLATES) {
+                                this.templates.push(new Template(json.templates[i], this.canvasElement, minPriority + this.templates.length));
                             }
                         }
                     }
+                    // TODO: connect to websockets
                 }
             });
-        };
-        TemplateManager.prototype.reload = function () {
+        }
+        reload() {
             var _a;
             // reload the templates
             // reloading only the json is not possible because it's user input and not uniquely identifiable
@@ -423,36 +358,111 @@
             while (this.templates.length) {
                 (_a = this.templates.shift()) === null || _a === void 0 ? void 0 : _a.destroy();
             }
+            // TODO: close websockets
             this.loadTemplatesFromJsonURL(this.startingUrl);
-        };
-        TemplateManager.prototype.currentSeconds = function () {
-            var averageDiff = this.responseDiffs.reduce(function (a, b) { return a + b; }, 0) / (this.responseDiffs.length);
+        }
+        currentSeconds() {
+            let averageDiff = this.responseDiffs.reduce((a, b) => a + b, 0) / (this.responseDiffs.length);
             return (Date.now() + averageDiff) / 1000;
-        };
-        TemplateManager.prototype.update = function () {
-            var cs = this.currentSeconds();
-            for (var i = 0; i < this.templates.length; i++)
+        }
+        update() {
+            let cs = this.currentSeconds();
+            for (let i = 0; i < this.templates.length; i++)
                 this.templates[i].update(this.percentage, this.randomness, cs);
             if (this.templates.length < MAX_TEMPLATES) {
-                for (var i = 0; i < this.whitelist.length; i++) {
+                for (let i = 0; i < this.whitelist.length; i++) {
                     // yes this calls all whitelist all the time but the load will cancel if already loaded
                     this.loadTemplatesFromJsonURL(this.whitelist[i], i * MAX_TEMPLATES);
                 }
             }
-        };
-        TemplateManager.prototype.restart = function () {
+        }
+        restart() {
             while (this.templates.length > 0) {
-                var template = this.templates.shift();
+                let template = this.templates.shift();
                 template === null || template === void 0 ? void 0 : template.destroy();
             }
             this.alreadyLoaded = new Array();
             this.loadTemplatesFromJsonURL(this.startingUrl);
-        };
-        return TemplateManager;
-    }());
+        }
+    }
 
-    var jsontemplate;
-    var canvasElement;
+    class Settings {
+        constructor(manager) {
+        }
+        open() {
+        }
+        close() {
+        }
+    }
+
+    let SLIDERS_SVG = '<svg draggable="true" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Pro 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 416c0-17.7 14.3-32 32-32l54.7 0c12.3-28.3 40.5-48 73.3-48s61 19.7 73.3 48L480 384c17.7 0 32 14.3 32 32s-14.3 32-32 32l-246.7 0c-12.3 28.3-40.5 48-73.3 48s-61-19.7-73.3-48L32 448c-17.7 0-32-14.3-32-32zm192 0a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM384 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm-32-80c32.8 0 61 19.7 73.3 48l54.7 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-54.7 0c-12.3 28.3-40.5 48-73.3 48s-61-19.7-73.3-48L32 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l246.7 0c12.3-28.3 40.5-48 73.3-48zM192 64a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm73.3 0L480 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l-214.7 0c-12.3 28.3-40.5 48-73.3 48s-61-19.7-73.3-48L32 128C14.3 128 0 113.7 0 96S14.3 64 32 64l86.7 0C131 35.7 159.2 16 192 16s61 19.7 73.3 48z"/></svg>';
+    async function init(manager) {
+        let settings = new Settings(manager);
+        let xKey = `${window.location.host} settingsX`;
+        let yKey = `${window.location.host} settingsY`;
+        let x = await GM.getValue(xKey, null) || 10;
+        let y = await GM.getValue(yKey, null) || 10;
+        let iconElement = stringToHtml(SLIDERS_SVG);
+        document.body.append(iconElement);
+        iconElement.style.position = 'absolute';
+        iconElement.style.width = "32px";
+        iconElement.style.height = "32px";
+        iconElement.style.left = `${x}vw`;
+        iconElement.style.top = `${y}vh`;
+        iconElement.style.stroke = 'fff';
+        iconElement.style.strokeWidth = '16px';
+        let clicked = false;
+        let dragged = false;
+        iconElement.addEventListener('mousedown', (ev) => {
+            clicked = true;
+            ev.preventDefault(); // prevent text from getting selected
+        });
+        iconElement.addEventListener('mouseleave', (ev) => {
+            if (clicked) {
+                dragged = true;
+            }
+        });
+        window.addEventListener('mouseup', (ev) => {
+            if (!dragged) {
+                settings.open();
+            }
+            clicked = false;
+            dragged = false;
+        });
+        window.addEventListener('mousemove', (ev) => {
+            if (dragged) {
+                let xMin = 16 / window.innerWidth * 100;
+                let yMin = 16 / window.innerHeight * 100;
+                x = (ev.clientX) / window.innerWidth * 100;
+                y = (ev.clientY) / window.innerHeight * 100;
+                GM.setValue(xKey, x);
+                GM.setValue(yKey, y);
+                if (x < 50) {
+                    x = Math.max(xMin, x - xMin);
+                    iconElement.style.left = `${x}vw`;
+                    iconElement.style.right = 'unset';
+                }
+                else {
+                    x = Math.max(xMin, 100 - x - xMin);
+                    iconElement.style.right = `${x}vw`;
+                    iconElement.style.left = 'unset';
+                }
+                if (y < 50) {
+                    y = Math.max(yMin, y - yMin);
+                    iconElement.style.top = `${y}vh`;
+                    iconElement.style.bottom = 'unset';
+                }
+                else {
+                    y = Math.max(yMin, 100 - y - yMin);
+                    iconElement.style.bottom = `${y}vh`;
+                    iconElement.style.top = 'unset';
+                }
+            }
+        });
+    }
+
+    let jsontemplate;
+    let canvasElement;
     function findCanvas(element) {
         if (element instanceof HTMLCanvasElement) {
             console.log('found canvas', element, window.location.href);
@@ -468,88 +478,67 @@
             findCanvas(element.shadowRoot);
         }
         // find in children
-        for (var _i = 0, _a = element.children; _i < _a.length; _i++) {
-            var child = _a[_i];
-            findCanvas(child);
+        for (let c = 0; c < element.children.length; c++) {
+            findCanvas(element.children[c]);
         }
     }
     function findParams(urlString) {
-        var urlSearchParams = new URLSearchParams(urlString);
-        var params = Object.fromEntries(urlSearchParams.entries());
+        const urlSearchParams = new URLSearchParams(urlString);
+        const params = Object.fromEntries(urlSearchParams.entries());
         console.log(params);
         return params.jsontemplate ? params.jsontemplate : null;
     }
     function topWindow() {
         console.log("top window code for", window.location.href);
         GM.setValue('canvasFound', false);
-        var params = findParams(window.location.hash.substring(1)) || findParams(window.location.search.substring(1));
+        let params = findParams(window.location.hash.substring(1)) || findParams(window.location.search.substring(1));
         if (params) {
             jsontemplate = params;
             GM.setValue('jsontemplate', jsontemplate);
         }
     }
-    function canvasWindow() {
-        return __awaiter(this, void 0, void 0, function () {
-            var sleep$1;
-            return __generator(this, function (_a) {
-                switch (_a.label) {
-                    case 0:
-                        console.log("canvas code for", window.location.href);
-                        sleep$1 = 0;
-                        _a.label = 1;
-                    case 1:
-                        if (!!canvasElement) return [3 /*break*/, 4];
-                        return [4 /*yield*/, GM.getValue('canvasFound', false)];
-                    case 2:
-                        if ((_a.sent()) && !windowIsEmbedded()) {
-                            console.log('canvas found by iframe');
-                            return [2 /*return*/];
-                        }
-                        return [4 /*yield*/, sleep(1000 * sleep$1)];
-                    case 3:
-                        _a.sent();
-                        sleep$1++;
-                        console.log("trying to find canvas");
-                        findCanvas(document.documentElement);
-                        return [3 /*break*/, 1];
-                    case 4:
-                        GM.setValue('canvasFound', true);
-                        sleep$1 = 0;
-                        _a.label = 5;
-                    case 5:
-                        if (!jsontemplate) return [3 /*break*/, 6];
-                        runCanvas(jsontemplate, canvasElement);
-                        return [3 /*break*/, 10];
-                    case 6:
-                        if (!windowIsEmbedded()) return [3 /*break*/, 8];
-                        return [4 /*yield*/, GM.getValue('jsontemplate', '')];
-                    case 7:
-                        jsontemplate = (_a.sent());
-                        _a.label = 8;
-                    case 8: return [4 /*yield*/, sleep(1000 * sleep$1)];
-                    case 9:
-                        _a.sent();
-                        sleep$1++;
-                        return [3 /*break*/, 5];
-                    case 10: return [2 /*return*/];
-                }
-            });
-        });
+    async function canvasWindow() {
+        console.log("canvas code for", window.location.href);
+        let sleep$1 = 0;
+        while (!canvasElement) {
+            if (await GM.getValue('canvasFound', false) && !windowIsEmbedded()) {
+                console.log('canvas found by iframe');
+                return;
+            }
+            await sleep(1000 * sleep$1);
+            sleep$1++;
+            console.log("trying to find canvas");
+            findCanvas(document.documentElement);
+        }
+        GM.setValue('canvasFound', true);
+        sleep$1 = 0;
+        while (true) {
+            if (jsontemplate) {
+                runCanvas(jsontemplate, canvasElement);
+                break;
+            }
+            else if (windowIsEmbedded()) {
+                jsontemplate = (await GM.getValue('jsontemplate', ''));
+            }
+            await sleep(1000 * sleep$1);
+            sleep$1++;
+        }
     }
     function runCanvas(jsontemplate, canvasElement) {
-        var manager = new TemplateManager(canvasElement, jsontemplate);
-        window.setInterval(function () {
+        let manager = new TemplateManager(canvasElement, jsontemplate);
+        init(manager);
+        window.setInterval(() => {
             manager.update();
         }, UPDATE_PERIOD_MILLIS);
         GM.setValue('jsontemplate', '');
     }
-    console.log("running templating script in ".concat(window.location.href));
+    console.log(`running templating script in ${window.location.href}`);
     if (!windowIsEmbedded()) {
         // we are the top window
         topWindow();
     }
     canvasWindow();
-    var __url = new URL(window.location.href);
+    let __url = new URL(window.location.href);
     if (__url.origin.endsWith('reddit.com')) {
         run();
     }

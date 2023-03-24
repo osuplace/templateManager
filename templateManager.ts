@@ -1,4 +1,4 @@
-import { ANIMATION_DEFAULT_PERCENTAGE, CACHE_BUST_PERIOD, MAX_TEMPLATES } from './constants';
+import { CACHE_BUST_PERIOD, MAX_TEMPLATES } from './constants';
 import { Template, JsonParams } from './template';
 
 
@@ -76,6 +76,7 @@ export class TemplateManager {
                         }
                     }
                 }
+                // TODO: connect to websockets
             }
         });
     }
@@ -87,6 +88,7 @@ export class TemplateManager {
         while (this.templates.length) {
             this.templates.shift()?.destroy()
         }
+        // TODO: close websockets
         this.loadTemplatesFromJsonURL(this.startingUrl)
     }
 

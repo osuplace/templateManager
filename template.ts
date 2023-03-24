@@ -21,6 +21,8 @@ interface NamedUrl {
     url: string
 }
 
+// TODO: add support for notification
+
 export interface JsonParams {
     templates: TemplateParams[]
     whitelist: NamedUrl[]
@@ -77,7 +79,6 @@ export class Template {
         this.imageLoader.style.height = '1px';
         this.imageLoader.style.opacity = `${Number.MIN_VALUE}`;
         this.imageLoader.style.pointerEvents = 'none';
-        this.imageLoader.crossOrigin = 'Anonymous';
         document.body.appendChild(this.imageLoader) // firefox doesn't seem to load images outside of DOM
 
         // set image loader event listeners
@@ -156,12 +157,12 @@ export class Template {
         }
     }
 
-    currentFrame: number
-    currentPercentage: number
-    currentRandomness: number;
+    currentFrame: number | undefined
+    currentPercentage: number | undefined
+    currentRandomness: number | undefined
 
     frameStartTime(n: number | null = null) {
-        return (this.startTime + (n || this.currentFrame) * this.frameSpeed) % this.animationDuration
+        return (this.startTime + (n || this.currentFrame || 0) * this.frameSpeed) % this.animationDuration
     }
 
     updateStyle() {
@@ -219,7 +220,7 @@ export class Template {
         this.blinking(currentSeconds)
     }
 
-    blinking(currentSeconds) {
+    blinking(currentSeconds: number) {
         // return if no blinking needed
         if (this.frameSpeed === Infinity || this.frameSpeed < 30 || this.frameCount === 1) return;
 

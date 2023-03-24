@@ -17,3 +17,9 @@ export function windowIsEmbedded() {
 export async function sleep(ms: number) {
     await new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export function stringToHtml(str: string): HTMLElement { 
+    let div = document.createElement('div');
+    div.innerHTML = str
+    return div.firstChild as HTMLElement
+}

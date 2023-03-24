@@ -2,6 +2,7 @@ import { UPDATE_PERIOD_MILLIS } from "./constants";
 import * as reddit from "./reddit";
 import { TemplateManager } from "./templateManager";
 import * as utils from "./utils";
+import * as settings from "./ui/settingsIcon";
 
 let jsontemplate: string;
 let canvasElement: HTMLCanvasElement;
@@ -22,8 +23,8 @@ function findCanvas(element: Element | ShadowRoot) {
         findCanvas(element.shadowRoot)
     }
     // find in children
-    for (let child of element.children) {
-        findCanvas(child)
+    for (let c = 0; c < element.children.length; c++) {
+        findCanvas(element.children[c])
     }
 }
 
@@ -50,7 +51,8 @@ async function canvasWindow() {
     while (!canvasElement) {
         if (await GM.getValue('canvasFound', false) && !utils.windowIsEmbedded()) {
             console.log('canvas found by iframe')
-            return;}
+            return;
+        }
         await utils.sleep(1000 * sleep);
         sleep++;
         console.log("trying to find canvas")
@@ -72,6 +74,7 @@ async function canvasWindow() {
 
 function runCanvas(jsontemplate: string, canvasElement: HTMLCanvasElement) {
     let manager = new TemplateManager(canvasElement, jsontemplate)
+    settings.init(manager)
     window.setInterval(() => {
         manager.update()
     }, UPDATE_PERIOD_MILLIS);
@@ -83,7 +86,7 @@ if (!utils.windowIsEmbedded()) {
     // we are the top window
     topWindow()
 }
-canvasWindow() 
+canvasWindow()
 
 let __url = new URL(window.location.href)
 if (__url.origin.endsWith('reddit.com')) {
