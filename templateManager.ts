@@ -105,6 +105,9 @@ export class TemplateManager {
             this.templates.shift()?.destroy()
         }
         // TODO: close websockets
+        this.alreadyLoaded = []
+        this.whitelist = []
+        this.blacklist = []
         this.loadTemplatesFromJsonURL(this.startingUrl)
     }
 

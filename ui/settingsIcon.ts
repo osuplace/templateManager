@@ -7,17 +7,46 @@ let SLIDERS_SVG = '<svg draggable="true" xmlns="http://www.w3.org/2000/svg" view
 export async function init(manager: TemplateManager) {
     let settings = new Settings(manager);
 
-    let xKey = `${window.location.host} settingsX`
-    let yKey = `${window.location.host} settingsY`
+    let xKey = `${window.location.host}_settingsX`
+    let yKey = `${window.location.host}_settingsY`
     let x = await GM.getValue(xKey, null) || 10
     let y = await GM.getValue(yKey, null) || 10
+
     let iconElement = utils.stringToHtml(SLIDERS_SVG)
     document.body.append(iconElement)
+
+    let setPosition = (xx: number, yy: number) => {
+        let xMin = 16 / window.innerWidth * 100
+        let yMin = 16 / window.innerHeight * 100
+        x = (xx) / window.innerWidth * 100
+        y = (yy) / window.innerHeight * 100
+        GM.setValue(xKey, x)
+        GM.setValue(yKey, y)
+        if (x < 50) {
+            x = Math.max(xMin, x - xMin)
+            iconElement.style.left = `${x}vw`
+            iconElement.style.right = 'unset'
+        } else {
+            x = Math.max(xMin, 100 - x - xMin)
+            iconElement.style.right = `${x}vw`
+            iconElement.style.left = 'unset'
+        }
+
+        if (y < 50) {
+            y = Math.max(yMin, y - yMin)
+            iconElement.style.top = `${y}vh`
+            iconElement.style.bottom = 'unset'
+        } else {
+            y = Math.max(yMin, 100 - y - yMin)
+            iconElement.style.bottom = `${y}vh`
+            iconElement.style.top = 'unset'
+        }
+    }
+
+    setPosition(x / 100 * window.innerWidth, y / 100 * window.innerHeight)
     iconElement.style.position = 'absolute'
     iconElement.style.width = "32px"
     iconElement.style.height = "32px"
-    iconElement.style.left = `${x}vw`
-    iconElement.style.top = `${y}vh`
     iconElement.style.backgroundColor = '#fff'
     iconElement.style.padding = "5px"
     iconElement.style.borderRadius = "5px"
@@ -25,6 +54,8 @@ export async function init(manager: TemplateManager) {
 
     let clicked = false
     let dragged = false
+
+
 
     iconElement.addEventListener('mousedown', (ev) => {
         if (ev.button === 0) {
@@ -48,31 +79,7 @@ export async function init(manager: TemplateManager) {
     })
     window.addEventListener('mousemove', (ev) => {
         if (dragged) {
-            let xMin = 16 / window.innerWidth * 100
-            let yMin = 16 / window.innerHeight * 100
-            x = (ev.clientX) / window.innerWidth * 100
-            y = (ev.clientY) / window.innerHeight * 100
-            GM.setValue(xKey, x)
-            GM.setValue(yKey, y)
-            if (x < 50) {
-                x = Math.max(xMin, x - xMin)
-                iconElement.style.left = `${x}vw`
-                iconElement.style.right = 'unset'
-            } else {
-                x = Math.max(xMin, 100 - x - xMin)
-                iconElement.style.right = `${x}vw`
-                iconElement.style.left = 'unset'
-            }
-
-            if (y < 50) {
-                y = Math.max(yMin, y - yMin)
-                iconElement.style.top = `${y}vh`
-                iconElement.style.bottom = 'unset'
-            } else {
-                y = Math.max(yMin, 100 - y - yMin)
-                iconElement.style.bottom = `${y}vh`
-                iconElement.style.top = 'unset'
-            }
+            setPosition(ev.clientX, ev.clientY)
         }
     })
 }

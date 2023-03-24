@@ -243,7 +243,7 @@ export class Template {
 
     async fakeReload(time:number) {
         this.canvasElement.style.opacity = '0'
-        await utils.sleep(100 + time)
+        await utils.sleep(300 + time)
         this.canvasElement.style.opacity = '1'
     }
 }
