@@ -34,7 +34,7 @@ export async function init(manager: TemplateManager | null) {
         }
     })
     window.addEventListener('mouseup', (ev) => {
-        if (!dragged) {
+        if (clicked && !dragged) {
             settings.open()
         }
         clicked = false
