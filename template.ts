@@ -240,5 +240,11 @@ export class Template {
         this.canvasElement.parentElement?.removeChild(this.canvasElement)
         this.canvasElement = document.createElement('canvas')
     }
+
+    async fakeReload(time:number) {
+        this.canvasElement.style.opacity = '0'
+        await utils.sleep(100 + time)
+        this.canvasElement.style.opacity = '1'
+    }
 }
 

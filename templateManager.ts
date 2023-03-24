@@ -14,6 +14,7 @@ export class TemplateManager {
     startingUrl: string;
     randomness = Math.random();
     percentage = 1
+    lastCacheBust = this.getCacheBustString();
 
     constructor(canvasElement: HTMLCanvasElement, startingUrl: string) {
         this.canvasElement = canvasElement;
@@ -24,10 +25,12 @@ export class TemplateManager {
             if (ev.key.match(/^\d$/)) {
                 let number = parseInt(ev.key) || 1.1
                 this.percentage = 1 / number
-            } else if (ev.key === 'd') {
-                this.randomness = (0.1 + Math.random()) % 1;
             }
         })
+    }
+
+    getCacheBustString() {
+        return Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36)
     }
 
     loadTemplatesFromJsonURL(url: string | URL, minPriority = 0) {
@@ -42,7 +45,8 @@ export class TemplateManager {
 
         console.log(`loading template from ${_url}`);
         // do some cache busting
-        _url.searchParams.append("date", Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36));
+        this.lastCacheBust = this.getCacheBustString()
+        _url.searchParams.append("date", this.lastCacheBust);
 
         GM.xmlHttpRequest({
             method: 'GET',
@@ -81,7 +85,19 @@ export class TemplateManager {
         });
     }
 
+    canReload(): boolean {
+        return this.lastCacheBust !== this.getCacheBustString()
+    }
+
     reload() {
+        if (!this.canReload()) {
+            // fake a reload
+            for (let i = 0; i < this.templates.length; i++) {
+                this.templates[i].fakeReload(i*50)
+            }
+            return;
+        }
+
         // reload the templates
         // reloading only the json is not possible because it's user input and not uniquely identifiable
         // so everything is reloaded as if the template manager was just initialized
@@ -96,7 +112,7 @@ export class TemplateManager {
         let averageDiff = this.responseDiffs.reduce((a, b) => a + b, 0) / (this.responseDiffs.length)
         return (Date.now() + averageDiff) / 1000;
     }
- 
+
     update() {
         let cs = this.currentSeconds()
         for (let i = 0; i < this.templates.length; i++)

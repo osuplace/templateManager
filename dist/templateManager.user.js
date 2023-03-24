@@ -279,6 +279,11 @@
             (_b = this.canvasElement.parentElement) === null || _b === void 0 ? void 0 : _b.removeChild(this.canvasElement);
             this.canvasElement = document.createElement('canvas');
         }
+        async fakeReload(time) {
+            this.canvasElement.style.opacity = '0';
+            await sleep(100 + time);
+            this.canvasElement.style.opacity = '1';
+        }
     }
 
     class TemplateManager {
@@ -290,6 +295,7 @@
             this.responseDiffs = new Array();
             this.randomness = Math.random();
             this.percentage = 1;
+            this.lastCacheBust = this.getCacheBustString();
             this.canvasElement = canvasElement;
             this.startingUrl = startingUrl;
             this.loadTemplatesFromJsonURL(startingUrl);
@@ -298,10 +304,10 @@
                     let number = parseInt(ev.key) || 1.1;
                     this.percentage = 1 / number;
                 }
-                else if (ev.key === 'd') {
-                    this.randomness = (0.1 + Math.random()) % 1;
-                }
             });
+        }
+        getCacheBustString() {
+            return Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36);
         }
         loadTemplatesFromJsonURL(url, minPriority = 0) {
             let _url = new URL(url);
@@ -313,7 +319,8 @@
             this.alreadyLoaded.push(uniqueString);
             console.log(`loading template from ${_url}`);
             // do some cache busting
-            _url.searchParams.append("date", Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36));
+            this.lastCacheBust = this.getCacheBustString();
+            _url.searchParams.append("date", this.lastCacheBust);
             GM.xmlHttpRequest({
                 method: 'GET',
                 url: _url.href,
@@ -350,8 +357,18 @@
                 }
             });
         }
+        canReload() {
+            return this.lastCacheBust !== this.getCacheBustString();
+        }
         reload() {
             var _a;
+            if (!this.canReload()) {
+                // fake a reload
+                for (let i = 0; i < this.templates.length; i++) {
+                    this.templates[i].fakeReload(i * 50);
+                }
+                return;
+            }
             // reload the templates
             // reloading only the json is not possible because it's user input and not uniquely identifiable
             // so everything is reloaded as if the template manager was just initialized
@@ -386,12 +403,104 @@
         }
     }
 
+    function createButton(text, callback) {
+        let button = document.createElement("button");
+        button.textContent = text;
+        button.onclick = () => callback();
+        button.style.backgroundColor = "#19d";
+        button.style.padding = "5px";
+        button.style.borderRadius = "5px";
+        return button;
+    }
+    function createSlider(text, value, callback) {
+        let div = document.createElement("div");
+        div.style.backgroundColor = "#057";
+        div.style.padding = "5px";
+        div.style.borderRadius = "5px";
+        let slider = document.createElement("input");
+        slider.type = "range";
+        slider.min = '0';
+        slider.max = '100';
+        slider.step = '1';
+        slider.value = value;
+        slider.oninput = (ev) => {
+            ev.preventDefault();
+            callback(parseInt(slider.value));
+        };
+        slider.style.width = "100%";
+        let label = document.createElement("label");
+        label.textContent = text;
+        div.append(label);
+        div.appendChild(document.createElement("br"));
+        div.append(slider);
+        return div;
+    }
     class Settings {
         constructor(manager) {
+            this.div = document.createElement("div");
+            // yeah this is all hardcoded xd
+            document.body.appendChild(this.div);
+            this.div.style.transition = "opacity 300ms";
+            this.div.style.width = "100vw";
+            this.div.style.height = "100vh";
+            this.div.style.position = "absolute";
+            this.div.style.left = "-0.1px";
+            this.div.style.top = "-0.1px";
+            this.div.style.backgroundColor = "rgba(0, 0, 0, 0.2)";
+            this.div.style.padding = "0";
+            this.div.style.margin = "0";
+            this.div.style.opacity = "0";
+            this.div.style.pointerEvents = "none";
+            this.div.style.zIndex = `${Number.MAX_SAFE_INTEGER}`;
+            this.div.style.textAlign = "center";
+            this.div.onclick = (ev) => {
+                if (ev.target === ev.currentTarget)
+                    this.close();
+            };
+            window.addEventListener("keydown", (ev) => {
+                if (ev.key === "Escape") {
+                    this.close();
+                }
+            });
+            this.div.appendChild(document.createElement('br'));
+            let label = document.createElement("label");
+            label.textContent = ".json Template settings";
+            this.div.appendChild(label);
+            this.div.appendChild(document.createElement('br'));
+            this.div.appendChild(createButton("Reload the template", () => manager.reload()));
+            this.div.appendChild(document.createElement('br'));
+            this.div.appendChild(createButton("Generate new randomness", () => {
+                let currentRandomness = manager.randomness;
+                while (true) {
+                    manager.randomness = Math.random();
+                    if (Math.abs(currentRandomness - manager.randomness) > 1 / 3)
+                        break;
+                }
+            }));
+            this.div.appendChild(document.createElement('br'));
+            this.div.appendChild(createSlider("Dither amount", "1", (n) => {
+                manager.percentage = 1 / ((n + 1) / 10);
+            }));
+            for (let c = 0; c < this.div.children.length; c++) {
+                let child = this.div.children[c];
+                child.style.margin = "1% 40%";
+            }
         }
         open() {
+            this.div.style.opacity = "1";
+            this.div.style.pointerEvents = "auto";
         }
         close() {
+            this.div.style.opacity = "0";
+            this.div.style.pointerEvents = "none";
+        }
+        toggle() {
+            if (this.div.style.pointerEvents === "none") {
+                this.open();
+            }
+            else {
+                this.close();
+            }
         }
     }
 
@@ -409,13 +518,17 @@
         iconElement.style.height = "32px";
         iconElement.style.left = `${x}vw`;
         iconElement.style.top = `${y}vh`;
-        iconElement.style.stroke = 'fff';
-        iconElement.style.strokeWidth = '16px';
+        iconElement.style.backgroundColor = '#fff';
+        iconElement.style.padding = "5px";
+        iconElement.style.borderRadius = "5px";
+        iconElement.style.zIndex = `${Number.MAX_SAFE_INTEGER - 1}`;
         let clicked = false;
         let dragged = false;
         iconElement.addEventListener('mousedown', (ev) => {
-            clicked = true;
-            ev.preventDefault(); // prevent text from getting selected
+            if (ev.button === 0) {
+                clicked = true;
+                ev.preventDefault(); // prevent text from getting selected
+            }
         });
         iconElement.addEventListener('mouseleave', (ev) => {
             if (clicked) {
@@ -423,11 +536,13 @@
             }
         });
         window.addEventListener('mouseup', (ev) => {
-            if (!dragged) {
-                settings.open();
+            if (ev.button === 0) {
+                if (clicked && !dragged) {
+                    settings.toggle();
+                }
+                clicked = false;
+                dragged = false;
             }
-            clicked = false;
-            dragged = false;
         });
         window.addEventListener('mousemove', (ev) => {
             if (dragged) {
