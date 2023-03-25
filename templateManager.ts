@@ -1,20 +1,23 @@
 import { CACHE_BUST_PERIOD, MAX_TEMPLATES } from './constants';
-import { Template, JsonParams } from './template';
-
-
+import { Template, JsonParams, NotificationServer, WSNotification } from './template';
+import { NotificationManager } from './ui/notificationsManager';
 
 export class TemplateManager {
-    alreadyLoaded: Array<string> = new Array<string>();
-    whitelist: Array<string> = new Array<string>();
-    blacklist: Array<string> = new Array<string>();
-    templates: Array<Template> = new Array<Template>();
-    responseDiffs: Array<number> = new Array<number>();
+    alreadyLoaded = new Array<string>();
+    websockets = new Array<WebSocket>();
+    notificationTypes = new Array<WSNotification>();
+    enabledNotifications = new Array<string>();
+    whitelist = new Array<string>();
+    blacklist = new Array<string>();
+    templates = new Array<Template>();
+    responseDiffs = new Array<number>();
 
     canvasElement: HTMLCanvasElement;
     startingUrl: string;
     randomness = Math.random();
     percentage = 1
     lastCacheBust = this.getCacheBustString();
+    notificationManager = new NotificationManager();
 
     constructor(canvasElement: HTMLCanvasElement, startingUrl: string) {
         this.canvasElement = canvasElement;
@@ -80,9 +83,26 @@ export class TemplateManager {
                         }
                     }
                 }
-                // TODO: connect to websockets
+                // connect to websocket
+                if (json.notifications) {
+                    this.connectToWebSocket(json.notifications)
+                }
             }
         });
+    }
+
+    connectToWebSocket(server: NotificationServer) {
+        let client = new WebSocket(server.url)
+        this.websockets.push(client);
+        this.notificationTypes.push(...server.notifications)
+
+        client.addEventListener('message', (ev) => {
+            let key = ev.data
+            let notification = this.notificationTypes.find((t) => t.key === key)
+            if (notification && this.enabledNotifications.includes(key)) {
+                this.notificationManager.newNotification(server.url, notification.message)
+            }
+        })
     }
 
     canReload(): boolean {
@@ -93,7 +113,7 @@ export class TemplateManager {
         if (!this.canReload()) {
             // fake a reload
             for (let i = 0; i < this.templates.length; i++) {
-                this.templates[i].fakeReload(i*50)
+                this.templates[i].fakeReload(i * 50)
             }
             return;
         }
@@ -104,7 +124,11 @@ export class TemplateManager {
         while (this.templates.length) {
             this.templates.shift()?.destroy()
         }
-        // TODO: close websockets
+        while (this.websockets.length) {
+            this.websockets.shift()?.close()
+        }
+        this.templates = []
+        this.websockets = []
         this.alreadyLoaded = []
         this.whitelist = []
         this.blacklist = []

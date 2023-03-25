@@ -21,10 +21,19 @@ interface NamedUrl {
     url: string
 }
 
-// TODO: add support for notification
+export interface WSNotification {
+    key: string
+    message: string
+}
+
+export interface NotificationServer {
+    url: string
+    notifications: WSNotification[]
+}
 
 export interface JsonParams {
     templates: TemplateParams[]
+    notifications: NotificationServer
     whitelist: NamedUrl[]
     blacklist: NamedUrl[]
 }
