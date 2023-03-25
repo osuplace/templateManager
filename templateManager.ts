@@ -30,6 +30,9 @@ export class TemplateManager {
                 this.percentage = 1 / number
             }
         })
+        GM.getValue(`${window.location.host}_notificationsEnabled`, "[]").then((value) => {
+            this.enabledNotifications = JSON.parse(value)
+        })
     }
 
     getCacheBustString() {

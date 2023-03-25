@@ -158,17 +158,18 @@ export class Settings {
             if (notifications?.length) {
                 for (let i = 0; i < notifications.length; i++) {
                     let notification = notifications[i]
-                    let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.key }`)
+                    let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.key}`)
                     let html = `<b>${notification.key}</b>: ${notification.message}`
-                    let checkbox = createCheckbox(html, enabled, (b) => {
-                        let index = this.manager.enabledNotifications.indexOf(`${value}??${notification.key }`)
+                    let checkbox = createCheckbox(html, enabled, async (b) => {
+                        let index = this.manager.enabledNotifications.indexOf(`${value}??${notification.key}`)
                         if (index !== -1) {
                             this.manager.enabledNotifications.splice(index, 1);
                         }
                         if (b) {
-                            this.manager.enabledNotifications.push(`${value}??${notification.key }`)
+                            this.manager.enabledNotifications.push(`${value}??${notification.key}`)
                         }
-                        console.log(this.manager.enabledNotifications)
+                        let enabledKey = `${window.location.host}_notificationsEnabled`
+                        await GM.setValue(enabledKey, JSON.stringify(this.manager.enabledNotifications))
                     })
                     this.checkboxes.append(document.createElement('br'))
                     this.checkboxes.append(checkbox)
