@@ -15,13 +15,13 @@ export async function init(manager: TemplateManager) {
     let iconElement = utils.stringToHtml(SLIDERS_SVG)
     document.body.append(iconElement)
 
-    let setPosition = (xx: number, yy: number) => {
+    let setPosition = async (xx: number, yy: number) => {
         let xMin = 16 / window.innerWidth * 100
         let yMin = 16 / window.innerHeight * 100
         x = (xx) / window.innerWidth * 100
         y = (yy) / window.innerHeight * 100
-        GM.setValue(xKey, x)
-        GM.setValue(yKey, y)
+        await GM.setValue(xKey, x)
+        await GM.setValue(yKey, y)
         if (x < 50) {
             x = Math.max(xMin, x - xMin)
             iconElement.style.left = `${x}vw`
@@ -43,7 +43,7 @@ export async function init(manager: TemplateManager) {
         }
     }
 
-    setPosition(x / 100 * window.innerWidth, y / 100 * window.innerHeight)
+    await setPosition(x / 100 * window.innerWidth, y / 100 * window.innerHeight)
     iconElement.style.position = 'absolute'
     iconElement.style.width = "32px"
     iconElement.style.height = "32px"

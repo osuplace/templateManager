@@ -69,6 +69,7 @@ export class Settings {
         let label = document.createElement("label")
         label.textContent = ".json Template settings"
         label.style.textShadow = "-1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111"
+        label.style.color = "#eee"
         this.div.appendChild(label)
         this.div.appendChild(document.createElement('br'))
         this.div.appendChild(createButton("Reload the template", () => manager.reload()))

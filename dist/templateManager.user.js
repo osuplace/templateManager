@@ -471,6 +471,7 @@
             let label = document.createElement("label");
             label.textContent = ".json Template settings";
             label.style.textShadow = "-1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111";
+            label.style.color = "#eee";
             this.div.appendChild(label);
             this.div.appendChild(document.createElement('br'));
             this.div.appendChild(createButton("Reload the template", () => manager.reload()));
@@ -519,13 +520,13 @@
         let y = await GM.getValue(yKey, null) || 10;
         let iconElement = stringToHtml(SLIDERS_SVG);
         document.body.append(iconElement);
-        let setPosition = (xx, yy) => {
+        let setPosition = async (xx, yy) => {
             let xMin = 16 / window.innerWidth * 100;
             let yMin = 16 / window.innerHeight * 100;
             x = (xx) / window.innerWidth * 100;
             y = (yy) / window.innerHeight * 100;
-            GM.setValue(xKey, x);
-            GM.setValue(yKey, y);
+            await GM.setValue(xKey, x);
+            await GM.setValue(yKey, y);
             if (x < 50) {
                 x = Math.max(xMin, x - xMin);
                 iconElement.style.left = `${x}vw`;
@@ -547,7 +548,7 @@
                 iconElement.style.top = 'unset';
             }
         };
-        setPosition(x / 100 * window.innerWidth, y / 100 * window.innerHeight);
+        await setPosition(x / 100 * window.innerWidth, y / 100 * window.innerHeight);
         iconElement.style.position = 'absolute';
         iconElement.style.width = "32px";
         iconElement.style.height = "32px";
