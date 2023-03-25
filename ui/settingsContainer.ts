@@ -1,4 +1,5 @@
 import { TemplateManager } from "../templateManager";
+import * as utils from "../utils";
 
 function createButton(innerHtml: string, callback: () => void) {
     let button = document.createElement("button");
@@ -161,10 +162,7 @@ export class Settings {
                     let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.key}`)
                     let html = `<b>${notification.key}</b>: ${notification.message}`
                     let checkbox = createCheckbox(html, enabled, async (b) => {
-                        let index = this.manager.enabledNotifications.indexOf(`${value}??${notification.key}`)
-                        if (index !== -1) {
-                            this.manager.enabledNotifications.splice(index, 1);
-                        }
+                        utils.removeItem(this.manager.enabledNotifications, `${value}??${notification.key}`)
                         if (b) {
                             this.manager.enabledNotifications.push(`${value}??${notification.key}`)
                         }

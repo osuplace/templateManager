@@ -18,8 +18,15 @@ export async function sleep(ms: number) {
     await new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export function stringToHtml(str: string): HTMLElement { 
+export function stringToHtml(str: string): HTMLElement {
     let div = document.createElement('div');
     div.innerHTML = str
     return div.firstChild as HTMLElement
+}
+
+export function removeItem<T>(array: Array<T>, item: T): void {
+    let index = array.indexOf(item);
+    if (index !== -1) {
+        array.splice(index, 1);
+    }
 }

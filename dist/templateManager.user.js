@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.3.5
+// @version			0.4.0
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu
 // @license			MIT
@@ -66,6 +66,12 @@
         let div = document.createElement('div');
         div.innerHTML = str;
         return div.firstChild;
+    }
+    function removeItem(array, item) {
+        let index = array.indexOf(item);
+        if (index !== -1) {
+            array.splice(index, 1);
+        }
     }
 
     function extractFrame(image, frameWidth, frameHeight, frameIndex) {
@@ -324,7 +330,7 @@
                 div.style.height = 'auto';
                 div.style.padding = '8px';
                 div.style.margin = '8px';
-            }, 1);
+            }, 100);
         }
     }
 
@@ -410,15 +416,30 @@
             });
         }
         connectToWebSocket(server) {
+            console.log("trying to connect to websocket at ", server.url);
             let client = new WebSocket(server.url);
-            this.websockets.push(client);
             this.notificationTypes.set(server.url, server.types);
-            client.addEventListener('message', (ev) => {
-                let key = ev.data;
+            client.addEventListener('open', (_) => {
+                console.log("successfully connected to ", server.url);
+                this.websockets.push(client);
+            });
+            client.addEventListener('message', async (ev) => {
+                console.log("received message from ", server, ev);
+                console.log(await ev.data.text());
+                let key = await ev.data.text();
                 let notification = server.types.find((t) => t.key === key);
                 if (notification && this.enabledNotifications.includes(`${server.url}??${key}`)) {
                     this.notificationManager.newNotification(server.url, notification.message);
                 }
+            });
+            client.addEventListener('close', (_) => {
+                removeItem(this.websockets, client);
+                setTimeout(() => {
+                    this.connectToWebSocket(server);
+                }, 1000 * 60);
+            });
+            client.addEventListener('error', (_) => {
+                client.close();
             });
         }
         canReload() {
@@ -622,10 +643,7 @@
                         let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.key}`);
                         let html = `<b>${notification.key}</b>: ${notification.message}`;
                         let checkbox = createCheckbox(html, enabled, async (b) => {
-                            let index = this.manager.enabledNotifications.indexOf(`${value}??${notification.key}`);
-                            if (index !== -1) {
-                                this.manager.enabledNotifications.splice(index, 1);
-                            }
+                            removeItem(this.manager.enabledNotifications, `${value}??${notification.key}`);
                             if (b) {
                                 this.manager.enabledNotifications.push(`${value}??${notification.key}`);
                             }
