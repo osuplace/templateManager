@@ -4,6 +4,7 @@ function createButton(text: string, callback: () => void) {
     let button = document.createElement("button");
     button.textContent = text;
     button.onclick = () => callback();
+    button.style.color = "#eee"
     button.style.backgroundColor = "#19d"
     button.style.padding = "5px"
     button.style.borderRadius = "5px";
@@ -28,6 +29,7 @@ function createSlider(text: string, value: string, callback: (n: number) => void
     slider.style.width = "100%";
     let label = document.createElement("label");
     label.textContent = text;
+    label.style.color = "#eee"
     div.append(label);
     div.appendChild(document.createElement("br"));
     div.append(slider);
@@ -66,6 +68,7 @@ export class Settings {
         this.div.appendChild(document.createElement('br'))
         let label = document.createElement("label")
         label.textContent = ".json Template settings"
+        label.style.textShadow = "-1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111"
         this.div.appendChild(label)
         this.div.appendChild(document.createElement('br'))
         this.div.appendChild(createButton("Reload the template", () => manager.reload()))
