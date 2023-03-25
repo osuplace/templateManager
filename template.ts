@@ -21,14 +21,14 @@ interface NamedUrl {
     url: string
 }
 
-export interface WSNotification {
+export interface NotificationTypes {
     key: string
     message: string
 }
 
 export interface NotificationServer {
     url: string
-    notifications: WSNotification[]
+    types: NotificationTypes[]
 }
 
 export interface JsonParams {

@@ -1,11 +1,11 @@
 import { CACHE_BUST_PERIOD, MAX_TEMPLATES } from './constants';
-import { Template, JsonParams, NotificationServer, WSNotification } from './template';
+import { Template, JsonParams, NotificationServer, NotificationTypes } from './template';
 import { NotificationManager } from './ui/notificationsManager';
 
 export class TemplateManager {
     alreadyLoaded = new Array<string>();
     websockets = new Array<WebSocket>();
-    notificationTypes = new Array<WSNotification>();
+    notificationTypes = new Map<string, NotificationTypes[]>();
     enabledNotifications = new Array<string>();
     whitelist = new Array<string>();
     blacklist = new Array<string>();
@@ -94,12 +94,12 @@ export class TemplateManager {
     connectToWebSocket(server: NotificationServer) {
         let client = new WebSocket(server.url)
         this.websockets.push(client);
-        this.notificationTypes.push(...server.notifications)
+        this.notificationTypes.set(server.url, server.types)
 
         client.addEventListener('message', (ev) => {
             let key = ev.data
-            let notification = this.notificationTypes.find((t) => t.key === key)
-            if (notification && this.enabledNotifications.includes(key)) {
+            let notification = server.types.find((t) => t.key === key)
+            if (notification && this.enabledNotifications.includes(`${server.url}??${key}`)) {
                 this.notificationManager.newNotification(server.url, notification.message)
             }
         })

@@ -28,7 +28,7 @@
     const UPDATE_PERIOD_MILLIS = 100;
     const SECONDS_SPENT_BLINKING = 5;
     const AMOUNT_OF_BLINKING = 11;
-    const ANIMATION_DEFAULT_PERCENTAGE = 1 / 6;
+    const ANIMATION_DEFAULT_PERCENTAGE = 1 / 3;
 
     function run() {
         let reticuleStyleSetter = setInterval(() => {
@@ -286,9 +286,54 @@
         }
     }
 
+    class NotificationManager {
+        constructor() {
+            this.container = document.createElement('div');
+            this.container.style.width = '150px';
+            this.container.style.height = '66%';
+            this.container.style.position = 'absolute';
+            this.container.style.zIndex = '9999';
+            this.container.style.top = '-0.1px';
+            this.container.style.right = '0px';
+            this.container.style.backgroundColor = 'rgba(255, 255, 255, 0)';
+            document.body.appendChild(this.container);
+        }
+        newNotification(url, message) {
+            let div = document.createElement('div');
+            div.innerHTML = `${url} says:<br/><b>${message}</b>`;
+            div.style.height = '0px';
+            div.style.width = '100%';
+            div.style.opacity = '0';
+            div.style.padding = '0px';
+            div.style.margin = '0px';
+            div.style.borderRadius = '8px';
+            div.style.backgroundColor = '#621';
+            div.style.color = '#eee';
+            div.style.transition = "height 300ms, opacity 300ms, padding 300ms, margin 300ms";
+            div.style.overflow = 'hidden';
+            div.onclick = () => {
+                div.style.opacity = '0';
+                div.style.height = '0px';
+                div.style.padding = '0px';
+                div.style.margin = '0px';
+                setTimeout(() => div.remove(), 500);
+            };
+            this.container.appendChild(div);
+            setTimeout(() => {
+                div.style.opacity = '1';
+                div.style.height = 'auto';
+                div.style.padding = '8px';
+                div.style.margin = '8px';
+            }, 1);
+        }
+    }
+
     class TemplateManager {
         constructor(canvasElement, startingUrl) {
             this.alreadyLoaded = new Array();
+            this.websockets = new Array();
+            this.notificationTypes = new Map();
+            this.enabledNotifications = new Array();
             this.whitelist = new Array();
             this.blacklist = new Array();
             this.templates = new Array();
@@ -296,6 +341,7 @@
             this.randomness = Math.random();
             this.percentage = 1;
             this.lastCacheBust = this.getCacheBustString();
+            this.notificationManager = new NotificationManager();
             this.canvasElement = canvasElement;
             this.startingUrl = startingUrl;
             this.loadTemplatesFromJsonURL(startingUrl);
@@ -353,7 +399,22 @@
                             }
                         }
                     }
-                    // TODO: connect to websockets
+                    // connect to websocket
+                    if (json.notifications) {
+                        this.connectToWebSocket(json.notifications);
+                    }
+                }
+            });
+        }
+        connectToWebSocket(server) {
+            let client = new WebSocket(server.url);
+            this.websockets.push(client);
+            this.notificationTypes.set(server.url, server.types);
+            client.addEventListener('message', (ev) => {
+                let key = ev.data;
+                let notification = server.types.find((t) => t.key === key);
+                if (notification && this.enabledNotifications.includes(`${server.url}??${key}`)) {
+                    this.notificationManager.newNotification(server.url, notification.message);
                 }
             });
         }
@@ -361,7 +422,7 @@
             return this.lastCacheBust !== this.getCacheBustString();
         }
         reload() {
-            var _a;
+            var _a, _b;
             if (!this.canReload()) {
                 // fake a reload
                 for (let i = 0; i < this.templates.length; i++) {
@@ -375,7 +436,11 @@
             while (this.templates.length) {
                 (_a = this.templates.shift()) === null || _a === void 0 ? void 0 : _a.destroy();
             }
-            // TODO: close websockets
+            while (this.websockets.length) {
+                (_b = this.websockets.shift()) === null || _b === void 0 ? void 0 : _b.close();
+            }
+            this.templates = [];
+            this.websockets = [];
             this.alreadyLoaded = [];
             this.whitelist = [];
             this.blacklist = [];
@@ -406,9 +471,9 @@
         }
     }
 
-    function createButton(text, callback) {
+    function createButton(innerHtml, callback) {
         let button = document.createElement("button");
-        button.textContent = text;
+        button.innerHTML = innerHtml;
         button.onclick = () => callback();
         button.style.color = "#eee";
         button.style.backgroundColor = "#19d";
@@ -416,7 +481,7 @@
         button.style.borderRadius = "5px";
         return button;
     }
-    function createSlider(text, value, callback) {
+    function createSlider(innerHtml, value, callback) {
         let div = document.createElement("div");
         div.style.backgroundColor = "#057";
         div.style.padding = "5px";
@@ -433,17 +498,37 @@
         };
         slider.style.width = "100%";
         let label = document.createElement("label");
-        label.textContent = text;
+        label.innerHTML = innerHtml;
         label.style.color = "#eee";
         div.append(label);
         div.appendChild(document.createElement("br"));
         div.append(slider);
         return div;
     }
+    function createCheckbox(innerHtml, checked, callback) {
+        let div = document.createElement("div");
+        div.style.backgroundColor = "#057";
+        div.style.padding = "5px";
+        div.style.borderRadius = "5px";
+        let checkbox = document.createElement('input');
+        checkbox.type = "checkbox";
+        checkbox.checked = checked;
+        checkbox.oninput = (ev) => {
+            ev.preventDefault();
+            callback(checkbox.checked);
+        };
+        let label = document.createElement("label");
+        label.innerHTML = innerHtml;
+        label.style.color = "#eee";
+        div.append(checkbox);
+        div.append(label);
+        return div;
+    }
     class Settings {
         constructor(manager) {
             this.div = document.createElement("div");
-            // yeah this is all hardcoded xd
+            this.checkboxes = document.createElement("div");
+            this.manager = manager;
             document.body.appendChild(this.div);
             this.div.style.transition = "opacity 300ms";
             this.div.style.width = "100vw";
@@ -488,6 +573,10 @@
             this.div.appendChild(createSlider("Dither amount", "1", (n) => {
                 manager.percentage = 1 / (n / 10 + 1);
             }));
+            this.checkboxes.style.backgroundColor = "rgba(0,0,0,0.5)";
+            this.checkboxes.style.padding = "8px";
+            this.checkboxes.style.borderRadius = "8px";
+            this.div.appendChild(this.checkboxes);
             for (let c = 0; c < this.div.children.length; c++) {
                 let child = this.div.children[c];
                 child.style.margin = "1% 40%";
@@ -496,6 +585,7 @@
         open() {
             this.div.style.opacity = "1";
             this.div.style.pointerEvents = "auto";
+            this.populateNotifications();
         }
         close() {
             this.div.style.opacity = "0";
@@ -507,6 +597,42 @@
             }
             else {
                 this.close();
+            }
+        }
+        populateNotifications() {
+            while (this.checkboxes.children.length) {
+                this.checkboxes.children[0].remove();
+            }
+            let keys = this.manager.notificationTypes.keys();
+            let key;
+            while (!(key = keys.next()).done) {
+                let value = key.value;
+                let label = document.createElement("label");
+                label.textContent = value;
+                label.style.textShadow = "-1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111";
+                label.style.color = "#eee";
+                this.checkboxes.appendChild(label);
+                let notifications = this.manager.notificationTypes.get(value);
+                if (notifications === null || notifications === void 0 ? void 0 : notifications.length) {
+                    for (let i = 0; i < notifications.length; i++) {
+                        let notification = notifications[i];
+                        let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.key}`);
+                        let html = `<b>${notification.key}</b>: ${notification.message}`;
+                        let checkbox = createCheckbox(html, enabled, (b) => {
+                            let index = this.manager.enabledNotifications.indexOf(`${value}??${notification.key}`);
+                            if (index !== -1) {
+                                this.manager.enabledNotifications.splice(index, 1);
+                            }
+                            if (b) {
+                                this.manager.enabledNotifications.push(`${value}??${notification.key}`);
+                            }
+                            console.log(this.manager.enabledNotifications);
+                        });
+                        this.checkboxes.append(document.createElement('br'));
+                        this.checkboxes.append(checkbox);
+                    }
+                }
+                this.checkboxes.append(document.createElement('br'));
             }
         }
     }

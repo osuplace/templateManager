@@ -1,8 +1,8 @@
 import { TemplateManager } from "../templateManager";
 
-function createButton(text: string, callback: () => void) {
+function createButton(innerHtml: string, callback: () => void) {
     let button = document.createElement("button");
-    button.textContent = text;
+    button.innerHTML = innerHtml;
     button.onclick = () => callback();
     button.style.color = "#eee"
     button.style.backgroundColor = "#19d"
@@ -11,7 +11,7 @@ function createButton(text: string, callback: () => void) {
     return button;
 }
 
-function createSlider(text: string, value: string, callback: (n: number) => void) {
+function createSlider(innerHtml: string, value: string, callback: (n: number) => void) {
     let div = document.createElement("div");
     div.style.backgroundColor = "#057"
     div.style.padding = "5px"
@@ -28,7 +28,7 @@ function createSlider(text: string, value: string, callback: (n: number) => void
     };
     slider.style.width = "100%";
     let label = document.createElement("label");
-    label.textContent = text;
+    label.innerHTML = innerHtml;
     label.style.color = "#eee"
     div.append(label);
     div.appendChild(document.createElement("br"));
@@ -36,11 +36,34 @@ function createSlider(text: string, value: string, callback: (n: number) => void
     return div;
 }
 
+function createCheckbox(innerHtml: string, checked: boolean, callback: (a: boolean) => void) {
+    let div = document.createElement("div");
+    div.style.backgroundColor = "#057"
+    div.style.padding = "5px"
+    div.style.borderRadius = "5px";
+    let checkbox = document.createElement('input')
+    checkbox.type = "checkbox"
+    checkbox.checked = checked;
+    checkbox.oninput = (ev) => {
+        ev.preventDefault()
+        callback(checkbox.checked)
+    }
+    let label = document.createElement("label")
+    label.innerHTML = innerHtml
+    label.style.color = "#eee"
+    div.append(checkbox);
+    div.append(label);
+    return div
+}
+
 
 export class Settings {
     div = document.createElement("div");
+    checkboxes = document.createElement("div");
+    manager: TemplateManager;
     constructor(manager: TemplateManager) {
-        // yeah this is all hardcoded xd
+        this.manager = manager;
+
         document.body.appendChild(this.div);
         this.div.style.transition = "opacity 300ms";
         this.div.style.width = "100vw"
@@ -87,6 +110,12 @@ export class Settings {
             manager.percentage = 1 / (n / 10 + 1)
         }))
 
+        this.checkboxes.style.backgroundColor = "rgba(0,0,0,0.5)"
+        this.checkboxes.style.padding = "8px"
+        this.checkboxes.style.borderRadius = "8px"
+
+        this.div.appendChild(this.checkboxes)
+
         for (let c = 0; c < this.div.children.length; c++) {
             let child = this.div.children[c] as HTMLElement
             child.style.margin = "1% 40%"
@@ -96,6 +125,7 @@ export class Settings {
     open() {
         this.div.style.opacity = "1"
         this.div.style.pointerEvents = "auto"
+        this.populateNotifications()
     }
 
     close() {
@@ -108,6 +138,43 @@ export class Settings {
             this.open()
         } else {
             this.close()
+        }
+    }
+
+    populateNotifications() {
+        while (this.checkboxes.children.length) {
+            this.checkboxes.children[0].remove()
+        }
+        let keys = this.manager.notificationTypes.keys()
+        let key: IteratorResult<string, string>;
+        while (!(key = keys.next()).done) {
+            let value = key.value
+            let label = document.createElement("label")
+            label.textContent = value
+            label.style.textShadow = "-1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111"
+            label.style.color = "#eee"
+            this.checkboxes.appendChild(label)
+            let notifications = this.manager.notificationTypes.get(value)
+            if (notifications?.length) {
+                for (let i = 0; i < notifications.length; i++) {
+                    let notification = notifications[i]
+                    let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.key }`)
+                    let html = `<b>${notification.key}</b>: ${notification.message}`
+                    let checkbox = createCheckbox(html, enabled, (b) => {
+                        let index = this.manager.enabledNotifications.indexOf(`${value}??${notification.key }`)
+                        if (index !== -1) {
+                            this.manager.enabledNotifications.splice(index, 1);
+                        }
+                        if (b) {
+                            this.manager.enabledNotifications.push(`${value}??${notification.key }`)
+                        }
+                        console.log(this.manager.enabledNotifications)
+                    })
+                    this.checkboxes.append(document.createElement('br'))
+                    this.checkboxes.append(checkbox)
+                }
+            }
+            this.checkboxes.append(document.createElement('br'))
         }
     }
 }
