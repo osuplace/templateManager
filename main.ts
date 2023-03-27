@@ -1,4 +1,4 @@
-import { UPDATE_PERIOD_MILLIS } from "./constants";
+import { DEFAULT_URL, UPDATE_PERIOD_MILLIS } from "./constants";
 import * as reddit from "./reddit";
 import { TemplateManager } from "./templateManager";
 import * as utils from "./utils";
