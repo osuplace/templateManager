@@ -4,6 +4,7 @@ import { NotificationManager } from './ui/notificationsManager';
 import * as utils from './utils';
 
 export class TemplateManager {
+    templatesToLoad = MAX_TEMPLATES;
     alreadyLoaded = new Array<string>();
     websockets = new Array<WebSocket>();
     notificationTypes = new Map<string, NotificationTypes[]>();
@@ -82,8 +83,8 @@ export class TemplateManager {
                 // read templates
                 if (json.templates) {
                     for (let i = 0; i < json.templates.length; i++) {
-                        if (this.templates.length < MAX_TEMPLATES) {
-                            this.templates.push(new Template(json.templates[i], this.canvasElement, minPriority + this.templates.length));
+                        if (this.templates.length < this.templatesToLoad) {
+                            this.templates.push(new Template(json.templates[i], json.contact || json.contactInfo, this.canvasElement, minPriority + this.templates.length));
                         }
                     }
                 }
@@ -166,10 +167,10 @@ export class TemplateManager {
         let cs = this.currentSeconds()
         for (let i = 0; i < this.templates.length; i++)
             this.templates[i].update(this.percentage, this.randomness, cs);
-        if (this.templates.length < MAX_TEMPLATES) {
+        if (this.templates.length < this.templatesToLoad) {
             for (let i = 0; i < this.whitelist.length; i++) {
                 // yes this calls all whitelist all the time but the load will cancel if already loaded
-                this.loadTemplatesFromJsonURL(this.whitelist[i], i * MAX_TEMPLATES)
+                this.loadTemplatesFromJsonURL(this.whitelist[i], i * this.templatesToLoad)
             }
         }
     }

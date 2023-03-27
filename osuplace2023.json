@@ -1,25 +1,29 @@
 {
+    "contact": "discord.gg/osuplace LittleEndu#0001 or Emi#4245",
     "templates": [
         {
-            "name": "osu! logo; Bad Apple!! text; Border",
+            "name": "osu! logo; Bad Apple!! text; Border; Marisa and Reimu;",
             "sources": [
-                "https://i.imgur.com/yGHoK96.png"
+                "https://i.imgur.com/UvrvLg7.png",
+                "https://files.catbox.moe/za1jcl.png"
             ],
-            "x": 640,
-            "y": 656
+            "x": 637,
+            "y": 640
         },
         {
             "name": "bad apple video",
             "sources": [
-                "https://i.imgur.com/ajW8tVg.png"
+                "https://i.imgur.com/0W20DhY.png",
+                "https://files.catbox.moe/fzx1mj.png"
             ],
             "x": 662,
             "y": 673,
             "frameWidth": 40,
             "frameHeight": 30,
             "frameRate": 43,
-            "frameCount": 6572,
-            "startTime": 1806584400
+            "frameCount": 6605,
+            "startTime": 1680354180,
+            "looping": false
         }
     ],
     "whitelist": [
@@ -29,7 +33,11 @@
         },
         {
             "name": "self reference (cyclical import check)",
-            "url": "https://raw.githubusercontent.com/osuplace/templateManager/main/osuplace2023.json"
+            "url": "https://rentry.org/osuplace2023/raw"
+        },
+        {
+            "name": "Starwars",
+            "url": "https://gist.githubusercontent.com/iratekalypso/eddce4cbb5b1d39b83c3beb1889a6b83/raw/starwars_place"
         }
     ]
 }

@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.4.0
+// @version			0.4.1
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu
 // @license			MIT
@@ -113,7 +113,7 @@
     }
 
     class Template {
-        constructor(params, globalCanvas, priority) {
+        constructor(params, contact, globalCanvas, priority) {
             this.imageLoader = new Image();
             this.canvasElement = document.createElement('canvas');
             this.loading = false;
@@ -162,6 +162,26 @@
                 // assume loading from this source fails
                 this.sources.shift();
             });
+            // add contact info container
+            if (contact) {
+                let bold = document.createElement('div');
+                bold.style.fontWeight = "bold";
+                bold.style.fontSize = "1px";
+                bold.style.color = "#eee";
+                bold.style.backgroundColor = "#111";
+                bold.style.padding = "1px";
+                bold.style.borderRadius = "1px";
+                bold.style.opacity = "0";
+                bold.style.transition = "opacity 500ms, width 200ms, height 200ms";
+                bold.style.position = "absolute";
+                bold.style.left = `${this.x}px`;
+                bold.style.top = `${this.y}px`;
+                bold.style.pointerEvents = "none";
+                bold.setAttribute('priority', (Number.MIN_SAFE_INTEGER + priority).toString());
+                bold.className = 'iHasContactInfo';
+                bold.innerText = params.name ? `${params.name}\ncontact: ${contact}` : contact;
+                globalCanvas.parentElement.appendChild(bold);
+            }
         }
         tryLoadSource() {
             if (this.loading)
@@ -343,6 +363,7 @@
 
     class TemplateManager {
         constructor(canvasElement, startingUrl) {
+            this.templatesToLoad = MAX_TEMPLATES;
             this.alreadyLoaded = new Array();
             this.websockets = new Array();
             this.notificationTypes = new Map();
@@ -410,8 +431,8 @@
                     // read templates
                     if (json.templates) {
                         for (let i = 0; i < json.templates.length; i++) {
-                            if (this.templates.length < MAX_TEMPLATES) {
-                                this.templates.push(new Template(json.templates[i], this.canvasElement, minPriority + this.templates.length));
+                            if (this.templates.length < this.templatesToLoad) {
+                                this.templates.push(new Template(json.templates[i], json.contact || json.contactInfo, this.canvasElement, minPriority + this.templates.length));
                             }
                         }
                     }
@@ -485,10 +506,10 @@
             let cs = this.currentSeconds();
             for (let i = 0; i < this.templates.length; i++)
                 this.templates[i].update(this.percentage, this.randomness, cs);
-            if (this.templates.length < MAX_TEMPLATES) {
+            if (this.templates.length < this.templatesToLoad) {
                 for (let i = 0; i < this.whitelist.length; i++) {
                     // yes this calls all whitelist all the time but the load will cancel if already loaded
-                    this.loadTemplatesFromJsonURL(this.whitelist[i], i * MAX_TEMPLATES);
+                    this.loadTemplatesFromJsonURL(this.whitelist[i], i * this.templatesToLoad);
                 }
             }
         }
@@ -536,7 +557,7 @@
         div.append(slider);
         return div;
     }
-    function createNotificationCheckbox(url, message, checked, callback) {
+    function createBoldCheckbox(boldText, regularText, checked, callback) {
         let div = document.createElement("div");
         div.style.backgroundColor = "#057";
         div.style.padding = "5px";
@@ -550,9 +571,9 @@
         };
         let label = document.createElement("label");
         let b = document.createElement("b");
-        b.innerText = url + " - ";
+        b.innerText = boldText;
         label.append(b);
-        label.append(document.createTextNode(message));
+        label.append(document.createTextNode(regularText));
         label.style.color = "#eee";
         div.append(checkbox);
         div.append(label);
@@ -595,6 +616,10 @@
             this.div.appendChild(document.createElement('br'));
             this.div.appendChild(createButton("Reload the template", () => manager.reload()));
             this.div.appendChild(document.createElement('br'));
+            this.div.appendChild(createSlider("Templates to load", "4", (n) => {
+                manager.templatesToLoad = (n + 1) * MAX_TEMPLATES / 5;
+            }));
+            this.div.appendChild(document.createElement('br'));
             this.div.appendChild(createButton("Generate new randomness", () => {
                 let currentRandomness = manager.randomness;
                 while (true) {
@@ -607,6 +632,14 @@
             this.div.appendChild(createSlider("Dither amount", "1", (n) => {
                 manager.percentage = 1 / (n / 10 + 1);
             }));
+            this.div.appendChild(document.createElement('br'));
+            this.div.appendChild(createBoldCheckbox('', "Show contact info besides templates", false, (a) => {
+                document.querySelectorAll('.iHasContactInfo').forEach((i) => {
+                    console.log(i);
+                    i.style.opacity = a ? "1" : "0";
+                });
+            }));
+            this.div.appendChild(document.createElement('br'));
             this.checkboxes.style.backgroundColor = "rgba(0,0,0,0.5)";
             this.checkboxes.style.padding = "8px";
             this.checkboxes.style.borderRadius = "8px";
@@ -651,8 +684,7 @@
                     for (let i = 0; i < notifications.length; i++) {
                         let notification = notifications[i];
                         let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.key}`);
-                        let html = `<b>${notification.key}</b>: ${notification.message}`;
-                        let checkbox = createNotificationCheckbox(html, enabled, async (b) => {
+                        let checkbox = createBoldCheckbox(notification.key + " - ", notification.message, enabled, async (b) => {
                             removeItem(this.manager.enabledNotifications, `${value}??${notification.key}`);
                             if (b) {
                                 this.manager.enabledNotifications.push(`${value}??${notification.key}`);

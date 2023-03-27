@@ -1,3 +1,4 @@
+import { MAX_TEMPLATES } from "../constants";
 import { TemplateManager } from "../templateManager";
 import * as utils from "../utils";
 
@@ -37,7 +38,7 @@ function createSlider(Text: string, value: string, callback: (n: number) => void
     return div;
 }
 
-function createNotificationCheckbox(url:string, message:string, checked: boolean, callback: (a: boolean) => void) {
+function createBoldCheckbox(boldText: string, regularText: string, checked: boolean, callback: (a: boolean) => void) {
     let div = document.createElement("div");
     div.style.backgroundColor = "#057"
     div.style.padding = "5px"
@@ -51,9 +52,9 @@ function createNotificationCheckbox(url:string, message:string, checked: boolean
     }
     let label = document.createElement("label")
     let b = document.createElement("b")
-    b.innerText = url + " - "
+    b.innerText = boldText
     label.append(b)
-    label.append(document.createTextNode(message))
+    label.append(document.createTextNode(regularText))
     label.style.color = "#eee"
     div.append(checkbox);
     div.append(label);
@@ -101,6 +102,10 @@ export class Settings {
         this.div.appendChild(document.createElement('br'))
         this.div.appendChild(createButton("Reload the template", () => manager.reload()))
         this.div.appendChild(document.createElement('br'))
+        this.div.appendChild(createSlider("Templates to load", "4", (n) => {
+            manager.templatesToLoad = (n + 1) * MAX_TEMPLATES / 5
+        }))
+        this.div.appendChild(document.createElement('br'))
         this.div.appendChild(createButton("Generate new randomness", () => {
             let currentRandomness = manager.randomness;
             while (true) {
@@ -113,11 +118,18 @@ export class Settings {
         this.div.appendChild(createSlider("Dither amount", "1", (n) => {
             manager.percentage = 1 / (n / 10 + 1)
         }))
+        this.div.appendChild(document.createElement('br'))
+        this.div.appendChild(createBoldCheckbox('', "Show contact info besides templates", false, (a) => {
+            document.querySelectorAll('.iHasContactInfo').forEach((i) => {
+                console.log(i as HTMLElement);
+                (i as HTMLElement).style.opacity = a ? "1" : "0";
+            })
+        }))
+        this.div.appendChild(document.createElement('br'))
 
         this.checkboxes.style.backgroundColor = "rgba(0,0,0,0.5)"
         this.checkboxes.style.padding = "8px"
         this.checkboxes.style.borderRadius = "8px"
-
         this.div.appendChild(this.checkboxes)
 
         for (let c = 0; c < this.div.children.length; c++) {
@@ -163,8 +175,7 @@ export class Settings {
                 for (let i = 0; i < notifications.length; i++) {
                     let notification = notifications[i]
                     let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.key}`)
-                    let html = `<b>${notification.key}</b>: ${notification.message}`
-                    let checkbox = createNotificationCheckbox(html, enabled, async (b) => {
+                    let checkbox = createBoldCheckbox(notification.key + " - ", notification.message, enabled, async (b) => {
                         utils.removeItem(this.manager.enabledNotifications, `${value}??${notification.key}`)
                         if (b) {
                             this.manager.enabledNotifications.push(`${value}??${notification.key}`)

@@ -3,21 +3,21 @@ import * as cf from './canvasFunctions'
 import { UPDATE_PERIOD_MILLIS, SECONDS_SPENT_BLINKING, AMOUNT_OF_BLINKING, ANIMATION_DEFAULT_PERCENTAGE } from './constants';
 
 interface TemplateParams {
-    name: string | null
+    name: string | undefined
     sources: string[];
     x: number
     y: number
-    frameWidth: number | null
-    frameHeight: number | null
-    frameCount: number | null
-    frameRate: number | null
-    frameSpeed: number | null // alias for frameRate
-    startTime: number | null
-    looping: boolean | null
+    frameWidth: number | undefined
+    frameHeight: number | undefined
+    frameCount: number | undefined
+    frameRate: number | undefined
+    frameSpeed: number | undefined // alias for frameRate
+    startTime: number | undefined
+    looping: boolean | undefined
 }
 
 interface NamedUrl {
-    name: string | null
+    name: string | undefined
     url: string
 }
 
@@ -32,6 +32,8 @@ export interface NotificationServer {
 }
 
 export interface JsonParams {
+    contact: string | undefined
+    contactInfo: string | undefined // alias for contact
     templates: TemplateParams[]
     notifications: NotificationServer
     whitelist: NamedUrl[]
@@ -39,12 +41,12 @@ export interface JsonParams {
 }
 
 export class Template {
-    name: string | null
+    name: string | undefined
     sources: string[];
     x: number
     y: number
-    frameWidth: number | null
-    frameHeight: number | null
+    frameWidth: number | undefined
+    frameHeight: number | undefined
     frameCount: number
     frameSpeed: number
     startTime: number
@@ -58,7 +60,7 @@ export class Template {
     blinkingPeriodMillis: number
     animationDuration: number;
 
-    constructor(params: TemplateParams, globalCanvas: HTMLCanvasElement, priority: number) {
+    constructor(params: TemplateParams, contact: string | undefined, globalCanvas: HTMLCanvasElement, priority: number) {
         // assign params
         this.name = params.name
         this.sources = params.sources
@@ -107,6 +109,28 @@ export class Template {
             // assume loading from this source fails
             this.sources.shift()
         })
+
+        // add contact info container
+        if (contact) {
+            let bold = document.createElement('div')
+            bold.style.fontWeight = "bold";
+            bold.style.fontSize = "1px"
+            bold.style.color = "#eee";
+            bold.style.backgroundColor = "#111";
+            bold.style.padding = "1px";
+            bold.style.borderRadius = "1px";
+            bold.style.opacity = "0";
+            bold.style.transition = "opacity 500ms, width 200ms, height 200ms";
+            bold.style.position = "absolute";
+            bold.style.left = `${this.x}px`;
+            bold.style.top = `${this.y}px`;
+            bold.style.pointerEvents = "none";
+            bold.setAttribute('priority', (Number.MIN_SAFE_INTEGER + priority).toString())
+            bold.className = 'iHasContactInfo'
+            bold.innerText = params.name ? `${params.name}\ncontact: ${contact}` : contact
+            globalCanvas.parentElement!.appendChild(bold);
+        }
+
     }
 
     loading = false
@@ -250,7 +274,7 @@ export class Template {
         this.canvasElement = document.createElement('canvas')
     }
 
-    async fakeReload(time:number) {
+    async fakeReload(time: number) {
         this.canvasElement.style.opacity = '0'
         await utils.sleep(300 + time)
         this.canvasElement.style.opacity = '1'
