@@ -31,6 +31,7 @@
     const SECONDS_SPENT_BLINKING = 5;
     const AMOUNT_OF_BLINKING = 11;
     const ANIMATION_DEFAULT_PERCENTAGE = 1 / 3;
+    const DEFAULT_URL = "https://rentry.org/osuplace2023/raw"; // if no "#jsonobject" is set in the URL params
 
     function run() {
         let reticuleStyleSetter = setInterval(() => {
@@ -807,7 +808,7 @@
         const urlSearchParams = new URLSearchParams(urlString);
         const params = Object.fromEntries(urlSearchParams.entries());
         console.log(params);
-        return params.jsontemplate ? params.jsontemplate : null;
+        return params.jsontemplate ? params.jsontemplate : DEFAULT_URL;
     }
     function topWindow() {
         console.log("top window code for", window.location.href);
