@@ -329,6 +329,8 @@
             this.container.style.top = '-0.1px';
             this.container.style.right = '0px';
             this.container.style.backgroundColor = 'rgba(255, 255, 255, 0)';
+            this.container.style.pointerEvents = 'none';
+            this.container.style.userSelect = 'none';
             document.body.appendChild(this.container);
         }
         newNotification(url, message) {
@@ -346,6 +348,7 @@
             div.style.color = '#eee';
             div.style.transition = "height 300ms, opacity 300ms, padding 300ms, margin 300ms";
             div.style.overflow = 'hidden';
+            div.style.pointerEvents = 'auto';
             div.onclick = () => {
                 div.style.opacity = '0';
                 div.style.height = '0px';
@@ -515,14 +518,6 @@
                 }
             }
         }
-        restart() {
-            while (this.templates.length > 0) {
-                let template = this.templates.shift();
-                template === null || template === void 0 ? void 0 : template.destroy();
-            }
-            this.alreadyLoaded = new Array();
-            this.loadTemplatesFromJsonURL(this.startingUrl);
-        }
     }
 
     function createButton(text, callback) {
@@ -600,6 +595,7 @@
             this.div.style.pointerEvents = "none";
             this.div.style.zIndex = `${Number.MAX_SAFE_INTEGER}`;
             this.div.style.textAlign = "center";
+            this.div.style.userSelect = "none";
             this.div.onclick = (ev) => {
                 if (ev.target === ev.currentTarget)
                     this.close();

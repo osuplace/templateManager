@@ -83,6 +83,7 @@ export class Settings {
         this.div.style.pointerEvents = "none"
         this.div.style.zIndex = `${Number.MAX_SAFE_INTEGER}`
         this.div.style.textAlign = "center"
+        this.div.style.userSelect = "none"
         this.div.onclick = (ev) => {
             if (ev.target === ev.currentTarget)
                 this.close();

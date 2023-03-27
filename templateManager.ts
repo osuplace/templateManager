@@ -174,13 +174,4 @@ export class TemplateManager {
             }
         }
     }
-
-    restart() {
-        while (this.templates.length > 0) {
-            let template = this.templates.shift()
-            template?.destroy()
-        }
-        this.alreadyLoaded = new Array<string>();
-        this.loadTemplatesFromJsonURL(this.startingUrl)
-    }
 }
