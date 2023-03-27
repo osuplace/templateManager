@@ -166,23 +166,29 @@
             });
             // add contact info container
             if (contact) {
-                let bold = document.createElement('div');
-                bold.style.fontWeight = "bold";
-                bold.style.fontSize = "1px";
-                bold.style.color = "#eee";
-                bold.style.backgroundColor = "#111";
-                bold.style.padding = "1px";
-                bold.style.borderRadius = "1px";
-                bold.style.opacity = "0";
-                bold.style.transition = "opacity 500ms, width 200ms, height 200ms";
-                bold.style.position = "absolute";
-                bold.style.left = `${this.x}px`;
-                bold.style.top = `${this.y}px`;
-                bold.style.pointerEvents = "none";
-                bold.setAttribute('priority', (Number.MIN_SAFE_INTEGER + priority).toString());
-                bold.className = 'iHasContactInfo';
-                bold.innerText = params.name ? `${params.name}\ncontact: ${contact}` : contact;
-                globalCanvas.parentElement.appendChild(bold);
+                this.contactElement = document.createElement('div');
+                this.contactElement.style.fontWeight = "bold";
+                this.contactElement.style.fontSize = "1px";
+                this.contactElement.style.fontFamily = "serif"; // this fixes firefox
+                this.contactElement.style.color = "#eee";
+                this.contactElement.style.backgroundColor = "#111";
+                this.contactElement.style.padding = "1px";
+                this.contactElement.style.borderRadius = "1px";
+                this.contactElement.style.opacity = "0";
+                this.contactElement.style.transition = "opacity 500ms, width 200ms, height 200ms";
+                this.contactElement.style.position = "absolute";
+                this.contactElement.style.left = `${this.x}px`;
+                this.contactElement.style.top = `${this.y}px`;
+                this.contactElement.style.pointerEvents = "none";
+                this.contactElement.setAttribute('priority', Math.round(Number.MIN_SAFE_INTEGER / 100 + priority).toString());
+                this.contactElement.className = 'iHasContactInfo';
+                if (params.name) {
+                    this.contactElement.appendChild(document.createTextNode(params.name));
+                    this.contactElement.appendChild(document.createElement('br'));
+                    this.contactElement.appendChild(document.createTextNode(`contact: `));
+                }
+                this.contactElement.appendChild(document.createTextNode(contact));
+                globalCanvas.parentElement.appendChild(this.contactElement);
             }
         }
         tryLoadSource() {
@@ -306,11 +312,13 @@
             }
         }
         destroy() {
-            var _a, _b;
+            var _a, _b, _c, _d;
             (_a = this.imageLoader.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(this.imageLoader);
             this.imageLoader = new Image();
             (_b = this.canvasElement.parentElement) === null || _b === void 0 ? void 0 : _b.removeChild(this.canvasElement);
             this.canvasElement = document.createElement('canvas');
+            (_d = (_c = this.contactElement) === null || _c === void 0 ? void 0 : _c.parentElement) === null || _d === void 0 ? void 0 : _d.removeChild(this.contactElement);
+            this.contactElement = undefined;
         }
         async fakeReload(time) {
             this.canvasElement.style.opacity = '0';
