@@ -134,7 +134,7 @@ export class Settings {
 
         for (let c = 0; c < this.div.children.length; c++) {
             let child = this.div.children[c] as HTMLElement
-            child.style.margin = "1% 40%"
+            child.style.margin = "8px 40%"
         }
     }
 

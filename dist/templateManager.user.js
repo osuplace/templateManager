@@ -647,7 +647,7 @@
             this.div.appendChild(this.checkboxes);
             for (let c = 0; c < this.div.children.length; c++) {
                 let child = this.div.children[c];
-                child.style.margin = "1% 40%";
+                child.style.margin = "8px 40%";
             }
         }
         open() {
@@ -707,15 +707,15 @@
         let settings = new Settings(manager);
         let xKey = `${window.location.host}_settingsX`;
         let yKey = `${window.location.host}_settingsY`;
-        let x = await GM.getValue(xKey, null) || 10;
-        let y = await GM.getValue(yKey, null) || 10;
+        let GMx = await GM.getValue(xKey, null) || 10;
+        let GMy = await GM.getValue(yKey, null) || 10;
         let iconElement = stringToHtml(SLIDERS_SVG);
         document.body.append(iconElement);
-        let setPosition = async (xx, yy) => {
+        let setPosition = async (mouseX, mouseY) => {
             let xMin = 16 / window.innerWidth * 100;
             let yMin = 16 / window.innerHeight * 100;
-            x = (xx) / window.innerWidth * 100;
-            y = (yy) / window.innerHeight * 100;
+            let x = (mouseX) / window.innerWidth * 100;
+            let y = (mouseY) / window.innerHeight * 100;
             await GM.setValue(xKey, x);
             await GM.setValue(yKey, y);
             if (x < 50) {
@@ -739,7 +739,7 @@
                 iconElement.style.top = 'unset';
             }
         };
-        await setPosition(x / 100 * window.innerWidth, y / 100 * window.innerHeight);
+        await setPosition(GMx / 100 * window.innerWidth, GMy / 100 * window.innerHeight);
         iconElement.style.position = 'absolute';
         iconElement.style.width = "32px";
         iconElement.style.height = "32px";
