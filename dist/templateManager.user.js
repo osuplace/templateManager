@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.4.1
+// @version			0.4.2
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu
 // @license			MIT
@@ -16,6 +16,7 @@
 // @match			https://www.twitch.tv/otknetwork/*
 // @match			https://9jjigdr1wlul7fbginbq7h76jg9h3s.ext-twitch.tv/*
 // @namespace		littleendu.xyz
+// @updateURL		https://github.com/osuplace/templateManager/raw/main/dist/templateManager.user.js
 // @downloadURL		https://github.com/osuplace/templateManager/raw/main/dist/templateManager.user.js
 //
 // Created with love using Gorilla

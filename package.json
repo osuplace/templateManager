@@ -15,6 +15,7 @@
   "gorilla": {
     "namespace": "littleendu.xyz",
     "downloadURL" : "https://github.com/osuplace/templateManager/raw/main/dist/templateManager.user.js",
+    "updateURL" : "https://github.com/osuplace/templateManager/raw/main/dist/templateManager.user.js",
     "match": [
       "https://pxls.space/",
       "https://new.reddit.com/r/place/*",
