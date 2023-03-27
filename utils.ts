@@ -24,6 +24,12 @@ export function stringToHtml(str: string): HTMLElement {
     return div.firstChild as HTMLElement
 }
 
+export function wrapInHtml(html: string, str: string): HTMLElement {
+    let tag = document.createElement(html);
+    tag.innerText = str;
+    return tag
+}
+
 export function removeItem<T>(array: Array<T>, item: T): void {
     let index = array.indexOf(item);
     if (index !== -1) {

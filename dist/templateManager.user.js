@@ -67,6 +67,11 @@
         div.innerHTML = str;
         return div.firstChild;
     }
+    function wrapInHtml(html, str) {
+        let tag = document.createElement(html);
+        tag.innerText = str;
+        return tag;
+    }
     function removeItem(array, item) {
         let index = array.indexOf(item);
         if (index !== -1) {
@@ -306,7 +311,9 @@
         }
         newNotification(url, message) {
             let div = document.createElement('div');
-            div.innerHTML = `${url} says:<br/><b>${message}</b>`;
+            div.appendChild(document.createTextNode(`${url} says:`));
+            div.append(document.createElement('br'));
+            div.append(wrapInHtml('b', message));
             div.style.height = '0px';
             div.style.width = '100%';
             div.style.opacity = '0';
@@ -495,9 +502,9 @@
         }
     }
 
-    function createButton(innerHtml, callback) {
+    function createButton(text, callback) {
         let button = document.createElement("button");
-        button.innerHTML = innerHtml;
+        button.innerText = text;
         button.onclick = () => callback();
         button.style.color = "#eee";
         button.style.backgroundColor = "#19d";
@@ -505,7 +512,7 @@
         button.style.borderRadius = "5px";
         return button;
     }
-    function createSlider(innerHtml, value, callback) {
+    function createSlider(Text, value, callback) {
         let div = document.createElement("div");
         div.style.backgroundColor = "#057";
         div.style.padding = "5px";
@@ -522,14 +529,14 @@
         };
         slider.style.width = "100%";
         let label = document.createElement("label");
-        label.innerHTML = innerHtml;
+        label.innerText = Text;
         label.style.color = "#eee";
         div.append(label);
         div.appendChild(document.createElement("br"));
         div.append(slider);
         return div;
     }
-    function createCheckbox(innerHtml, checked, callback) {
+    function createNotificationCheckbox(url, message, checked, callback) {
         let div = document.createElement("div");
         div.style.backgroundColor = "#057";
         div.style.padding = "5px";
@@ -542,7 +549,10 @@
             callback(checkbox.checked);
         };
         let label = document.createElement("label");
-        label.innerHTML = innerHtml;
+        let b = document.createElement("b");
+        b.innerText = url + " - ";
+        label.append(b);
+        label.append(document.createTextNode(message));
         label.style.color = "#eee";
         div.append(checkbox);
         div.append(label);
@@ -642,7 +652,7 @@
                         let notification = notifications[i];
                         let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.key}`);
                         let html = `<b>${notification.key}</b>: ${notification.message}`;
-                        let checkbox = createCheckbox(html, enabled, async (b) => {
+                        let checkbox = createNotificationCheckbox(html, enabled, async (b) => {
                             removeItem(this.manager.enabledNotifications, `${value}??${notification.key}`);
                             if (b) {
                                 this.manager.enabledNotifications.push(`${value}??${notification.key}`);

@@ -1,9 +1,9 @@
 import { TemplateManager } from "../templateManager";
 import * as utils from "../utils";
 
-function createButton(innerHtml: string, callback: () => void) {
+function createButton(text: string, callback: () => void) {
     let button = document.createElement("button");
-    button.innerHTML = innerHtml;
+    button.innerText = text;
     button.onclick = () => callback();
     button.style.color = "#eee"
     button.style.backgroundColor = "#19d"
@@ -12,7 +12,7 @@ function createButton(innerHtml: string, callback: () => void) {
     return button;
 }
 
-function createSlider(innerHtml: string, value: string, callback: (n: number) => void) {
+function createSlider(Text: string, value: string, callback: (n: number) => void) {
     let div = document.createElement("div");
     div.style.backgroundColor = "#057"
     div.style.padding = "5px"
@@ -29,7 +29,7 @@ function createSlider(innerHtml: string, value: string, callback: (n: number) =>
     };
     slider.style.width = "100%";
     let label = document.createElement("label");
-    label.innerHTML = innerHtml;
+    label.innerText = Text;
     label.style.color = "#eee"
     div.append(label);
     div.appendChild(document.createElement("br"));
@@ -37,7 +37,7 @@ function createSlider(innerHtml: string, value: string, callback: (n: number) =>
     return div;
 }
 
-function createCheckbox(innerHtml: string, checked: boolean, callback: (a: boolean) => void) {
+function createNotificationCheckbox(url:string, message:string, checked: boolean, callback: (a: boolean) => void) {
     let div = document.createElement("div");
     div.style.backgroundColor = "#057"
     div.style.padding = "5px"
@@ -50,7 +50,10 @@ function createCheckbox(innerHtml: string, checked: boolean, callback: (a: boole
         callback(checkbox.checked)
     }
     let label = document.createElement("label")
-    label.innerHTML = innerHtml
+    let b = document.createElement("b")
+    b.innerText = url + " - "
+    label.append(b)
+    label.append(document.createTextNode(message))
     label.style.color = "#eee"
     div.append(checkbox);
     div.append(label);
@@ -161,7 +164,7 @@ export class Settings {
                     let notification = notifications[i]
                     let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.key}`)
                     let html = `<b>${notification.key}</b>: ${notification.message}`
-                    let checkbox = createCheckbox(html, enabled, async (b) => {
+                    let checkbox = createNotificationCheckbox(html, enabled, async (b) => {
                         utils.removeItem(this.manager.enabledNotifications, `${value}??${notification.key}`)
                         if (b) {
                             this.manager.enabledNotifications.push(`${value}??${notification.key}`)
