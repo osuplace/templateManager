@@ -47,6 +47,54 @@
         pointer-events: none;
     }
 `;
+    const SETTINGS_CSS = css `
+    #settingsOverlay {
+        transition: opacity 300ms ease 0s;
+        width: 100vw;
+        height: 100vh;
+        position: absolute;
+        left: -0.1px;
+        top: -0.1px;
+        background-color: rgba(0, 0, 0, 0.25);
+        padding: 0px;
+        margin: 0px;
+        opacity: 0;
+        pointer-events: none;
+        z-index: 2147483647;
+        text-align: center;
+        user-select: none;
+    }
+    .settingsWrapper {
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 8px;
+        border-radius: 8px;
+        border: 1px solid rgba(238, 238, 238, 0.5);
+        margin: 0.5rem 40%
+    }
+    .settingsWrapper:empty {
+        display: none;
+    }
+    .settingsButton {
+        cursor: pointer;
+        display: inline-block;
+        color: rgb(238, 238, 238);
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 0.25rem 0.5rem;
+        margin: 0.5rem;
+        border-radius: 5px;
+        line-height: 1.1em;
+        border: 1px solid rgba(238, 238, 238, 0.5);
+    }
+    .settingsSliderBox, .settingsCheckbox {
+        background-color: rgba(0, 0, 0, 0.5);
+        padding: 0.25rem 0.5rem;
+        border-radius: 5px;
+        margin: 0.5rem;
+    }
+    input[type=range] {
+        
+    }
+`;
 
     function run() {
         let reticuleStyleSetter = setInterval(() => {
@@ -564,17 +612,12 @@
         let button = document.createElement("button");
         button.innerText = text;
         button.onclick = () => callback();
-        button.style.color = "#eee";
-        button.style.backgroundColor = "#19d";
-        button.style.padding = "5px";
-        button.style.borderRadius = "5px";
+        button.className = "settingsButton";
         return button;
     }
     function createSlider(Text, value, callback) {
         let div = document.createElement("div");
-        div.style.backgroundColor = "#057";
-        div.style.padding = "5px";
-        div.style.borderRadius = "5px";
+        div.className = "settingsSliderBox";
         let slider = document.createElement("input");
         slider.type = "range";
         slider.min = '0';
@@ -596,9 +639,7 @@
     }
     function createBoldCheckbox(boldText, regularText, checked, callback) {
         let div = document.createElement("div");
-        div.style.backgroundColor = "#057";
-        div.style.padding = "5px";
-        div.style.borderRadius = "5px";
+        div.className = "settingsCheckbox";
         let checkbox = document.createElement('input');
         checkbox.type = "checkbox";
         checkbox.checked = checked;
@@ -618,25 +659,16 @@
     }
     class Settings {
         constructor(manager) {
-            this.div = document.createElement("div");
+            this.overlay = document.createElement("div");
             this.checkboxes = document.createElement("div");
             this.manager = manager;
-            document.body.appendChild(this.div);
-            this.div.style.transition = "opacity 300ms";
-            this.div.style.width = "100vw";
-            this.div.style.height = "100vh";
-            this.div.style.position = "absolute";
-            this.div.style.left = "-0.1px";
-            this.div.style.top = "-0.1px";
-            this.div.style.backgroundColor = "rgba(0, 0, 0, 0.2)";
-            this.div.style.padding = "0";
-            this.div.style.margin = "0";
-            this.div.style.opacity = "0";
-            this.div.style.pointerEvents = "none";
-            this.div.style.zIndex = `${Number.MAX_SAFE_INTEGER}`;
-            this.div.style.textAlign = "center";
-            this.div.style.userSelect = "none";
-            this.div.onclick = (ev) => {
+            document.body.appendChild(this.overlay);
+            let style = document.createElement("style");
+            style.innerHTML = SETTINGS_CSS;
+            document.body.appendChild(style);
+            this.overlay.id = "settingsOverlay";
+            this.overlay.style.opacity = "0";
+            this.overlay.onclick = (ev) => {
                 if (ev.target === ev.currentTarget)
                     this.close();
             };
@@ -645,20 +677,22 @@
                     this.close();
                 }
             });
-            this.div.appendChild(document.createElement('br'));
+            let div = document.createElement('div');
+            div.className = "settingsWrapper";
+            div.appendChild(document.createElement('br'));
             let label = document.createElement("label");
             label.textContent = ".json Template settings";
             label.style.textShadow = "-1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111";
             label.style.color = "#eee";
-            this.div.appendChild(label);
-            this.div.appendChild(document.createElement('br'));
-            this.div.appendChild(createButton("Reload the template", () => manager.reload()));
-            this.div.appendChild(document.createElement('br'));
-            this.div.appendChild(createSlider("Templates to load", "4", (n) => {
+            div.appendChild(label);
+            div.appendChild(document.createElement('br'));
+            div.appendChild(createButton("Reload the template", () => manager.reload()));
+            div.appendChild(document.createElement('br'));
+            div.appendChild(createSlider("Templates to load", "4", (n) => {
                 manager.templatesToLoad = (n + 1) * MAX_TEMPLATES / 5;
             }));
-            this.div.appendChild(document.createElement('br'));
-            this.div.appendChild(createButton("Generate new randomness", () => {
+            div.appendChild(document.createElement('br'));
+            div.appendChild(createButton("Generate new randomness", () => {
                 let currentRandomness = manager.randomness;
                 while (true) {
                     manager.randomness = Math.random();
@@ -666,35 +700,30 @@
                         break;
                 }
             }));
-            this.div.appendChild(document.createElement('br'));
-            this.div.appendChild(createSlider("Dither amount", "1", (n) => {
+            div.appendChild(document.createElement('br'));
+            div.appendChild(createSlider("Dither amount", "1", (n) => {
                 manager.percentage = 1 / (n / 10 + 1);
             }));
-            this.div.appendChild(document.createElement('br'));
-            this.div.appendChild(createBoldCheckbox('', "Show contact info besides templates", false, (a) => {
+            div.appendChild(document.createElement('br'));
+            div.appendChild(createBoldCheckbox('', "Show contact info besides templates", false, (a) => {
                 manager.setContactInfoDisplay(a);
             }));
-            this.div.appendChild(document.createElement('br'));
-            this.checkboxes.style.backgroundColor = "rgba(0,0,0,0.5)";
-            this.checkboxes.style.padding = "8px";
-            this.checkboxes.style.borderRadius = "8px";
-            this.div.appendChild(this.checkboxes);
-            for (let c = 0; c < this.div.children.length; c++) {
-                let child = this.div.children[c];
-                child.style.margin = "8px 40%";
-            }
+            div.appendChild(document.createElement('br'));
+            this.checkboxes.className = "settingsWrapper";
+            this.overlay.appendChild(div);
+            this.overlay.appendChild(this.checkboxes);
         }
         open() {
-            this.div.style.opacity = "1";
-            this.div.style.pointerEvents = "auto";
+            this.overlay.style.opacity = "1";
+            this.overlay.style.pointerEvents = "auto";
             this.populateNotifications();
         }
         close() {
-            this.div.style.opacity = "0";
-            this.div.style.pointerEvents = "none";
+            this.overlay.style.opacity = "0";
+            this.overlay.style.pointerEvents = "none";
         }
         toggle() {
-            if (this.div.style.opacity === "0") {
+            if (this.overlay.style.opacity === "0") {
                 this.open();
             }
             else {
@@ -702,8 +731,8 @@
             }
         }
         changeMouseEvents(enabled) {
-            if (this.div.style.opacity === "0")
-                this.div.style.pointerEvents = enabled ? "auto" : "none";
+            if (this.overlay.style.opacity === "0")
+                this.overlay.style.pointerEvents = enabled ? "auto" : "none";
         }
         populateNotifications() {
             while (this.checkboxes.children.length) {
