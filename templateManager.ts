@@ -20,6 +20,7 @@ export class TemplateManager {
     percentage = 1
     lastCacheBust = this.getCacheBustString();
     notificationManager = new NotificationManager();
+    notificationSent = false;
 
     constructor(canvasElement: HTMLCanvasElement, startingUrl: string) {
         this.canvasElement = canvasElement;
@@ -167,8 +168,9 @@ export class TemplateManager {
                 for (let i = 0; i < templates.length; i++) {
                     this.loadTemplatesFromJsonURL(templates[i])
                 }
-            } else {
+            } else if (!this.notificationSent){
                 this.notificationManager.newNotification("template manager", "No default template set. Consider adding one via settings.")
+                this.notificationSent = true
             }
         })
     }

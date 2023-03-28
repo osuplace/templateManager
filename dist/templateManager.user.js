@@ -486,6 +486,7 @@
             this.percentage = 1;
             this.lastCacheBust = this.getCacheBustString();
             this.notificationManager = new NotificationManager();
+            this.notificationSent = false;
             this.canvasElement = canvasElement;
             this.startingUrl = startingUrl;
             this.initOrReloadTemplates(true);
@@ -618,8 +619,9 @@
                         this.loadTemplatesFromJsonURL(templates[i]);
                     }
                 }
-                else {
+                else if (!this.notificationSent) {
                     this.notificationManager.newNotification("template manager", "No default template set. Consider adding one via settings.");
+                    this.notificationSent = true;
                 }
             });
         }
