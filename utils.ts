@@ -36,3 +36,15 @@ export function removeItem<T>(array: Array<T>, item: T): void {
         array.splice(index, 1);
     }
 }
+
+function findJSONTemplateInParams(urlString: string): string | null {
+    const urlSearchParams = new URLSearchParams(urlString);
+    const params = Object.fromEntries(urlSearchParams.entries());
+    console.log(params)
+    return params.jsontemplate ? params.jsontemplate : null;
+}
+
+export function findJSONTemplateInURL(url: URL | Location): string | null {
+    return findJSONTemplateInParams(url.hash.substring(1)) || findJSONTemplateInParams(url.search.substring(1))
+}
+

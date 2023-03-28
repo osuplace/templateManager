@@ -1,4 +1,4 @@
-import { UPDATE_PERIOD_MILLIS } from "./constants";
+import { NO_JSON_TEMPLATE_IN_PARAMS, UPDATE_PERIOD_MILLIS } from "./constants";
 import * as reddit from "./reddit";
 import { TemplateManager } from "./templateManager";
 import * as utils from "./utils";
@@ -28,21 +28,12 @@ function findCanvas(element: Element | ShadowRoot) {
     }
 }
 
-function findParams(urlString: string): string | null {
-    const urlSearchParams = new URLSearchParams(urlString);
-    const params = Object.fromEntries(urlSearchParams.entries());
-    console.log(params)
-    return params.jsontemplate ? params.jsontemplate : null;
-}
-
 function topWindow() {
     console.log("top window code for", window.location.href)
     GM.setValue('canvasFound', false)
-    let params = findParams(window.location.hash.substring(1)) || findParams(window.location.search.substring(1));
-    if (params) {
-        jsontemplate = params
-        GM.setValue('jsontemplate', jsontemplate)
-    }
+    let params = utils.findJSONTemplateInURL(window.location) || NO_JSON_TEMPLATE_IN_PARAMS;
+    jsontemplate = params
+    GM.setValue('jsontemplate', jsontemplate)
 }
 
 async function canvasWindow() {

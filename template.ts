@@ -16,7 +16,7 @@ interface TemplateParams {
     looping: boolean | undefined
 }
 
-interface NamedUrl {
+interface NamedURL {
     name: string | undefined
     url: string
 }
@@ -36,8 +36,8 @@ export interface JsonParams {
     contactInfo: string | undefined // alias for contact
     templates: TemplateParams[]
     notifications: NotificationServer
-    whitelist: NamedUrl[]
-    blacklist: NamedUrl[]
+    whitelist: NamedURL[]
+    blacklist: NamedURL[]
 }
 
 export class Template {

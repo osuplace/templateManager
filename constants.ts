@@ -5,6 +5,7 @@ export const UPDATE_PERIOD_MILLIS = 100
 export const SECONDS_SPENT_BLINKING = 5;
 export const AMOUNT_OF_BLINKING = 11
 export const ANIMATION_DEFAULT_PERCENTAGE = 1 / 3
+export const NO_JSON_TEMPLATE_IN_PARAMS = "no_json_template"
 export const CONTACT_INFO_CSS = css`
     div.iHasContactInfo {
         font-weight: bold;
@@ -37,12 +38,25 @@ export const SETTINGS_CSS = css`
         text-align: center;
         user-select: none;
     }
+    #settingsOverlay label {
+        text-shadow: -1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111;
+        color: #eee;
+    }
+    #settingsOverlay input[type=range] {
+        
+    }
     .settingsWrapper {
         background-color: rgba(0, 0, 0, 0.5);
         padding: 8px;
         border-radius: 8px;
         border: 1px solid rgba(238, 238, 238, 0.5);
         margin: 0.5rem 40%
+    }
+    #templateLinksWrapper button,
+    #templateLinksWrapper label {
+        height: auto;
+        word-break: break-all;
+        white-space: normal;
     }
     .settingsWrapper:empty {
         display: none;
@@ -58,13 +72,16 @@ export const SETTINGS_CSS = css`
         line-height: 1.1em;
         border: 1px solid rgba(238, 238, 238, 0.5);
     }
+    .settingsButton:hover {
+        background-color: rgba(64, 64, 64, 0.5);
+    }
     .settingsSliderBox, .settingsCheckbox {
         background-color: rgba(0, 0, 0, 0.5);
         padding: 0.25rem 0.5rem;
         border-radius: 5px;
         margin: 0.5rem;
     }
-    input[type=range] {
-        
+    .templateLink:hover {
+        background-color: rgba(128, 0, 0, 0.5);
     }
 `

@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.4.2
+// @version			0.4.4
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu
 // @license			MIT
@@ -32,6 +32,7 @@
     const SECONDS_SPENT_BLINKING = 5;
     const AMOUNT_OF_BLINKING = 11;
     const ANIMATION_DEFAULT_PERCENTAGE = 1 / 3;
+    const NO_JSON_TEMPLATE_IN_PARAMS = "no_json_template";
     const CONTACT_INFO_CSS = css `
     div.iHasContactInfo {
         font-weight: bold;
@@ -64,12 +65,25 @@
         text-align: center;
         user-select: none;
     }
+    #settingsOverlay label {
+        text-shadow: -1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111;
+        color: #eee;
+    }
+    #settingsOverlay input[type=range] {
+        
+    }
     .settingsWrapper {
         background-color: rgba(0, 0, 0, 0.5);
         padding: 8px;
         border-radius: 8px;
         border: 1px solid rgba(238, 238, 238, 0.5);
         margin: 0.5rem 40%
+    }
+    #templateLinksWrapper button,
+    #templateLinksWrapper label {
+        height: auto;
+        word-break: break-all;
+        white-space: normal;
     }
     .settingsWrapper:empty {
         display: none;
@@ -85,14 +99,17 @@
         line-height: 1.1em;
         border: 1px solid rgba(238, 238, 238, 0.5);
     }
+    .settingsButton:hover {
+        background-color: rgba(64, 64, 64, 0.5);
+    }
     .settingsSliderBox, .settingsCheckbox {
         background-color: rgba(0, 0, 0, 0.5);
         padding: 0.25rem 0.5rem;
         border-radius: 5px;
         margin: 0.5rem;
     }
-    input[type=range] {
-        
+    .templateLink:hover {
+        background-color: rgba(128, 0, 0, 0.5);
     }
 `;
 
@@ -143,6 +160,15 @@
         if (index !== -1) {
             array.splice(index, 1);
         }
+    }
+    function findJSONTemplateInParams(urlString) {
+        const urlSearchParams = new URLSearchParams(urlString);
+        const params = Object.fromEntries(urlSearchParams.entries());
+        console.log(params);
+        return params.jsontemplate ? params.jsontemplate : null;
+    }
+    function findJSONTemplateInURL(url) {
+        return findJSONTemplateInParams(url.hash.substring(1)) || findJSONTemplateInParams(url.search.substring(1));
     }
 
     function extractFrame(image, frameWidth, frameHeight, frameIndex) {
@@ -407,7 +433,7 @@
             this.container.style.position = 'absolute';
             this.container.style.zIndex = '9999';
             this.container.style.top = '-0.1px';
-            this.container.style.right = '0px';
+            this.container.style.right = '10px';
             this.container.style.backgroundColor = 'rgba(255, 255, 255, 0)';
             this.container.style.pointerEvents = 'none';
             this.container.style.userSelect = 'none';
@@ -415,11 +441,10 @@
         }
         newNotification(url, message) {
             let div = document.createElement('div');
-            div.appendChild(document.createTextNode(`${url} says:`));
+            div.appendChild(wrapInHtml('i', `${url} says:`));
             div.append(document.createElement('br'));
             div.append(wrapInHtml('b', message));
             div.style.height = '0px';
-            div.style.width = '100%';
             div.style.opacity = '0';
             div.style.padding = '0px';
             div.style.margin = '0px';
@@ -463,7 +488,7 @@
             this.notificationManager = new NotificationManager();
             this.canvasElement = canvasElement;
             this.startingUrl = startingUrl;
-            this.loadTemplatesFromJsonURL(startingUrl);
+            this.initOrReloadTemplates(true);
             window.addEventListener('keydown', (ev) => {
                 if (ev.key.match(/^\d$/)) {
                     let number = parseInt(ev.key) || 1.1;
@@ -561,9 +586,9 @@
         canReload() {
             return this.lastCacheBust !== this.getCacheBustString();
         }
-        reload() {
+        initOrReloadTemplates(forced = false) {
             var _a, _b;
-            if (!this.canReload()) {
+            if (!this.canReload() && !forced) {
                 // fake a reload
                 for (let i = 0; i < this.templates.length; i++) {
                     this.templates[i].fakeReload(i * 50);
@@ -584,7 +609,19 @@
             this.alreadyLoaded = [];
             this.whitelist = [];
             this.blacklist = [];
-            this.loadTemplatesFromJsonURL(this.startingUrl);
+            if (this.startingUrl !== NO_JSON_TEMPLATE_IN_PARAMS)
+                this.loadTemplatesFromJsonURL(this.startingUrl);
+            GM.getValue(`${window.location.host}_alwaysLoad`).then(value => {
+                if (value && value !== "[]") {
+                    let templates = JSON.parse(value);
+                    for (let i = 0; i < templates.length; i++) {
+                        this.loadTemplatesFromJsonURL(templates[i]);
+                    }
+                }
+                else {
+                    this.notificationManager.newNotification("template manager", "No default template set. Consider adding one via settings.");
+                }
+            });
         }
         currentSeconds() {
             let averageDiff = this.responseDiffs.reduce((a, b) => a + b, 0) / (this.responseDiffs.length);
@@ -608,12 +645,30 @@
         }
     }
 
+    function createLabel(text) {
+        let label = document.createElement("label");
+        label.innerText = text;
+        return label;
+    }
     function createButton(text, callback) {
         let button = document.createElement("button");
         button.innerText = text;
         button.onclick = () => callback();
         button.className = "settingsButton";
         return button;
+    }
+    function createTextInput(buttonText, placeholder, callback) {
+        let div = document.createElement("div");
+        let textInput = document.createElement("input");
+        textInput.type = "text";
+        textInput.placeholder = placeholder;
+        textInput.className = "settingsTextInput";
+        let button = createButton(buttonText, () => {
+            callback(textInput.value);
+        });
+        div.appendChild(textInput);
+        div.appendChild(button);
+        return div;
     }
     function createSlider(Text, value, callback) {
         let div = document.createElement("div");
@@ -660,7 +715,12 @@
     class Settings {
         constructor(manager) {
             this.overlay = document.createElement("div");
-            this.checkboxes = document.createElement("div");
+            this.templateLinksWrapper = document.createElement("div");
+            this.notificationsWrapper = document.createElement("div");
+            this.reloadTemplatesWhenClosed = false;
+            this.templateLinksWrapper.className = "settingsWrapper";
+            this.templateLinksWrapper.id = "templateLinksWrapper";
+            this.notificationsWrapper.className = "settingsWrapper";
             this.manager = manager;
             document.body.appendChild(this.overlay);
             let style = document.createElement("style");
@@ -679,14 +739,9 @@
             });
             let div = document.createElement('div');
             div.className = "settingsWrapper";
+            div.appendChild(createLabel(".json Template settings"));
             div.appendChild(document.createElement('br'));
-            let label = document.createElement("label");
-            label.textContent = ".json Template settings";
-            label.style.textShadow = "-1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111";
-            label.style.color = "#eee";
-            div.appendChild(label);
-            div.appendChild(document.createElement('br'));
-            div.appendChild(createButton("Reload the template", () => manager.reload()));
+            div.appendChild(createButton("Reload the template", () => manager.initOrReloadTemplates()));
             div.appendChild(document.createElement('br'));
             div.appendChild(createSlider("Templates to load", "4", (n) => {
                 manager.templatesToLoad = (n + 1) * MAX_TEMPLATES / 5;
@@ -709,18 +764,22 @@
                 manager.setContactInfoDisplay(a);
             }));
             div.appendChild(document.createElement('br'));
-            this.checkboxes.className = "settingsWrapper";
             this.overlay.appendChild(div);
-            this.overlay.appendChild(this.checkboxes);
+            this.overlay.appendChild(this.templateLinksWrapper);
+            this.overlay.appendChild(this.notificationsWrapper);
         }
         open() {
             this.overlay.style.opacity = "1";
             this.overlay.style.pointerEvents = "auto";
-            this.populateNotifications();
+            this.populateAll();
         }
         close() {
             this.overlay.style.opacity = "0";
             this.overlay.style.pointerEvents = "none";
+            if (this.reloadTemplatesWhenClosed) {
+                this.manager.initOrReloadTemplates(true);
+                this.reloadTemplatesWhenClosed = false;
+            }
         }
         toggle() {
             if (this.overlay.style.opacity === "0") {
@@ -734,19 +793,52 @@
             if (this.overlay.style.opacity === "0")
                 this.overlay.style.pointerEvents = enabled ? "auto" : "none";
         }
+        populateAll() {
+            this.populateTemplateLinks();
+            this.populateNotifications();
+        }
+        populateTemplateLinks() {
+            while (this.templateLinksWrapper.children.length) {
+                this.templateLinksWrapper.children[0].remove();
+            }
+            GM.getValue(`${window.location.host}_alwaysLoad`).then(value => {
+                let templates = value ? JSON.parse(value) : [];
+                let templateAdder = createTextInput("Always load", "Template URL", async (tx) => {
+                    let url = new URL(tx);
+                    let template = findJSONTemplateInURL(url) || url.toString();
+                    if (templates.includes(template))
+                        return;
+                    templates.push(template);
+                    await GM.setValue(`${window.location.host}_alwaysLoad`, JSON.stringify(templates));
+                    this.populateTemplateLinks();
+                    this.manager.loadTemplatesFromJsonURL(template);
+                });
+                this.templateLinksWrapper.appendChild(templateAdder);
+                if (templates.length > 0) {
+                    this.templateLinksWrapper.appendChild(createLabel("Click to remove template from always loading"));
+                }
+                for (let i = 0; i < templates.length; i++) {
+                    let button = createButton(templates[i], async () => {
+                        button.remove();
+                        templates.splice(i, 1);
+                        await GM.setValue(`${window.location.host}_alwaysLoad`, JSON.stringify(templates));
+                        this.populateTemplateLinks();
+                        this.reloadTemplatesWhenClosed = true;
+                    });
+                    button.className = `${button.className} templateLink`;
+                    this.templateLinksWrapper.appendChild(button);
+                }
+            });
+        }
         populateNotifications() {
-            while (this.checkboxes.children.length) {
-                this.checkboxes.children[0].remove();
+            while (this.notificationsWrapper.children.length) {
+                this.notificationsWrapper.children[0].remove();
             }
             let keys = this.manager.notificationTypes.keys();
             let key;
             while (!(key = keys.next()).done) {
                 let value = key.value;
-                let label = document.createElement("label");
-                label.textContent = value;
-                label.style.textShadow = "-1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111";
-                label.style.color = "#eee";
-                this.checkboxes.appendChild(label);
+                this.notificationsWrapper.appendChild(createLabel(value));
                 let notifications = this.manager.notificationTypes.get(value);
                 if (notifications === null || notifications === void 0 ? void 0 : notifications.length) {
                     for (let i = 0; i < notifications.length; i++) {
@@ -760,11 +852,11 @@
                             let enabledKey = `${window.location.host}_notificationsEnabled`;
                             await GM.setValue(enabledKey, JSON.stringify(this.manager.enabledNotifications));
                         });
-                        this.checkboxes.append(document.createElement('br'));
-                        this.checkboxes.append(checkbox);
+                        this.notificationsWrapper.append(document.createElement('br'));
+                        this.notificationsWrapper.append(checkbox);
                     }
                 }
-                this.checkboxes.append(document.createElement('br'));
+                this.notificationsWrapper.append(document.createElement('br'));
             }
         }
     }
@@ -867,20 +959,12 @@
             findCanvas(element.children[c]);
         }
     }
-    function findParams(urlString) {
-        const urlSearchParams = new URLSearchParams(urlString);
-        const params = Object.fromEntries(urlSearchParams.entries());
-        console.log(params);
-        return params.jsontemplate ? params.jsontemplate : null;
-    }
     function topWindow() {
         console.log("top window code for", window.location.href);
         GM.setValue('canvasFound', false);
-        let params = findParams(window.location.hash.substring(1)) || findParams(window.location.search.substring(1));
-        if (params) {
-            jsontemplate = params;
-            GM.setValue('jsontemplate', jsontemplate);
-        }
+        let params = findJSONTemplateInURL(window.location) || NO_JSON_TEMPLATE_IN_PARAMS;
+        jsontemplate = params;
+        GM.setValue('jsontemplate', jsontemplate);
     }
     async function canvasWindow() {
         console.log("canvas code for", window.location.href);

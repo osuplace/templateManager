@@ -2,12 +2,32 @@ import { MAX_TEMPLATES, SETTINGS_CSS } from "../constants";
 import { TemplateManager } from "../templateManager";
 import * as utils from "../utils";
 
+function createLabel(text:string) {
+    let label = document.createElement("label");
+    label.innerText = text;
+    return label;
+}
+
 function createButton(text: string, callback: () => void) {
     let button = document.createElement("button");
     button.innerText = text;
     button.onclick = () => callback();
     button.className = "settingsButton"
     return button;
+}
+
+function createTextInput(buttonText: string, placeholder: string, callback: (value: string) => void) {
+    let div = document.createElement("div")
+    let textInput = document.createElement("input")
+    textInput.type = "text"
+    textInput.placeholder = placeholder
+    textInput.className = "settingsTextInput"
+    let button = createButton(buttonText, () => {
+        callback(textInput.value)
+    })
+    div.appendChild(textInput)
+    div.appendChild(button)
+    return div
 }
 
 function createSlider(Text: string, value: string, callback: (n: number) => void) {
@@ -57,9 +77,14 @@ function createBoldCheckbox(boldText: string, regularText: string, checked: bool
 
 export class Settings {
     overlay = document.createElement("div");
-    checkboxes = document.createElement("div");
+    templateLinksWrapper = document.createElement("div");
+    notificationsWrapper = document.createElement("div");
     manager: TemplateManager;
+    reloadTemplatesWhenClosed = false;
     constructor(manager: TemplateManager) {
+        this.templateLinksWrapper.className = "settingsWrapper"
+        this.templateLinksWrapper.id = "templateLinksWrapper"
+        this.notificationsWrapper.className = "settingsWrapper"
         this.manager = manager;
 
         document.body.appendChild(this.overlay);
@@ -81,16 +106,10 @@ export class Settings {
 
         let div = document.createElement('div')
         div.className = "settingsWrapper"
-        
 
+        div.appendChild(createLabel(".json Template settings"))
         div.appendChild(document.createElement('br'))
-        let label = document.createElement("label")
-        label.textContent = ".json Template settings"
-        label.style.textShadow = "-1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111"
-        label.style.color = "#eee"
-        div.appendChild(label)
-        div.appendChild(document.createElement('br'))
-        div.appendChild(createButton("Reload the template", () => manager.reload()))
+        div.appendChild(createButton("Reload the template", () => manager.initOrReloadTemplates()))
         div.appendChild(document.createElement('br'))
         div.appendChild(createSlider("Templates to load", "4", (n) => {
             manager.templatesToLoad = (n + 1) * MAX_TEMPLATES / 5
@@ -114,21 +133,25 @@ export class Settings {
         }))
         div.appendChild(document.createElement('br'))
 
-        this.checkboxes.className = "settingsWrapper"
 
         this.overlay.appendChild(div)
-        this.overlay.appendChild(this.checkboxes)
+        this.overlay.appendChild(this.templateLinksWrapper)
+        this.overlay.appendChild(this.notificationsWrapper)
     }
 
     open() {
         this.overlay.style.opacity = "1"
         this.overlay.style.pointerEvents = "auto"
-        this.populateNotifications()
+        this.populateAll()
     }
 
     close() {
         this.overlay.style.opacity = "0"
         this.overlay.style.pointerEvents = "none"
+        if (this.reloadTemplatesWhenClosed) {
+            this.manager.initOrReloadTemplates(true)
+            this.reloadTemplatesWhenClosed = false
+        }
     }
 
     toggle() {
@@ -144,19 +167,53 @@ export class Settings {
             this.overlay.style.pointerEvents = enabled ? "auto" : "none"
     }
 
+    populateAll() {
+        this.populateTemplateLinks()
+        this.populateNotifications()
+    }
+
+    populateTemplateLinks() {
+        while (this.templateLinksWrapper.children.length) {
+            this.templateLinksWrapper.children[0].remove()
+        }
+        GM.getValue(`${window.location.host}_alwaysLoad`).then(value => {
+            let templates: string[] = value ? JSON.parse(value as string) : []
+            let templateAdder = createTextInput("Always load", "Template URL", async (tx) => {
+                let url = new URL(tx)
+                let template = utils.findJSONTemplateInURL(url) || url.toString()
+                if (templates.includes(template)) return;
+                templates.push(template)
+                await GM.setValue(`${window.location.host}_alwaysLoad`, JSON.stringify(templates))
+                this.populateTemplateLinks()
+                this.manager.loadTemplatesFromJsonURL(template)
+            })
+            this.templateLinksWrapper.appendChild(templateAdder)
+            if (templates.length > 0) {
+                this.templateLinksWrapper.appendChild(createLabel("Click to remove template from always loading"))
+            }
+            for (let i = 0; i < templates.length; i++) {
+                let button = createButton(templates[i], async () => {
+                    button.remove()
+                    templates.splice(i, 1)
+                    await GM.setValue(`${window.location.host}_alwaysLoad`, JSON.stringify(templates))
+                    this.populateTemplateLinks()
+                    this.reloadTemplatesWhenClosed = true
+                })
+                button.className = `${button.className} templateLink`
+                this.templateLinksWrapper.appendChild(button)
+            }
+        })
+    }
+
     populateNotifications() {
-        while (this.checkboxes.children.length) {
-            this.checkboxes.children[0].remove()
+        while (this.notificationsWrapper.children.length) {
+            this.notificationsWrapper.children[0].remove()
         }
         let keys = this.manager.notificationTypes.keys()
         let key: IteratorResult<string, string>;
         while (!(key = keys.next()).done) {
             let value = key.value
-            let label = document.createElement("label")
-            label.textContent = value
-            label.style.textShadow = "-1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111"
-            label.style.color = "#eee"
-            this.checkboxes.appendChild(label)
+            this.notificationsWrapper.appendChild(createLabel(value))
             let notifications = this.manager.notificationTypes.get(value)
             if (notifications?.length) {
                 for (let i = 0; i < notifications.length; i++) {
@@ -170,11 +227,11 @@ export class Settings {
                         let enabledKey = `${window.location.host}_notificationsEnabled`
                         await GM.setValue(enabledKey, JSON.stringify(this.manager.enabledNotifications))
                     })
-                    this.checkboxes.append(document.createElement('br'))
-                    this.checkboxes.append(checkbox)
+                    this.notificationsWrapper.append(document.createElement('br'))
+                    this.notificationsWrapper.append(checkbox)
                 }
             }
-            this.checkboxes.append(document.createElement('br'))
+            this.notificationsWrapper.append(document.createElement('br'))
         }
     }
 }

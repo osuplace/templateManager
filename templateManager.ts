@@ -1,4 +1,4 @@
-import { CACHE_BUST_PERIOD, CONTACT_INFO_CSS, MAX_TEMPLATES } from './constants';
+import { CACHE_BUST_PERIOD, CONTACT_INFO_CSS, MAX_TEMPLATES, NO_JSON_TEMPLATE_IN_PARAMS } from './constants';
 import { Template, JsonParams, NotificationServer, NotificationTypes } from './template';
 import { NotificationManager } from './ui/notificationsManager';
 import * as utils from './utils';
@@ -24,7 +24,7 @@ export class TemplateManager {
     constructor(canvasElement: HTMLCanvasElement, startingUrl: string) {
         this.canvasElement = canvasElement;
         this.startingUrl = startingUrl
-        this.loadTemplatesFromJsonURL(startingUrl)
+        this.initOrReloadTemplates(true)
 
         window.addEventListener('keydown', (ev: KeyboardEvent) => {
             if (ev.key.match(/^\d$/)) {
@@ -136,8 +136,8 @@ export class TemplateManager {
         return this.lastCacheBust !== this.getCacheBustString()
     }
 
-    reload() {
-        if (!this.canReload()) {
+    initOrReloadTemplates(forced = false) {
+        if (!this.canReload() && !forced) {
             // fake a reload
             for (let i = 0; i < this.templates.length; i++) {
                 this.templates[i].fakeReload(i * 50)
@@ -159,7 +159,18 @@ export class TemplateManager {
         this.alreadyLoaded = []
         this.whitelist = []
         this.blacklist = []
-        this.loadTemplatesFromJsonURL(this.startingUrl)
+        if (this.startingUrl !== NO_JSON_TEMPLATE_IN_PARAMS)
+            this.loadTemplatesFromJsonURL(this.startingUrl)
+        GM.getValue(`${window.location.host}_alwaysLoad`).then(value => {
+            if (value && value !== "[]") {
+                let templates: string[] = JSON.parse(value as string);
+                for (let i = 0; i < templates.length; i++) {
+                    this.loadTemplatesFromJsonURL(templates[i])
+                }
+            } else {
+                this.notificationManager.newNotification("template manager", "No default template set. Consider adding one via settings.")
+            }
+        })
     }
 
     currentSeconds() {
