@@ -61,6 +61,7 @@ export async function init(manager: TemplateManager) {
     iconElement.addEventListener('mousedown', (ev) => {
         if (ev.button === 0) {
             clicked = true
+            settings.changeMouseEvents(true)
             ev.preventDefault() // prevent text from getting selected
         }
     })
@@ -76,6 +77,7 @@ export async function init(manager: TemplateManager) {
             }
             clicked = false
             dragged = false
+            settings.changeMouseEvents(false)
         }
     })
     window.addEventListener('mousemove', (ev) => {

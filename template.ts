@@ -113,21 +113,27 @@ export class Template {
 
         // add contact info container
         if (contact) {
+            let contactX = Math.round(this.x / 5) * 5
+            let contactY = Math.round(this.y / 5) * 5
+            let checkingCoords = true
+            while (checkingCoords) {
+                checkingCoords = false
+                let contactInfos = globalCanvas.parentElement!.querySelectorAll('.iHasContactInfo')
+                for (let i = 0; i < contactInfos.length; i++) {
+                    let child = contactInfos[i] as HTMLElement
+                    if (child && parseInt(child.style.left) === contactX && parseInt(child.style.top) === contactY) {
+                        checkingCoords = true
+                        contactX += 5
+                        contactY += 5
+                    }
+                }
+            }
             this.contactElement = document.createElement('div')
-            this.contactElement.style.fontWeight = "bold";
-            this.contactElement.style.fontSize = "1px"
-            this.contactElement.style.fontFamily = "serif" // this fixes firefox
-            this.contactElement.style.color = "#eee";
-            this.contactElement.style.backgroundColor = "#111";
-            this.contactElement.style.padding = "1px";
-            this.contactElement.style.borderRadius = "1px";
-            this.contactElement.style.opacity = "0";
-            this.contactElement.style.transition = "opacity 500ms, width 200ms, height 200ms";
-            this.contactElement.style.position = "absolute";
-            this.contactElement.style.left = `${this.x}px`;
-            this.contactElement.style.top = `${this.y}px`;
-            this.contactElement.style.pointerEvents = "none";
-            this.contactElement.setAttribute('priority', Math.round(Number.MIN_SAFE_INTEGER / 100 + priority).toString())
+            this.contactElement.style.left = `${contactX}px`;
+            this.contactElement.style.top = `${contactY}px`;
+
+            let contactPriority = Math.round(Number.MIN_SAFE_INTEGER / 100 + priority)
+            this.contactElement.setAttribute('priority', contactPriority.toString())
             this.contactElement.className = 'iHasContactInfo'
             if (params.name) {
                 this.contactElement.appendChild(document.createTextNode(params.name))
@@ -135,9 +141,14 @@ export class Template {
                 this.contactElement.appendChild(document.createTextNode(`contact: `))
             }
             this.contactElement.appendChild(document.createTextNode(contact))
-            globalCanvas.parentElement!.appendChild(this.contactElement);
+            this.insertPriorityElement(this.contactElement)
         }
+    }
 
+    setContactInfoDisplay(enabled: boolean) {
+        if (this.contactElement) {
+            this.contactElement.style.opacity = enabled ? "1" : "0";
+        }
     }
 
     loading = false
@@ -165,6 +176,23 @@ export class Template {
         return utils.negativeSafeModulo(Math.floor((currentSeconds - this.startTime) / this.frameSpeed), this.frameCount)
     }
 
+    insertPriorityElement(element: HTMLElement) {
+        let priorityElements = this.globalCanvas.parentElement!.children;
+        let priorityElementsArray: Array<Element> = Array.from(priorityElements).filter(el => el.hasAttribute('priority'));
+        if (priorityElementsArray.length === 0) {
+            this.globalCanvas.parentElement!.appendChild(element)
+        } else {
+            priorityElementsArray.push(element)
+            priorityElementsArray.sort((a, b) => parseInt(b.getAttribute('priority')!) - parseInt(a.getAttribute('priority')!));
+            let index = priorityElementsArray.findIndex(el => el === element);
+            if (index === priorityElementsArray.length - 1) {
+                this.globalCanvas.parentElement!.appendChild(element);
+            } else {
+                this.globalCanvas.parentElement!.insertBefore(element, priorityElementsArray[index + 1]);
+            }
+        }
+    }
+
     initCanvas() {
         this.canvasElement.style.position = 'absolute'
         this.canvasElement.style.top = `${this.y}px`;
@@ -175,26 +203,7 @@ export class Template {
         this.canvasElement.style.imageRendering = 'pixelated'
         this.canvasElement.setAttribute('priority', this.priority.toString())
 
-        // find others and append to correct position
-        let templateElements = this.globalCanvas.parentElement!.children;
-        let templateElementsArray: Array<Element> = Array.from(templateElements).filter(element => element.hasAttribute('priority'));
-
-        if (templateElementsArray.length === 0) {
-            this.globalCanvas.parentElement!.appendChild(this.canvasElement);
-        } else {
-            // add the new template element to the array
-            templateElementsArray.push(this.canvasElement);
-            // sort the array by priority
-            templateElementsArray.sort((a, b) => parseInt(b.getAttribute('priority')!) - parseInt(a.getAttribute('priority')!));
-            // find the index of the new template element in the sorted array
-            let index = templateElementsArray.findIndex(element => element === this.canvasElement);
-            // insert the new template element at the index
-            if (index === templateElementsArray.length - 1) {
-                this.globalCanvas.parentElement!.appendChild(this.canvasElement);
-            } else {
-                this.globalCanvas.parentElement!.insertBefore(this.canvasElement, templateElementsArray[index + 1]);
-            }
-        }
+        this.insertPriorityElement(this.canvasElement)
     }
 
     currentFrame: number | undefined

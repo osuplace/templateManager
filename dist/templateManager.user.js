@@ -25,12 +25,28 @@
 (function () {
     'use strict';
 
+    const css = (x) => x;
     const MAX_TEMPLATES = 100;
     const CACHE_BUST_PERIOD = 1000 * 60 * 2;
     const UPDATE_PERIOD_MILLIS = 100;
     const SECONDS_SPENT_BLINKING = 5;
     const AMOUNT_OF_BLINKING = 11;
     const ANIMATION_DEFAULT_PERCENTAGE = 1 / 3;
+    const CONTACT_INFO_CSS = css `
+    div.iHasContactInfo {
+        font-weight: bold;
+        font-size: 1px;
+        font-family: serif; /* this fixes firefox */
+        color: #eee;
+        background-color: #111;
+        padding: 1px;
+        border-radius: 1px;
+        opacity: 0;
+        transition: opacity 500ms, width 200ms, height 200ms;
+        position: absolute;
+        pointer-events: none;
+    }
+`;
 
     function run() {
         let reticuleStyleSetter = setInterval(() => {
@@ -166,21 +182,26 @@
             });
             // add contact info container
             if (contact) {
+                let contactX = Math.round(this.x / 5) * 5;
+                let contactY = Math.round(this.y / 5) * 5;
+                let checkingCoords = true;
+                while (checkingCoords) {
+                    checkingCoords = false;
+                    let contactInfos = globalCanvas.parentElement.querySelectorAll('.iHasContactInfo');
+                    for (let i = 0; i < contactInfos.length; i++) {
+                        let child = contactInfos[i];
+                        if (child && parseInt(child.style.left) === contactX && parseInt(child.style.top) === contactY) {
+                            checkingCoords = true;
+                            contactX += 5;
+                            contactY += 5;
+                        }
+                    }
+                }
                 this.contactElement = document.createElement('div');
-                this.contactElement.style.fontWeight = "bold";
-                this.contactElement.style.fontSize = "1px";
-                this.contactElement.style.fontFamily = "serif"; // this fixes firefox
-                this.contactElement.style.color = "#eee";
-                this.contactElement.style.backgroundColor = "#111";
-                this.contactElement.style.padding = "1px";
-                this.contactElement.style.borderRadius = "1px";
-                this.contactElement.style.opacity = "0";
-                this.contactElement.style.transition = "opacity 500ms, width 200ms, height 200ms";
-                this.contactElement.style.position = "absolute";
-                this.contactElement.style.left = `${this.x}px`;
-                this.contactElement.style.top = `${this.y}px`;
-                this.contactElement.style.pointerEvents = "none";
-                this.contactElement.setAttribute('priority', Math.round(Number.MIN_SAFE_INTEGER / 100 + priority).toString());
+                this.contactElement.style.left = `${contactX}px`;
+                this.contactElement.style.top = `${contactY}px`;
+                let contactPriority = Math.round(Number.MIN_SAFE_INTEGER / 100 + priority);
+                this.contactElement.setAttribute('priority', contactPriority.toString());
                 this.contactElement.className = 'iHasContactInfo';
                 if (params.name) {
                     this.contactElement.appendChild(document.createTextNode(params.name));
@@ -188,7 +209,12 @@
                     this.contactElement.appendChild(document.createTextNode(`contact: `));
                 }
                 this.contactElement.appendChild(document.createTextNode(contact));
-                globalCanvas.parentElement.appendChild(this.contactElement);
+                this.insertPriorityElement(this.contactElement);
+            }
+        }
+        setContactInfoDisplay(enabled) {
+            if (this.contactElement) {
+                this.contactElement.style.opacity = enabled ? "1" : "0";
             }
         }
         tryLoadSource() {
@@ -214,6 +240,24 @@
                 return this.frameCount - 1;
             return negativeSafeModulo(Math.floor((currentSeconds - this.startTime) / this.frameSpeed), this.frameCount);
         }
+        insertPriorityElement(element) {
+            let priorityElements = this.globalCanvas.parentElement.children;
+            let priorityElementsArray = Array.from(priorityElements).filter(el => el.hasAttribute('priority'));
+            if (priorityElementsArray.length === 0) {
+                this.globalCanvas.parentElement.appendChild(element);
+            }
+            else {
+                priorityElementsArray.push(element);
+                priorityElementsArray.sort((a, b) => parseInt(b.getAttribute('priority')) - parseInt(a.getAttribute('priority')));
+                let index = priorityElementsArray.findIndex(el => el === element);
+                if (index === priorityElementsArray.length - 1) {
+                    this.globalCanvas.parentElement.appendChild(element);
+                }
+                else {
+                    this.globalCanvas.parentElement.insertBefore(element, priorityElementsArray[index + 1]);
+                }
+            }
+        }
         initCanvas() {
             this.canvasElement.style.position = 'absolute';
             this.canvasElement.style.top = `${this.y}px`;
@@ -223,27 +267,7 @@
             this.canvasElement.style.pointerEvents = 'none';
             this.canvasElement.style.imageRendering = 'pixelated';
             this.canvasElement.setAttribute('priority', this.priority.toString());
-            // find others and append to correct position
-            let templateElements = this.globalCanvas.parentElement.children;
-            let templateElementsArray = Array.from(templateElements).filter(element => element.hasAttribute('priority'));
-            if (templateElementsArray.length === 0) {
-                this.globalCanvas.parentElement.appendChild(this.canvasElement);
-            }
-            else {
-                // add the new template element to the array
-                templateElementsArray.push(this.canvasElement);
-                // sort the array by priority
-                templateElementsArray.sort((a, b) => parseInt(b.getAttribute('priority')) - parseInt(a.getAttribute('priority')));
-                // find the index of the new template element in the sorted array
-                let index = templateElementsArray.findIndex(element => element === this.canvasElement);
-                // insert the new template element at the index
-                if (index === templateElementsArray.length - 1) {
-                    this.globalCanvas.parentElement.appendChild(this.canvasElement);
-                }
-                else {
-                    this.globalCanvas.parentElement.insertBefore(this.canvasElement, templateElementsArray[index + 1]);
-                }
-            }
+            this.insertPriorityElement(this.canvasElement);
         }
         frameStartTime(n = null) {
             return (this.startTime + (n || this.currentFrame || 0) * this.frameSpeed) % this.animationDuration;
@@ -401,6 +425,9 @@
             GM.getValue(`${window.location.host}_notificationsEnabled`, "[]").then((value) => {
                 this.enabledNotifications = JSON.parse(value);
             });
+            let style = document.createElement('style');
+            style.innerHTML = CONTACT_INFO_CSS;
+            canvasElement.parentElement.appendChild(style);
         }
         getCacheBustString() {
             return Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36);
@@ -526,6 +553,11 @@
                 }
             }
         }
+        setContactInfoDisplay(enabled) {
+            for (let i = 0; i < this.templates.length; i++) {
+                this.templates[i].setContactInfoDisplay(enabled);
+            }
+        }
     }
 
     function createButton(text, callback) {
@@ -640,10 +672,7 @@
             }));
             this.div.appendChild(document.createElement('br'));
             this.div.appendChild(createBoldCheckbox('', "Show contact info besides templates", false, (a) => {
-                document.querySelectorAll('.iHasContactInfo').forEach((i) => {
-                    console.log(i);
-                    i.style.opacity = a ? "1" : "0";
-                });
+                manager.setContactInfoDisplay(a);
             }));
             this.div.appendChild(document.createElement('br'));
             this.checkboxes.style.backgroundColor = "rgba(0,0,0,0.5)";
@@ -665,12 +694,16 @@
             this.div.style.pointerEvents = "none";
         }
         toggle() {
-            if (this.div.style.pointerEvents === "none") {
+            if (this.div.style.opacity === "0") {
                 this.open();
             }
             else {
                 this.close();
             }
+        }
+        changeMouseEvents(enabled) {
+            if (this.div.style.opacity === "0")
+                this.div.style.pointerEvents = enabled ? "auto" : "none";
         }
         populateNotifications() {
             while (this.checkboxes.children.length) {
@@ -758,6 +791,7 @@
         iconElement.addEventListener('mousedown', (ev) => {
             if (ev.button === 0) {
                 clicked = true;
+                settings.changeMouseEvents(true);
                 ev.preventDefault(); // prevent text from getting selected
             }
         });
@@ -773,6 +807,7 @@
                 }
                 clicked = false;
                 dragged = false;
+                settings.changeMouseEvents(false);
             }
         });
         window.addEventListener('mousemove', (ev) => {

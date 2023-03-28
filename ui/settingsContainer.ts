@@ -121,10 +121,7 @@ export class Settings {
         }))
         this.div.appendChild(document.createElement('br'))
         this.div.appendChild(createBoldCheckbox('', "Show contact info besides templates", false, (a) => {
-            document.querySelectorAll('.iHasContactInfo').forEach((i) => {
-                console.log(i as HTMLElement);
-                (i as HTMLElement).style.opacity = a ? "1" : "0";
-            })
+            manager.setContactInfoDisplay(a)
         }))
         this.div.appendChild(document.createElement('br'))
 
@@ -151,11 +148,16 @@ export class Settings {
     }
 
     toggle() {
-        if (this.div.style.pointerEvents === "none") {
+        if (this.div.style.opacity === "0") {
             this.open()
         } else {
             this.close()
         }
+    }
+
+    changeMouseEvents(enabled: boolean) {
+        if (this.div.style.opacity === "0")
+            this.div.style.pointerEvents = enabled ? "auto" : "none"
     }
 
     populateNotifications() {

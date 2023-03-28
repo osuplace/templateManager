@@ -1,4 +1,4 @@
-import { CACHE_BUST_PERIOD, MAX_TEMPLATES } from './constants';
+import { CACHE_BUST_PERIOD, CONTACT_INFO_CSS, MAX_TEMPLATES } from './constants';
 import { Template, JsonParams, NotificationServer, NotificationTypes } from './template';
 import { NotificationManager } from './ui/notificationsManager';
 import * as utils from './utils';
@@ -35,6 +35,10 @@ export class TemplateManager {
         GM.getValue(`${window.location.host}_notificationsEnabled`, "[]").then((value) => {
             this.enabledNotifications = JSON.parse(value)
         })
+
+        let style = document.createElement('style')
+        style.innerHTML = CONTACT_INFO_CSS
+        canvasElement.parentElement!.appendChild(style)
     }
 
     getCacheBustString() {
@@ -172,6 +176,12 @@ export class TemplateManager {
                 // yes this calls all whitelist all the time but the load will cancel if already loaded
                 this.loadTemplatesFromJsonURL(this.whitelist[i], i * this.templatesToLoad)
             }
+        }
+    }
+
+    setContactInfoDisplay(enabled: boolean) {
+        for (let i = 0; i < this.templates.length; i++) {
+            this.templates[i].setContactInfoDisplay(enabled)
         }
     }
 }
