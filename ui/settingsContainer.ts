@@ -1,8 +1,8 @@
-import { MAX_TEMPLATES, SETTINGS_CSS } from "../constants";
+import { MAX_TEMPLATES } from "../constants";
 import { TemplateManager } from "../templateManager";
 import * as utils from "../utils";
 
-function createLabel(text:string) {
+function createLabel(text: string) {
     let label = document.createElement("label");
     label.innerText = text;
     return label;
@@ -88,9 +88,6 @@ export class Settings {
         this.manager = manager;
 
         document.body.appendChild(this.overlay);
-        let style = document.createElement("style")
-        style.innerHTML = SETTINGS_CSS;
-        document.body.appendChild(style);
 
         this.overlay.id = "settingsOverlay"
         this.overlay.style.opacity = "0"

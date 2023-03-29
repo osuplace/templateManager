@@ -21,7 +21,42 @@ export const CONTACT_INFO_CSS = css`
         pointer-events: none;
     }
 `
-export const SETTINGS_CSS = css`
+export const GLOBAL_CANVAS_CSS = css`
+    #osuplaceNotificationContainer {
+        width: 150px;
+        height: 66%;
+        position: absolute;
+        z-index: 9999;
+        top: -0.1px;
+        right: 10px;
+        background-color: rgba(255, 255, 255, 0);
+        pointer-events: none;
+        user-select: none;
+    }
+
+    .osuplaceNotification {
+        border-radius: 8px;
+        background-color: #621;
+        color: #eee;
+        transition: height 300ms, opacity 300ms, padding 300ms, margin 300ms;
+        overflow: hidden;
+        pointer-events: auto;
+    }
+
+    .osuplaceNotification.hidden {
+        height: 0px;
+        opacity: 0;
+        padding: 0px;
+        margin: 0px;
+    }
+
+    .osuplaceNotification.visible { 
+        height: auto;
+        opacity: 1;
+        padding: 8px;
+        margin: 8px;
+    }
+
     #settingsOverlay {
         transition: opacity 300ms ease 0s;
         width: 100vw;
