@@ -27,12 +27,6 @@ export class TemplateManager {
         this.startingUrl = startingUrl
         this.initOrReloadTemplates(true)
 
-        window.addEventListener('keydown', (ev: KeyboardEvent) => {
-            if (ev.key.match(/^\d$/)) {
-                let number = parseInt(ev.key) || 1.1
-                this.percentage = 1 / number
-            }
-        })
         GM.getValue(`${window.location.host}_notificationsEnabled`, "[]").then((value) => {
             this.enabledNotifications = JSON.parse(value)
         })
