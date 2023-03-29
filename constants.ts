@@ -41,6 +41,7 @@ export const GLOBAL_CANVAS_CSS = css`
         transition: height 300ms, opacity 300ms, padding 300ms, margin 300ms;
         overflow: hidden;
         pointer-events: auto;
+        cursor: pointer;
     }
 
     .osuplaceNotification.hidden {
@@ -98,6 +99,7 @@ export const GLOBAL_CANVAS_CSS = css`
 
     #templateLinksWrapper button{
         word-break: break-all;
+        cursor: pointer;
     }
 
     .settingsWrapper:empty {

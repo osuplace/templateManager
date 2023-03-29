@@ -68,6 +68,7 @@
         transition: height 300ms, opacity 300ms, padding 300ms, margin 300ms;
         overflow: hidden;
         pointer-events: auto;
+        cursor: pointer;
     }
 
     .osuplaceNotification.hidden {
@@ -125,6 +126,7 @@
 
     #templateLinksWrapper button{
         word-break: break-all;
+        cursor: pointer;
     }
 
     .settingsWrapper:empty {
