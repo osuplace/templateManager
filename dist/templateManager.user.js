@@ -3,7 +3,7 @@
 // @name			template-manager
 // @version			0.4.4
 // @description		Manages your templates on various canvas games
-// @author			LittleEndu
+// @author			LittleEndu, Mikarific
 // @license			MIT
 // @grant			GM.xmlHttpRequest
 // @grant			GM.setValue
@@ -224,6 +224,8 @@
         let context = canvas.getContext('2d');
         if (!context)
             return null;
+        context.canvas.width = image.naturalWidth;
+        context.canvas.height = image.naturalHeight;
         let gridWidth = Math.round(image.naturalWidth / frameWidth);
         let gridX = frameIndex % gridWidth;
         let gridY = Math.floor(frameIndex / gridWidth);
