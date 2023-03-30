@@ -2,11 +2,10 @@ import * as utils from './utils'
 
 export function extractFrame(image: HTMLImageElement, frameWidth: number, frameHeight: number, frameIndex: number): ImageData | null {
     let canvas = document.createElement('canvas')
+    canvas.width = frameWidth
+    canvas.height = frameHeight
     let context = canvas.getContext('2d')
     if (!context) return null;
-
-    context.canvas.width = image.naturalWidth
-    context.canvas.height = image.naturalHeight
 
     let gridWidth = Math.round(image.naturalWidth / frameWidth)
     let gridX = frameIndex % gridWidth

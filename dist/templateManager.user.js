@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.4.4
+// @version			0.4.5
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific
 // @license			MIT
@@ -221,11 +221,11 @@
 
     function extractFrame(image, frameWidth, frameHeight, frameIndex) {
         let canvas = document.createElement('canvas');
+        canvas.width = frameWidth;
+        canvas.height = frameHeight;
         let context = canvas.getContext('2d');
         if (!context)
             return null;
-        context.canvas.width = image.naturalWidth;
-        context.canvas.height = image.naturalHeight;
         let gridWidth = Math.round(image.naturalWidth / frameWidth);
         let gridX = frameIndex % gridWidth;
         let gridY = Math.floor(frameIndex / gridWidth);
