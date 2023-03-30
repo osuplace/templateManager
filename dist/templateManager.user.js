@@ -3,7 +3,7 @@
 // @name			template-manager
 // @version			0.4.4
 // @description		Manages your templates on various canvas games
-// @author			LittleEndu
+// @author			LittleEndu, Mikarific
 // @license			MIT
 // @grant			GM.xmlHttpRequest
 // @grant			GM.setValue
