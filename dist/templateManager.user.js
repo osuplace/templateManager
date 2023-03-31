@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.4.5
+// @version			0.4.6
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -69,6 +69,7 @@
         overflow: hidden;
         pointer-events: auto;
         cursor: pointer;
+        word-wrap: break-word;
     }
 
     .osuplaceNotification.hidden {
