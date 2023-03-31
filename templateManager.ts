@@ -160,6 +160,8 @@ export class TemplateManager {
                 ws.addEventListener('error', (_) => {
                     ws.close();
                 });
+            }).catch((error) => {
+                console.error(`Couldn\'t get topics from ${serverUrl}: ${error}`);
             })
     }
 
