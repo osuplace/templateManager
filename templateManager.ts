@@ -93,7 +93,6 @@ export class TemplateManager {
                 }
                 // connect to websocket
                 if (json.notifications) {
-                    //this.connectToWebSocket(json.notifications)
                     this.setupNotifications(json.notifications)
                 }
             }
@@ -163,38 +162,6 @@ export class TemplateManager {
             }).catch((error) => {
                 console.error(`Couldn\'t get topics from ${serverUrl}: ${error}`);
             })
-    }
-
-    connectToWebSocket(server: NotificationServer) {
-        console.log("trying to connect to websocket at ", server.url)
-        let client = new WebSocket(server.url)
-        this.notificationTypes.set(server.url, server.types)
-
-        client.addEventListener('open', (_) => {
-            console.log("successfully connected to ", server.url)
-            this.websockets.push(client);
-        })
-
-        client.addEventListener('message', async (ev) => {
-            console.log("received message from ", server, ev)
-            console.log(await ev.data.text())
-            let key = await ev.data.text()
-            let notification = server.types.find((t) => t.key === key)
-            if (notification && this.enabledNotifications.includes(`${server.url}??${key}`)) {
-                this.notificationManager.newNotification(server.url, notification.message)
-            }
-        })
-
-        client.addEventListener('close', (_) => {
-            utils.removeItem(this.websockets, client)
-            setTimeout(() => {
-                this.connectToWebSocket(server)
-            }, 1000 * 60);
-        });
-
-        client.addEventListener('error', (_) => {
-            client.close();
-        });
     }
 
     canReload(): boolean {
