@@ -35,6 +35,8 @@
     const NO_JSON_TEMPLATE_IN_PARAMS = "no_json_template";
     const CONTACT_INFO_CSS = css `
     div.iHasContactInfo {
+        max-width: 100px;
+        overflow: hidden;
         font-weight: bold;
         font-size: 1px;
         font-family: serif; /* this fixes firefox */
@@ -50,7 +52,7 @@
 `;
     const GLOBAL_CANVAS_CSS = css `
     #osuplaceNotificationContainer {
-        width: 150px;
+        width: 200px;
         height: 66%;
         position: absolute;
         z-index: 9999;
