@@ -126,7 +126,7 @@ export class TemplateManager {
                 this.notificationTypes.set(serverUrl, topics);
 
                 // actually connecting to the websocket now
-                let ws = new WebSocket(new URL(serverUrl, '/listen'));
+                let ws = new WebSocket(new URL('/listen', serverUrl));
 
                 ws.addEventListener('open', (_) => {
                     console.log(`successfully connected to websocket for ${serverUrl}`);
