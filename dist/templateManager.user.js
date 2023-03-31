@@ -576,9 +576,68 @@
                     }
                     // connect to websocket
                     if (json.notifications) {
-                        this.connectToWebSocket(json.notifications);
+                        //this.connectToWebSocket(json.notifications)
+                        this.setupNotifications(json.notifications);
                     }
                 }
+            });
+        }
+        setupNotifications(serverUrl) {
+            console.log('attempting to set up notification server ' + serverUrl);
+            // get topics
+            fetch(`${serverUrl}/topics`)
+                .then((response) => {
+                if (!response.ok) {
+                    console.error(`error getting ${serverUrl}/topics, trying again in 10s...`);
+                    setTimeout(() => { this.setupNotifications(serverUrl); }, 10000);
+                }
+                return response.json();
+            })
+                .then((data) => {
+                let topics = [];
+                data.forEach((topicFromApi) => {
+                    if (!topicFromApi.id || !topicFromApi.description) {
+                        console.error('Invalid topic: ' + topicFromApi);
+                        return;
+                    }
+                    topics.push({
+                        key: topicFromApi.id,
+                        message: topicFromApi.description
+                    });
+                });
+                this.notificationTypes.set(serverUrl, topics);
+                // actually connecting to the websocket now
+                let ws = new WebSocket(new URL(serverUrl, '/listen'));
+                ws.addEventListener('open', (_) => {
+                    console.log(`successfully connected to websocket for ${serverUrl}`);
+                    this.websockets.push(ws);
+                });
+                ws.addEventListener('message', async (event) => {
+                    // https://github.com/osuplace/broadcaster/blob/main/API.md
+                    let data = JSON.parse(await event.data.text());
+                    if (data.e == 1) {
+                        if (!data.t || !data.c) {
+                            console.error(`Malformed event from ${serverUrl}: ${data}`);
+                        }
+                        if (this.enabledNotifications.includes(`${serverUrl}??${data.t}`)) {
+                            this.notificationManager.newNotification(serverUrl, data.c);
+                        }
+                    }
+                    else {
+                        console.log(`Received unknown event from ${serverUrl}: ${data}`);
+                    }
+                });
+                ws.addEventListener('close', (_) => {
+                    removeItem(this.websockets, ws);
+                    setTimeout(() => {
+                        this.setupNotifications(serverUrl);
+                    }, 1000 * 60);
+                });
+                ws.addEventListener('error', (_) => {
+                    ws.close();
+                });
+            }).catch((error) => {
+                console.error(`Couldn\'t get topics from ${serverUrl}: ${error}`);
             });
         }
         connectToWebSocket(server) {
