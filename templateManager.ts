@@ -108,10 +108,12 @@ export class TemplateManager {
                 if (!response.ok) {
                     console.error(`error getting ${serverUrl}/topics, trying again in 10s...`);
                     setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate) }, 10000);
+                    return false;
                 }
                 return response.json();
             })
             .then((data: any) => {
+                if (data == false) return;
                 let topics: Array<NotificationTopic> = [];
                 data.forEach((topicFromApi: any) => {
                     if (!topicFromApi.id || !topicFromApi.description) {
