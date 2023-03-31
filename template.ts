@@ -35,7 +35,7 @@ export interface JsonParams {
     contact: string | undefined
     contactInfo: string | undefined // alias for contact
     templates: TemplateParams[]
-    notifications: NotificationServer
+    notifications: string | undefined // url to broadcaster
     whitelist: NamedURL[]
     blacklist: NamedURL[]
 }
