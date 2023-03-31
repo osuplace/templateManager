@@ -44,6 +44,7 @@ export const GLOBAL_CANVAS_CSS = css`
         overflow: hidden;
         pointer-events: auto;
         cursor: pointer;
+        word-wrap: break-word;
     }
 
     .osuplaceNotification.hidden {

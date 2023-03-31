@@ -21,21 +21,22 @@ interface NamedURL {
     url: string
 }
 
-export interface NotificationTypes {
-    key: string
-    message: string
+export interface NotificationTopic {
+    id: string
+    description: string
+    forced: boolean;
 }
 
 export interface NotificationServer {
     url: string
-    types: NotificationTypes[]
+    topics: NotificationTopic[]
 }
 
 export interface JsonParams {
     contact: string | undefined
     contactInfo: string | undefined // alias for contact
     templates: TemplateParams[]
-    notifications: NotificationServer
+    notifications: string | undefined // url to broadcaster
     whitelist: NamedURL[]
     blacklist: NamedURL[]
 }

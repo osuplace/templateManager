@@ -1,13 +1,13 @@
 {
   "name": "template-manager",
-  "version": "0.4.5",
+  "version": "0.4.6",
   "description": "Manages your templates on various canvas games",
   "main": "main.ts",
   "scripts": {
     "test": "echo \\\"Test command\\\" && exit 0",
     "build": "gorilla --input ./main.ts --output ./dist/templateManager.user.js"
   },
-  "author": "LittleEndu, Mikarific",
+  "author": "LittleEndu, Mikarific, April",
   "license": "MIT",
   "dependencies": {
     "@types/greasemonkey": "^4.0.4"

@@ -1,5 +1,5 @@
 import { CACHE_BUST_PERIOD, CONTACT_INFO_CSS, GLOBAL_CANVAS_CSS, MAX_TEMPLATES, NO_JSON_TEMPLATE_IN_PARAMS } from './constants';
-import { Template, JsonParams, NotificationServer, NotificationTypes } from './template';
+import { Template, JsonParams, NotificationServer, NotificationTopic } from './template';
 import { NotificationManager } from './ui/notificationsManager';
 import * as utils from './utils';
 
@@ -7,7 +7,7 @@ export class TemplateManager {
     templatesToLoad = MAX_TEMPLATES;
     alreadyLoaded = new Array<string>();
     websockets = new Array<WebSocket>();
-    notificationTypes = new Map<string, NotificationTypes[]>();
+    notificationTypes = new Map<string, NotificationTopic[]>();
     enabledNotifications = new Array<string>();
     whitelist = new Array<string>();
     blacklist = new Array<string>();
@@ -93,42 +93,80 @@ export class TemplateManager {
                 }
                 // connect to websocket
                 if (json.notifications) {
-                    this.connectToWebSocket(json.notifications)
+                    this.setupNotifications(json.notifications, url == this.startingUrl);
                 }
             }
         });
     }
 
-    connectToWebSocket(server: NotificationServer) {
-        console.log("trying to connect to websocket at ", server.url)
-        let client = new WebSocket(server.url)
-        this.notificationTypes.set(server.url, server.types)
+    setupNotifications(serverUrl: string, isTopLevelTemplate: boolean) {
+        console.log('attempting to set up notification server ' + serverUrl);
+        // get topics
+        let domain = new URL(serverUrl).hostname.replace('broadcaster.','');
+        fetch(`${serverUrl}/topics`)
+            .then((response) => {
+                if (!response.ok) {
+                    console.error(`error getting ${serverUrl}/topics, trying again in 10s...`);
+                    setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate) }, 10000);
+                    return false;
+                }
+                return response.json();
+            })
+            .then((data: any) => {
+                if (data == false) return;
+                let topics: Array<NotificationTopic> = [];
+                data.forEach((topicFromApi: any) => {
+                    if (!topicFromApi.id || !topicFromApi.description) {
+                        console.error('Invalid topic: ' + topicFromApi);
+                        return;
+                    };
+                    let topic = topicFromApi as NotificationTopic;
+                    topic.forced = isTopLevelTemplate;
 
-        client.addEventListener('open', (_) => {
-            console.log("successfully connected to ", server.url)
-            this.websockets.push(client);
-        })
+                    topics.push(topic);
+                });
+                this.notificationTypes.set(domain, topics);
 
-        client.addEventListener('message', async (ev) => {
-            console.log("received message from ", server, ev)
-            console.log(await ev.data.text())
-            let key = await ev.data.text()
-            let notification = server.types.find((t) => t.key === key)
-            if (notification && this.enabledNotifications.includes(`${server.url}??${key}`)) {
-                this.notificationManager.newNotification(server.url, notification.message)
-            }
-        })
+                // actually connecting to the websocket now
+                let wsUrl = new URL('/listen', serverUrl)
+                wsUrl.protocol = wsUrl.protocol == 'https' ? 'wss' : 'ws';
+                let ws = new WebSocket(wsUrl);
 
-        client.addEventListener('close', (_) => {
-            utils.removeItem(this.websockets, client)
-            setTimeout(() => {
-                this.connectToWebSocket(server)
-            }, 1000 * 60);
-        });
+                ws.addEventListener('open', (_) => {
+                    console.log(`successfully connected to websocket for ${serverUrl}`);
+                    this.websockets.push(ws);
+                });
 
-        client.addEventListener('error', (_) => {
-            client.close();
-        });
+                ws.addEventListener('message', async (event) => {
+                    // https://github.com/osuplace/broadcaster/blob/main/API.md
+                    let data = JSON.parse(await event.data);
+                    if (data.e == 1) {
+                        if (!data.t || !data.c) {
+                            console.error(`Malformed event from ${serverUrl}: ${data}`);
+                        };
+                        let topic = topics.find(t => t.id == data.t); // FIXME: if we add dynamically updating topics, this will use the old topic list instead of the up to date one
+                        if (!topic) return;
+                        if (this.enabledNotifications.includes(`${domain}??${data.t}`) || topic.forced) {
+                            this.notificationManager.newNotification(domain, data.c);
+                        }
+                    } else {
+                        console.log(`Received unknown event from ${serverUrl}: ${data}`);
+                    }
+                });
+
+                ws.addEventListener('close', (_) => {
+                    utils.removeItem(this.websockets, ws);
+                    setTimeout(() => {
+                        this.setupNotifications(serverUrl, isTopLevelTemplate);
+                    }, 1000 * 60)
+                });
+
+                ws.addEventListener('error', (_) => {
+                    ws.close();
+                });
+            }).catch((error) => {
+                console.error(`Couldn\'t get topics from ${serverUrl}: ${error}`);
+            })
     }
 
     canReload(): boolean {
