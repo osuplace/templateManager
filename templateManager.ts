@@ -102,6 +102,7 @@ export class TemplateManager {
     setupNotifications(serverUrl: string) {
         console.log('attempting to set up notification server ' + serverUrl);
         // get topics
+        let domain = new URL(serverUrl).hostname.replace('broadcaster.','');
         fetch(`${serverUrl}/topics`)
             .then((response) => {
                 if (!response.ok) {
@@ -123,10 +124,12 @@ export class TemplateManager {
                         message: topicFromApi.description
                     });
                 });
-                this.notificationTypes.set(serverUrl, topics);
+                this.notificationTypes.set(domain, topics);
 
                 // actually connecting to the websocket now
-                let ws = new WebSocket(new URL('/listen', serverUrl));
+                let wsUrl = new URL('/listen', serverUrl)
+                wsUrl.protocol = wsUrl.protocol == 'https' ? 'wss' : 'ws';
+                let ws = new WebSocket(wsUrl);
 
                 ws.addEventListener('open', (_) => {
                     console.log(`successfully connected to websocket for ${serverUrl}`);
@@ -135,14 +138,14 @@ export class TemplateManager {
 
                 ws.addEventListener('message', async (event) => {
                     // https://github.com/osuplace/broadcaster/blob/main/API.md
-                    let data = JSON.parse(await event.data.text());
+                    let data = JSON.parse(await event.data);
                     if (data.e == 1) {
                         if (!data.t || !data.c) {
                             console.error(`Malformed event from ${serverUrl}: ${data}`);
                         };
                         
-                        if (this.enabledNotifications.includes(`${serverUrl}??${data.t}`)) {
-                            this.notificationManager.newNotification(serverUrl, data.c);
+                        if (this.enabledNotifications.includes(`${domain}??${data.t}`)) {
+                            this.notificationManager.newNotification(domain, data.c);
                         }
                     } else {
                         console.log(`Received unknown event from ${serverUrl}: ${data}`);
