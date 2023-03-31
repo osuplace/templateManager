@@ -53,12 +53,13 @@ function createSlider(Text: string, value: string, callback: (n: number) => void
     return div;
 }
 
-function createBoldCheckbox(boldText: string, regularText: string, checked: boolean, callback: (a: boolean) => void) {
+function createBoldCheckbox(boldText: string, regularText: string, checked: boolean, callback: (a: boolean) => void, disabled: boolean = false) {
     let div = document.createElement("div");
     div.className = "settingsCheckbox"
     let checkbox = document.createElement('input')
     checkbox.type = "checkbox"
     checkbox.checked = checked;
+    checkbox.disabled = disabled;
     checkbox.oninput = (ev) => {
         ev.preventDefault()
         callback(checkbox.checked)
@@ -215,15 +216,16 @@ export class Settings {
             if (notifications?.length) {
                 for (let i = 0; i < notifications.length; i++) {
                     let notification = notifications[i]
-                    let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.key}`)
-                    let checkbox = createBoldCheckbox(notification.key + " - ", notification.message, enabled, async (b) => {
-                        utils.removeItem(this.manager.enabledNotifications, `${value}??${notification.key}`)
+                    let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.id}`)
+                    if (notification.forced) enabled = true;
+                    let checkbox = createBoldCheckbox(notification.id + " - ", notification.description, enabled, async (b) => {
+                        utils.removeItem(this.manager.enabledNotifications, `${value}??${notification.id}`)
                         if (b) {
-                            this.manager.enabledNotifications.push(`${value}??${notification.key}`)
+                            this.manager.enabledNotifications.push(`${value}??${notification.id}`)
                         }
                         let enabledKey = `${window.location.host}_notificationsEnabled`
                         await GM.setValue(enabledKey, JSON.stringify(this.manager.enabledNotifications))
-                    })
+                    }, notification.forced)
                     this.notificationsWrapper.append(document.createElement('br'))
                     this.notificationsWrapper.append(checkbox)
                 }

@@ -1,5 +1,5 @@
 import { CACHE_BUST_PERIOD, CONTACT_INFO_CSS, GLOBAL_CANVAS_CSS, MAX_TEMPLATES, NO_JSON_TEMPLATE_IN_PARAMS } from './constants';
-import { Template, JsonParams, NotificationServer, NotificationTypes } from './template';
+import { Template, JsonParams, NotificationServer, NotificationTopic } from './template';
 import { NotificationManager } from './ui/notificationsManager';
 import * as utils from './utils';
 
@@ -7,7 +7,7 @@ export class TemplateManager {
     templatesToLoad = MAX_TEMPLATES;
     alreadyLoaded = new Array<string>();
     websockets = new Array<WebSocket>();
-    notificationTypes = new Map<string, NotificationTypes[]>();
+    notificationTypes = new Map<string, NotificationTopic[]>();
     enabledNotifications = new Array<string>();
     whitelist = new Array<string>();
     blacklist = new Array<string>();
@@ -93,13 +93,13 @@ export class TemplateManager {
                 }
                 // connect to websocket
                 if (json.notifications) {
-                    this.setupNotifications(json.notifications)
+                    this.setupNotifications(json.notifications, url == this.startingUrl);
                 }
             }
         });
     }
 
-    setupNotifications(serverUrl: string) {
+    setupNotifications(serverUrl: string, isTopLevelTemplate: boolean) {
         console.log('attempting to set up notification server ' + serverUrl);
         // get topics
         let domain = new URL(serverUrl).hostname.replace('broadcaster.','');
@@ -107,22 +107,21 @@ export class TemplateManager {
             .then((response) => {
                 if (!response.ok) {
                     console.error(`error getting ${serverUrl}/topics, trying again in 10s...`);
-                    setTimeout(() => { this.setupNotifications(serverUrl) }, 10000);
+                    setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate) }, 10000);
                 }
                 return response.json();
             })
             .then((data: any) => {
-                let topics: Array<NotificationTypes> = [];
+                let topics: Array<NotificationTopic> = [];
                 data.forEach((topicFromApi: any) => {
                     if (!topicFromApi.id || !topicFromApi.description) {
                         console.error('Invalid topic: ' + topicFromApi);
                         return;
                     };
+                    let topic = topicFromApi as NotificationTopic;
+                    topic.forced = isTopLevelTemplate;
 
-                    topics.push({
-                        key: topicFromApi.id,
-                        message: topicFromApi.description
-                    });
+                    topics.push(topic);
                 });
                 this.notificationTypes.set(domain, topics);
 
@@ -143,8 +142,9 @@ export class TemplateManager {
                         if (!data.t || !data.c) {
                             console.error(`Malformed event from ${serverUrl}: ${data}`);
                         };
-                        
-                        if (this.enabledNotifications.includes(`${domain}??${data.t}`)) {
+                        let topic = topics.find(t => t.id == data.t); // FIXME: if we add dynamically updating topics, this will use the old topic list instead of the up to date one
+                        if (!topic) return;
+                        if (this.enabledNotifications.includes(`${domain}??${data.t}`) || topic.forced) {
                             this.notificationManager.newNotification(domain, data.c);
                         }
                     } else {
@@ -155,7 +155,7 @@ export class TemplateManager {
                 ws.addEventListener('close', (_) => {
                     utils.removeItem(this.websockets, ws);
                     setTimeout(() => {
-                        this.setupNotifications(serverUrl);
+                        this.setupNotifications(serverUrl, isTopLevelTemplate);
                     }, 1000 * 60)
                 });
 
