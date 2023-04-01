@@ -21,17 +21,6 @@ interface NamedURL {
     url: string
 }
 
-export interface NotificationTopic {
-    id: string
-    description: string
-    forced: boolean;
-}
-
-export interface NotificationServer {
-    url: string
-    topics: NotificationTopic[]
-}
-
 export interface JsonParams {
     contact: string | undefined
     contactInfo: string | undefined // alias for contact

@@ -1,7 +1,13 @@
 import { CACHE_BUST_PERIOD, CONTACT_INFO_CSS, GLOBAL_CANVAS_CSS, MAX_TEMPLATES, NO_JSON_TEMPLATE_IN_PARAMS } from './constants';
-import { Template, JsonParams, NotificationServer, NotificationTopic } from './template';
+import { Template, JsonParams } from './template';
 import { NotificationManager } from './ui/notificationsManager';
 import * as utils from './utils';
+
+interface NotificationTopic {
+    id: string
+    description: string
+    forced: boolean | undefined;
+}
 
 export class TemplateManager {
     templatesToLoad = MAX_TEMPLATES;
@@ -102,7 +108,7 @@ export class TemplateManager {
     setupNotifications(serverUrl: string, isTopLevelTemplate: boolean) {
         console.log('attempting to set up notification server ' + serverUrl);
         // get topics
-        let domain = new URL(serverUrl).hostname.replace('broadcaster.','');
+        let domain = new URL(serverUrl).hostname.replace('broadcaster.', '');
         fetch(`${serverUrl}/topics`)
             .then((response) => {
                 if (!response.ok) {
@@ -120,7 +126,8 @@ export class TemplateManager {
                         console.error('Invalid topic: ' + topicFromApi);
                         return;
                     };
-                    let topic = topicFromApi as NotificationTopic;
+                    
+                    let topic: NotificationTopic = topicFromApi;
                     topic.forced = isTopLevelTemplate;
 
                     topics.push(topic);
@@ -204,7 +211,7 @@ export class TemplateManager {
                 for (let i = 0; i < templates.length; i++) {
                     this.loadTemplatesFromJsonURL(templates[i])
                 }
-            } else if (!this.notificationSent){
+            } else if (!this.notificationSent) {
                 this.notificationManager.newNotification("template manager", "No default template set. Consider adding one via settings.")
                 this.notificationSent = true
             }
