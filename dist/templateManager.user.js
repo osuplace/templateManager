@@ -620,9 +620,7 @@
                         console.error('Invalid topic: ' + topicFromApi);
                         return;
                     }
-                    let topic = topicFromApi;
-                    topic.forced = isTopLevelTemplate;
-                    topics.push(topic);
+                    topics.push(topicFromApi);
                 });
                 this.notificationTypes.set(domain, topics);
                 // actually connecting to the websocket now
@@ -643,7 +641,7 @@
                         let topic = topics.find(t => t.id == data.t); // FIXME: if we add dynamically updating topics, this will use the old topic list instead of the up to date one
                         if (!topic)
                             return;
-                        if (this.enabledNotifications.includes(`${domain}??${data.t}`) || topic.forced) {
+                        if (this.enabledNotifications.includes(`${domain}??${data.t}`) || isTopLevelTemplate) {
                             this.notificationManager.newNotification(domain, data.c);
                         }
                     }
@@ -924,8 +922,6 @@
                     for (let i = 0; i < notifications.length; i++) {
                         let notification = notifications[i];
                         let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.id}`);
-                        if (notification.forced)
-                            enabled = true;
                         let checkbox = createBoldCheckbox(notification.id + " - ", notification.description, enabled, async (b) => {
                             removeItem(this.manager.enabledNotifications, `${value}??${notification.id}`);
                             if (b) {
@@ -933,7 +929,7 @@
                             }
                             let enabledKey = `${window.location.host}_notificationsEnabled`;
                             await GM.setValue(enabledKey, JSON.stringify(this.manager.enabledNotifications));
-                        }, notification.forced);
+                        });
                         this.notificationsWrapper.append(document.createElement('br'));
                         this.notificationsWrapper.append(checkbox);
                     }

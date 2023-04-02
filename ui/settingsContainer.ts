@@ -217,7 +217,6 @@ export class Settings {
                 for (let i = 0; i < notifications.length; i++) {
                     let notification = notifications[i]
                     let enabled = this.manager.enabledNotifications.includes(`${value}??${notification.id}`)
-                    if (notification.forced) enabled = true;
                     let checkbox = createBoldCheckbox(notification.id + " - ", notification.description, enabled, async (b) => {
                         utils.removeItem(this.manager.enabledNotifications, `${value}??${notification.id}`)
                         if (b) {
@@ -225,7 +224,7 @@ export class Settings {
                         }
                         let enabledKey = `${window.location.host}_notificationsEnabled`
                         await GM.setValue(enabledKey, JSON.stringify(this.manager.enabledNotifications))
-                    }, notification.forced)
+                    })
                     this.notificationsWrapper.append(document.createElement('br'))
                     this.notificationsWrapper.append(checkbox)
                 }

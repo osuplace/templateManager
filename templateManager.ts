@@ -6,7 +6,6 @@ import * as utils from './utils';
 interface NotificationTopic {
     id: string
     description: string
-    forced: boolean | undefined;
 }
 
 export class TemplateManager {
@@ -128,10 +127,7 @@ export class TemplateManager {
                         return;
                     };
 
-                    let topic: NotificationTopic = topicFromApi;
-                    topic.forced = isTopLevelTemplate;
-
-                    topics.push(topic);
+                    topics.push(topicFromApi);
                 });
                 this.notificationTypes.set(domain, topics);
 
@@ -154,7 +150,7 @@ export class TemplateManager {
                         };
                         let topic = topics.find(t => t.id == data.t); // FIXME: if we add dynamically updating topics, this will use the old topic list instead of the up to date one
                         if (!topic) return;
-                        if (this.enabledNotifications.includes(`${domain}??${data.t}`) || topic.forced) {
+                        if (this.enabledNotifications.includes(`${domain}??${data.t}`) || isTopLevelTemplate) {
                             this.notificationManager.newNotification(domain, data.c);
                         }
                     } else {
