@@ -21,17 +21,6 @@ interface NamedURL {
     url: string
 }
 
-export interface NotificationTopic {
-    id: string
-    description: string
-    forced: boolean;
-}
-
-export interface NotificationServer {
-    url: string
-    topics: NotificationTopic[]
-}
-
 export interface JsonParams {
     contact: string | undefined
     contactInfo: string | undefined // alias for contact
@@ -119,7 +108,7 @@ export class Template {
             let checkingCoords = true
             while (checkingCoords) {
                 checkingCoords = false
-                let contactInfos = globalCanvas.parentElement!.querySelectorAll('.iHasContactInfo')
+                let contactInfos = this.globalCanvas.parentElement!.querySelectorAll('.iHasContactInfo')
                 for (let i = 0; i < contactInfos.length; i++) {
                     let child = contactInfos[i] as HTMLElement
                     if (child && parseInt(child.style.left) === contactX && parseInt(child.style.top) === contactY) {
@@ -144,6 +133,28 @@ export class Template {
             this.contactElement.appendChild(document.createTextNode(contact))
             this.insertPriorityElement(this.contactElement)
         }
+
+        let updateStyle = () => {
+            let css = getComputedStyle(this.globalCanvas)
+            let globalRatio = parseFloat(this.globalCanvas.style.width) / this.globalCanvas.width
+            this.canvasElement.style.width = `${this.frameWidth! * globalRatio}px`
+            this.canvasElement.style.height = `${this.frameHeight! * globalRatio}px`
+            if (css.left !== "auto")
+                this.canvasElement.style.left = `calc(${this.x * globalRatio}px + ${css.left})`
+            else
+                this.canvasElement.style.left = `${this.x * globalRatio}px`
+            if (css.right !== "auto")
+                this.canvasElement.style.top = `calc(${this.y * globalRatio}px + ${css.top})`
+            else
+                this.canvasElement.style.top = `${this.y * globalRatio}px`
+            this.canvasElement.style.translate = css.translate
+            this.canvasElement.style.transform = css.transform
+            this.canvasElement.style.zIndex = (parseInt(css.zIndex) + priority).toString()
+        }
+        // observe changes in the canvas
+        let observer = new MutationObserver(updateStyle)
+        observer.observe(globalCanvas, { attributes: true })
+        updateStyle()
     }
 
     setContactInfoDisplay(enabled: boolean) {
@@ -178,18 +189,19 @@ export class Template {
     }
 
     insertPriorityElement(element: HTMLElement) {
-        let priorityElements = this.globalCanvas.parentElement!.children;
+        let container = this.globalCanvas.parentElement!
+        let priorityElements = container.children;
         let priorityElementsArray: Array<Element> = Array.from(priorityElements).filter(el => el.hasAttribute('priority'));
         if (priorityElementsArray.length === 0) {
-            this.globalCanvas.parentElement!.appendChild(element)
+            container.appendChild(element)
         } else {
             priorityElementsArray.push(element)
             priorityElementsArray.sort((a, b) => parseInt(b.getAttribute('priority')!) - parseInt(a.getAttribute('priority')!));
             let index = priorityElementsArray.findIndex(el => el === element);
             if (index === priorityElementsArray.length - 1) {
-                this.globalCanvas.parentElement!.appendChild(element);
+                container.appendChild(element);
             } else {
-                this.globalCanvas.parentElement!.insertBefore(element, priorityElementsArray[index + 1]);
+                container.insertBefore(element, priorityElementsArray[index + 1]);
             }
         }
     }
@@ -215,18 +227,7 @@ export class Template {
         return (this.startTime + (n || this.currentFrame || 0) * this.frameSpeed) % this.animationDuration
     }
 
-    updateStyle() {
-        // for canvas games where the canvas itself has css applied
-        let globalRatio = parseFloat(this.globalCanvas.style.width) / this.globalCanvas.width
-        this.canvasElement.style.width = `${this.frameWidth! * globalRatio}px`
-        this.canvasElement.style.height = `${this.frameHeight! * globalRatio}px`
-        this.canvasElement.style.left = `${this.x * globalRatio}px`
-        this.canvasElement.style.top = `${this.y * globalRatio}px`
-    }
-
     update(percentage: number, randomness: number, currentSeconds: number) {
-        this.updateStyle()
-
         // return if the animation is finished
         if (!this.looping && currentSeconds > this.startTime + this.frameSpeed * this.frameCount) {
             return;

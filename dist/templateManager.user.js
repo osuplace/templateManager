@@ -35,6 +35,8 @@
     const NO_JSON_TEMPLATE_IN_PARAMS = "no_json_template";
     const CONTACT_INFO_CSS = css `
     div.iHasContactInfo {
+        max-width: 100px;
+        overflow: hidden;
         font-weight: bold;
         font-size: 1px;
         font-family: serif; /* this fixes firefox */
@@ -50,7 +52,7 @@
 `;
     const GLOBAL_CANVAS_CSS = css `
     #osuplaceNotificationContainer {
-        width: 150px;
+        width: 200px;
         height: 66%;
         position: absolute;
         z-index: 9999;
@@ -312,7 +314,7 @@
                 let checkingCoords = true;
                 while (checkingCoords) {
                     checkingCoords = false;
-                    let contactInfos = globalCanvas.parentElement.querySelectorAll('.iHasContactInfo');
+                    let contactInfos = this.globalCanvas.parentElement.querySelectorAll('.iHasContactInfo');
                     for (let i = 0; i < contactInfos.length; i++) {
                         let child = contactInfos[i];
                         if (child && parseInt(child.style.left) === contactX && parseInt(child.style.top) === contactY) {
@@ -336,6 +338,27 @@
                 this.contactElement.appendChild(document.createTextNode(contact));
                 this.insertPriorityElement(this.contactElement);
             }
+            let updateStyle = () => {
+                let css = getComputedStyle(this.globalCanvas);
+                let globalRatio = parseFloat(this.globalCanvas.style.width) / this.globalCanvas.width;
+                this.canvasElement.style.width = `${this.frameWidth * globalRatio}px`;
+                this.canvasElement.style.height = `${this.frameHeight * globalRatio}px`;
+                if (css.left !== "auto")
+                    this.canvasElement.style.left = `calc(${this.x * globalRatio}px + ${css.left})`;
+                else
+                    this.canvasElement.style.left = `${this.x * globalRatio}px`;
+                if (css.right !== "auto")
+                    this.canvasElement.style.top = `calc(${this.y * globalRatio}px + ${css.top})`;
+                else
+                    this.canvasElement.style.top = `${this.y * globalRatio}px`;
+                this.canvasElement.style.translate = css.translate;
+                this.canvasElement.style.transform = css.transform;
+                this.canvasElement.style.zIndex = (parseInt(css.zIndex) + priority).toString();
+            };
+            // observe changes in the canvas
+            let observer = new MutationObserver(updateStyle);
+            observer.observe(globalCanvas, { attributes: true });
+            updateStyle();
         }
         setContactInfoDisplay(enabled) {
             if (this.contactElement) {
@@ -366,20 +389,21 @@
             return negativeSafeModulo(Math.floor((currentSeconds - this.startTime) / this.frameSpeed), this.frameCount);
         }
         insertPriorityElement(element) {
-            let priorityElements = this.globalCanvas.parentElement.children;
+            let container = this.globalCanvas.parentElement;
+            let priorityElements = container.children;
             let priorityElementsArray = Array.from(priorityElements).filter(el => el.hasAttribute('priority'));
             if (priorityElementsArray.length === 0) {
-                this.globalCanvas.parentElement.appendChild(element);
+                container.appendChild(element);
             }
             else {
                 priorityElementsArray.push(element);
                 priorityElementsArray.sort((a, b) => parseInt(b.getAttribute('priority')) - parseInt(a.getAttribute('priority')));
                 let index = priorityElementsArray.findIndex(el => el === element);
                 if (index === priorityElementsArray.length - 1) {
-                    this.globalCanvas.parentElement.appendChild(element);
+                    container.appendChild(element);
                 }
                 else {
-                    this.globalCanvas.parentElement.insertBefore(element, priorityElementsArray[index + 1]);
+                    container.insertBefore(element, priorityElementsArray[index + 1]);
                 }
             }
         }
@@ -397,17 +421,8 @@
         frameStartTime(n = null) {
             return (this.startTime + (n || this.currentFrame || 0) * this.frameSpeed) % this.animationDuration;
         }
-        updateStyle() {
-            // for canvas games where the canvas itself has css applied
-            let globalRatio = parseFloat(this.globalCanvas.style.width) / this.globalCanvas.width;
-            this.canvasElement.style.width = `${this.frameWidth * globalRatio}px`;
-            this.canvasElement.style.height = `${this.frameHeight * globalRatio}px`;
-            this.canvasElement.style.left = `${this.x * globalRatio}px`;
-            this.canvasElement.style.top = `${this.y * globalRatio}px`;
-        }
         update(percentage, randomness, currentSeconds) {
             var _a;
-            this.updateStyle();
             // return if the animation is finished
             if (!this.looping && currentSeconds > this.startTime + this.frameSpeed * this.frameCount) {
                 return;
@@ -515,6 +530,7 @@
             this.lastCacheBust = this.getCacheBustString();
             this.notificationManager = new NotificationManager();
             this.notificationSent = false;
+            console.log('TemplateManager constructor ', canvasElement);
             this.canvasElement = canvasElement;
             this.startingUrl = startingUrl;
             this.initOrReloadTemplates(true);
@@ -1005,11 +1021,11 @@
     }
 
     let jsontemplate;
-    let canvasElement;
+    let canvasElement; // FIXME: This should probably be a list and the user can just select the correct one manually
     function findCanvas(element) {
         if (element instanceof HTMLCanvasElement) {
             console.log('found canvas', element, window.location.href);
-            if (!canvasElement) {
+            if (!canvasElement && element.width > 0 && element.height > 0) {
                 canvasElement = element;
             }
             else if (element.width * element.height > canvasElement.width * canvasElement.height) {
