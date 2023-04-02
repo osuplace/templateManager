@@ -627,7 +627,7 @@
                 this.notificationTypes.set(domain, topics);
                 // actually connecting to the websocket now
                 let wsUrl = new URL('/listen', serverUrl);
-                wsUrl.protocol = wsUrl.protocol == 'https' ? 'wss' : 'ws';
+                wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
                 let ws = new WebSocket(wsUrl);
                 ws.addEventListener('open', (_) => {
                     console.log(`successfully connected to websocket for ${serverUrl}`);
