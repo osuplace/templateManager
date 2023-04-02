@@ -119,7 +119,7 @@ export class TemplateManager {
                 }
                 return response.json();
             })
-            .then((data: any) => {
+            .then(async (data: any) => {
                 if (data == false) return;
                 let topics: Array<NotificationTopic> = [];
                 data.forEach((topicFromApi: any) => {
@@ -129,28 +129,29 @@ export class TemplateManager {
                     };
 
                     let topic: NotificationTopic = topicFromApi;
-                    topic.forced = isTopLevelTemplate;
+                    if (isTopLevelTemplate) {
+                        topic.forced = true;
+                        this.enabledNotifications.push(`${domain}??${topic.id}`)
+                    }
 
                     topics.push(topic);
                 });
                 this.notificationTypes.set(domain, topics);
+                
+                if (isTopLevelTemplate) {
+                    let enabledKey = `${window.location.host}_notificationsEnabled`
+                    await GM.setValue(enabledKey, JSON.stringify(this.enabledNotifications))
+                    this.notificationManager.newNotification("template manager", `You were automatically set to recieve notifications from ${domain} as it's from your address-bar template`);
+                }
 
                 // actually connecting to the websocket now
                 let wsUrl = new URL('/listen', serverUrl)
                 wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
                 let ws = new WebSocket(wsUrl);
 
-                ws.addEventListener('open', async (_) => {
+                ws.addEventListener('open', (_) => {
                     console.log(`successfully connected to websocket for ${serverUrl}`);
                     this.websockets.push(ws);
-                    if (isTopLevelTemplate) {
-                        for (let i = 0; i < topics.length; i++) {
-                            this.enabledNotifications.push(`${domain}??${topics[i].id}`)
-                        }
-                        let enabledKey = `${window.location.host}_notificationsEnabled`
-                        await GM.setValue(enabledKey, JSON.stringify(this.enabledNotifications))
-                        this.notificationManager.newNotification("template manager", `You were automatically set to recieve notifications from ${domain} as it's from your address-bar template`);
-                    }
                 });
 
                 ws.addEventListener('message', async (event) => {
