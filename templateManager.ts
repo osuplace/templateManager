@@ -131,13 +131,14 @@ export class TemplateManager {
                     let topic: NotificationTopic = topicFromApi;
                     if (isTopLevelTemplate) {
                         topic.forced = true;
+                        utils.removeItem(this.enabledNotifications, `${domain}??${topic.id}`)
                         this.enabledNotifications.push(`${domain}??${topic.id}`)
                     }
 
                     topics.push(topic);
                 });
                 this.notificationTypes.set(domain, topics);
-                
+
                 if (isTopLevelTemplate) {
                     let enabledKey = `${window.location.host}_notificationsEnabled`
                     await GM.setValue(enabledKey, JSON.stringify(this.enabledNotifications))

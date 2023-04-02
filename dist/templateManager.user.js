@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.4.6
+// @version			0.4.7
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -623,6 +623,7 @@
                     let topic = topicFromApi;
                     if (isTopLevelTemplate) {
                         topic.forced = true;
+                        removeItem(this.enabledNotifications, `${domain}??${topic.id}`);
                         this.enabledNotifications.push(`${domain}??${topic.id}`);
                     }
                     topics.push(topic);
