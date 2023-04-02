@@ -29,6 +29,7 @@ export class TemplateManager {
     notificationSent = false;
 
     constructor(canvasElement: HTMLCanvasElement, startingUrl: string) {
+        console.log('TemplateManager constructor ', canvasElement);
         this.canvasElement = canvasElement;
         this.startingUrl = startingUrl
         this.initOrReloadTemplates(true)
@@ -126,7 +127,7 @@ export class TemplateManager {
                         console.error('Invalid topic: ' + topicFromApi);
                         return;
                     };
-                    
+
                     let topic: NotificationTopic = topicFromApi;
                     topic.forced = isTopLevelTemplate;
 
