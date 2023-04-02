@@ -139,6 +139,9 @@ export class TemplateManager {
                 ws.addEventListener('open', (_) => {
                     console.log(`successfully connected to websocket for ${serverUrl}`);
                     this.websockets.push(ws);
+                    if (isTopLevelTemplate) {
+                        this.notificationManager.newNotification("template manager", `You will recieve notifications from ${domain} as it's from your addressbar template`);
+                    }
                 });
 
                 ws.addEventListener('message', async (event) => {
