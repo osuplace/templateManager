@@ -611,7 +611,7 @@
                 }
                 return response.json();
             })
-                .then((data) => {
+                .then(async (data) => {
                 if (data == false)
                     return;
                 let topics = [];
@@ -621,10 +621,18 @@
                         return;
                     }
                     let topic = topicFromApi;
-                    topic.forced = isTopLevelTemplate;
+                    if (isTopLevelTemplate) {
+                        topic.forced = true;
+                        this.enabledNotifications.push(`${domain}??${topic.id}`);
+                    }
                     topics.push(topic);
                 });
                 this.notificationTypes.set(domain, topics);
+                if (isTopLevelTemplate) {
+                    let enabledKey = `${window.location.host}_notificationsEnabled`;
+                    await GM.setValue(enabledKey, JSON.stringify(this.enabledNotifications));
+                    this.notificationManager.newNotification("template manager", `You were automatically set to recieve notifications from ${domain} as it's from your address-bar template`);
+                }
                 // actually connecting to the websocket now
                 let wsUrl = new URL('/listen', serverUrl);
                 wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
