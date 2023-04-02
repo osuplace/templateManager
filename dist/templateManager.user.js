@@ -627,11 +627,16 @@
                 let wsUrl = new URL('/listen', serverUrl);
                 wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
                 let ws = new WebSocket(wsUrl);
-                ws.addEventListener('open', (_) => {
+                ws.addEventListener('open', async (_) => {
                     console.log(`successfully connected to websocket for ${serverUrl}`);
                     this.websockets.push(ws);
                     if (isTopLevelTemplate) {
-                        this.notificationManager.newNotification("template manager", `You will recieve notifications from ${domain} as it's from your addressbar template`);
+                        for (let i = 0; i < topics.length; i++) {
+                            this.enabledNotifications.push(`${domain}??${topics[i].id}`);
+                        }
+                        let enabledKey = `${window.location.host}_notificationsEnabled`;
+                        await GM.setValue(enabledKey, JSON.stringify(this.enabledNotifications));
+                        this.notificationManager.newNotification("template manager", `You were automatically set to recieve notifications from ${domain} as it's from your address-bar template`);
                     }
                 });
                 ws.addEventListener('message', async (event) => {
