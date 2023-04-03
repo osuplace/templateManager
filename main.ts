@@ -11,8 +11,10 @@ let canvasElement: HTMLCanvasElement; // FIXME: This should probably be a list a
 function findCanvas(element: Element | ShadowRoot) {
     if (element instanceof HTMLCanvasElement) {
         console.log('found canvas', element, window.location.href);
-        if (!canvasElement && element.width > 0 && element.height > 0) {
-            canvasElement = element;
+        if (!canvasElement) {
+            if (element.width > 0 && element.height > 0) {
+                canvasElement = element;
+            }
         } else if (element.width * element.height > canvasElement.width * canvasElement.height) {
             canvasElement = element;
         }

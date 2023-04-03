@@ -103,6 +103,7 @@
         z-index: 2147483647;
         text-align: center;
         user-select: none;
+        overflow-y: auto;
     }
 
     #settingsOverlay label,
@@ -113,8 +114,8 @@
         text-shadow: -1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111;
         color: #eee;
     }
-    #settingsOverlay input[type=range] {
-        
+    #settingsOverlay input {
+        color: #111
     }
 
     .settingsWrapper {
@@ -122,7 +123,7 @@
         padding: 8px;
         border-radius: 8px;
         border: 1px solid rgba(238, 238, 238, 0.5);
-        margin: 0.5rem auto auto;
+        margin: 0.5rem auto 0.5rem auto;
         min-width: 13rem;
         max-width: 20%;
     }
@@ -826,6 +827,11 @@
                     this.close();
                 }
             });
+            this.overlay.addEventListener("wheel", (ev) => {
+                ev.preventDefault();
+                var direction = (ev.deltaY > 0) ? 1 : -1;
+                this.overlay.scrollTop += direction * 100;
+            });
             let div = document.createElement('div');
             div.className = "settingsWrapper";
             div.appendChild(createLabel(".json Template settings"));
@@ -1034,8 +1040,10 @@
     function findCanvas(element) {
         if (element instanceof HTMLCanvasElement) {
             console.log('found canvas', element, window.location.href);
-            if (!canvasElement && element.width > 0 && element.height > 0) {
-                canvasElement = element;
+            if (!canvasElement) {
+                if (element.width > 0 && element.height > 0) {
+                    canvasElement = element;
+                }
             }
             else if (element.width * element.height > canvasElement.width * canvasElement.height) {
                 canvasElement = element;

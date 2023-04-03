@@ -76,6 +76,7 @@ export const GLOBAL_CANVAS_CSS = css`
         z-index: 2147483647;
         text-align: center;
         user-select: none;
+        overflow-y: auto;
     }
 
     #settingsOverlay label,
@@ -86,8 +87,8 @@ export const GLOBAL_CANVAS_CSS = css`
         text-shadow: -1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111;
         color: #eee;
     }
-    #settingsOverlay input[type=range] {
-        
+    #settingsOverlay input {
+        color: #111
     }
 
     .settingsWrapper {
@@ -95,7 +96,7 @@ export const GLOBAL_CANVAS_CSS = css`
         padding: 8px;
         border-radius: 8px;
         border: 1px solid rgba(238, 238, 238, 0.5);
-        margin: 0.5rem auto auto;
+        margin: 0.5rem auto 0.5rem auto;
         min-width: 13rem;
         max-width: 20%;
     }

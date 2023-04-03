@@ -101,6 +101,11 @@ export class Settings {
                 this.close();
             }
         })
+        this.overlay.addEventListener("wheel", (ev) => {
+            ev.preventDefault();
+            var direction = (ev.deltaY > 0) ? 1 : -1;
+            this.overlay.scrollTop += direction * 100;
+        })
 
         let div = document.createElement('div')
         div.className = "settingsWrapper"
