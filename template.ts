@@ -47,6 +47,7 @@ export class Template {
     imageLoader = new Image()
     canvasElement = document.createElement('canvas')
     contactElement: HTMLDivElement | undefined
+    initialContactCSS: CSSStyleDeclaration | undefined
 
     blinkingPeriodMillis: number
     animationDuration: number;
@@ -111,7 +112,11 @@ export class Template {
                 let contactInfos = this.globalCanvas.parentElement!.querySelectorAll('.iHasContactInfo')
                 for (let i = 0; i < contactInfos.length; i++) {
                     let child = contactInfos[i] as HTMLElement
-                    if (child && parseInt(child.style.left) === contactX && parseInt(child.style.top) === contactY) {
+                    if (
+                        child
+                        && parseInt(child.getAttribute('contactX') ?? '0') === contactX
+                        && parseInt(child.getAttribute('contactY') ?? '0') === contactY
+                    ) {
                         checkingCoords = true
                         contactX += 5
                         contactY += 5
@@ -119,6 +124,8 @@ export class Template {
                 }
             }
             this.contactElement = document.createElement('div')
+            this.contactElement.setAttribute('contactX', contactX.toString())
+            this.contactElement.setAttribute('contactY', contactY.toString())
             this.contactElement.style.left = `${contactX}px`;
             this.contactElement.style.top = `${contactY}px`;
 
@@ -132,6 +139,7 @@ export class Template {
             }
             this.contactElement.appendChild(document.createTextNode(contact))
             this.insertPriorityElement(this.contactElement)
+            this.initialContactCSS = getComputedStyle(this.contactElement)
         }
 
         let updateStyle = () => {
@@ -150,6 +158,10 @@ export class Template {
             this.canvasElement.style.translate = css.translate
             this.canvasElement.style.transform = css.transform
             this.canvasElement.style.zIndex = (parseInt(css.zIndex) + priority).toString()
+
+            if (this.contactElement) {
+                let contactCSS = getComputedStyle(document.getElementById('osuplace-contactinfo-style')!)
+            }
         }
         // observe changes in the canvas
         let observer = new MutationObserver(updateStyle)

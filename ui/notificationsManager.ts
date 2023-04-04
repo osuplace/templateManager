@@ -13,15 +13,15 @@ export class NotificationManager {
         div.appendChild(utils.wrapInHtml('i', `${url} says:`));
         div.append(document.createElement('br'));
         div.append(utils.wrapInHtml('b', message));
-        div.className = 'osuplaceNotification hidden'
+        div.className = 'osuplaceNotification'
         div.onclick = () => {
-            div.className = 'osuplaceNotification hidden'
+            div.classList.remove('visible');
             setTimeout(() => div.remove(), 500)
         }
 
         this.container.appendChild(div)
         setTimeout(() => {
-            div.className = 'osuplaceNotification visible'
+            div.classList.add('visible');
         }, 100)
     }
 }

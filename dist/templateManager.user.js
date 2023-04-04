@@ -48,6 +48,7 @@
         transition: opacity 500ms, width 200ms, height 200ms;
         position: absolute;
         pointer-events: none;
+        z-index: 9999999;
     }
 `;
     const GLOBAL_CANVAS_CSS = css `
@@ -72,9 +73,6 @@
         pointer-events: auto;
         cursor: pointer;
         word-wrap: break-word;
-    }
-
-    .osuplaceNotification.hidden {
         height: 0px;
         opacity: 0;
         padding: 0px;
@@ -104,6 +102,7 @@
         text-align: center;
         user-select: none;
         overflow-y: auto;
+        font-size: 14px;
     }
 
     #settingsOverlay label,
@@ -115,7 +114,15 @@
         color: #eee;
     }
     #settingsOverlay input {
-        color: #111
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        color: #eee;
+        background-color: #111;
+        -webkit-appearance: auto;
+        padding: 5px;
+        border-radius: 5px;
+        font-size: 14px;
     }
 
     .settingsWrapper {
@@ -222,6 +229,22 @@
     function findJSONTemplateInURL(url) {
         return findJSONTemplateInParams(url.hash.substring(1)) || findJSONTemplateInParams(url.search.substring(1));
     }
+    function findElementOfType(element, type) {
+        let rv = [];
+        if (element instanceof type) {
+            console.log('found canvas', element, window.location.href);
+            rv.push(element);
+        }
+        // find in Shadow DOM elements
+        if (element instanceof HTMLElement && element.shadowRoot) {
+            rv.push(...findElementOfType(element.shadowRoot, type));
+        }
+        // find in children
+        for (let c = 0; c < element.children.length; c++) {
+            rv.push(...findElementOfType(element.children[c], type));
+        }
+        return rv;
+    }
 
     function extractFrame(image, frameWidth, frameHeight, frameIndex) {
         let canvas = document.createElement('canvas');
@@ -260,6 +283,7 @@
 
     class Template {
         constructor(params, contact, globalCanvas, priority) {
+            var _a, _b;
             this.imageLoader = new Image();
             this.canvasElement = document.createElement('canvas');
             this.loading = false;
@@ -318,7 +342,9 @@
                     let contactInfos = this.globalCanvas.parentElement.querySelectorAll('.iHasContactInfo');
                     for (let i = 0; i < contactInfos.length; i++) {
                         let child = contactInfos[i];
-                        if (child && parseInt(child.style.left) === contactX && parseInt(child.style.top) === contactY) {
+                        if (child
+                            && parseInt((_a = child.getAttribute('contactX')) !== null && _a !== void 0 ? _a : '0') === contactX
+                            && parseInt((_b = child.getAttribute('contactY')) !== null && _b !== void 0 ? _b : '0') === contactY) {
                             checkingCoords = true;
                             contactX += 5;
                             contactY += 5;
@@ -326,6 +352,8 @@
                     }
                 }
                 this.contactElement = document.createElement('div');
+                this.contactElement.setAttribute('contactX', contactX.toString());
+                this.contactElement.setAttribute('contactY', contactY.toString());
                 this.contactElement.style.left = `${contactX}px`;
                 this.contactElement.style.top = `${contactY}px`;
                 let contactPriority = Math.round(Number.MIN_SAFE_INTEGER / 100 + priority);
@@ -338,6 +366,7 @@
                 }
                 this.contactElement.appendChild(document.createTextNode(contact));
                 this.insertPriorityElement(this.contactElement);
+                this.initialContactCSS = getComputedStyle(this.contactElement);
             }
             let updateStyle = () => {
                 let css = getComputedStyle(this.globalCanvas);
@@ -355,6 +384,9 @@
                 this.canvasElement.style.translate = css.translate;
                 this.canvasElement.style.transform = css.transform;
                 this.canvasElement.style.zIndex = (parseInt(css.zIndex) + priority).toString();
+                if (this.contactElement) {
+                    getComputedStyle(document.getElementById('osuplace-contactinfo-style'));
+                }
             };
             // observe changes in the canvas
             let observer = new MutationObserver(updateStyle);
@@ -503,20 +535,20 @@
             div.appendChild(wrapInHtml('i', `${url} says:`));
             div.append(document.createElement('br'));
             div.append(wrapInHtml('b', message));
-            div.className = 'osuplaceNotification hidden';
+            div.className = 'osuplaceNotification';
             div.onclick = () => {
-                div.className = 'osuplaceNotification hidden';
+                div.classList.remove('visible');
                 setTimeout(() => div.remove(), 500);
             };
             this.container.appendChild(div);
             setTimeout(() => {
-                div.className = 'osuplaceNotification visible';
+                div.classList.add('visible');
             }, 100);
         }
     }
 
     class TemplateManager {
-        constructor(canvasElement, startingUrl) {
+        constructor(canvasElements, startingUrl) {
             this.templatesToLoad = MAX_TEMPLATES;
             this.alreadyLoaded = new Array();
             this.websockets = new Array();
@@ -524,26 +556,55 @@
             this.enabledNotifications = new Array();
             this.whitelist = new Array();
             this.blacklist = new Array();
+            this.templateConstructors = new Array();
             this.templates = new Array();
             this.responseDiffs = new Array();
+            this.canvasElements = [];
             this.randomness = Math.random();
             this.percentage = 1;
             this.lastCacheBust = this.getCacheBustString();
             this.notificationManager = new NotificationManager();
             this.notificationSent = false;
-            console.log('TemplateManager constructor ', canvasElement);
-            this.canvasElement = canvasElement;
+            console.log('TemplateManager constructor ', canvasElements);
+            this.canvasElements = canvasElements;
+            this.selectedCanvas = canvasElements[0];
+            this.selectBestCanvas();
             this.startingUrl = startingUrl;
             this.initOrReloadTemplates(true);
             GM.getValue(`${window.location.host}_notificationsEnabled`, "[]").then((value) => {
                 this.enabledNotifications = JSON.parse(value);
             });
             let style = document.createElement('style');
+            style.id = 'osuplace-contactinfo-style';
             style.innerHTML = CONTACT_INFO_CSS;
-            canvasElement.parentElement.appendChild(style);
+            this.selectedCanvas.parentElement.appendChild(style);
             let globalStyle = document.createElement("style");
             globalStyle.innerHTML = GLOBAL_CANVAS_CSS;
             document.body.appendChild(globalStyle);
+        }
+        selectBestCanvas() {
+            var _a;
+            let selectionChanged = false;
+            let selectedBounds = this.selectedCanvas.getBoundingClientRect();
+            for (let i = 0; i < this.canvasElements.length; i++) {
+                let canvas = this.canvasElements[i];
+                let canvasBounds = canvas.getBoundingClientRect();
+                let selectedArea = selectedBounds.width * selectedBounds.height;
+                let canvasArea = canvasBounds.width * canvasBounds.height;
+                if (canvasArea > selectedArea) {
+                    this.selectedCanvas = canvas;
+                    selectedBounds = canvasBounds;
+                    selectionChanged = true;
+                }
+            }
+            if (selectionChanged) {
+                while (this.templates.length) {
+                    (_a = this.templates.shift()) === null || _a === void 0 ? void 0 : _a.destroy();
+                }
+                for (let i = 0; i < this.templateConstructors.length; i++) {
+                    this.templates.push(this.templateConstructors[i](this.selectedCanvas));
+                }
+            }
         }
         getCacheBustString() {
             return Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36);
@@ -588,7 +649,9 @@
                     if (json.templates) {
                         for (let i = 0; i < json.templates.length; i++) {
                             if (this.templates.length < this.templatesToLoad) {
-                                this.templates.push(new Template(json.templates[i], json.contact || json.contactInfo, this.canvasElement, minPriority + this.templates.length));
+                                let constructor = (a) => new Template(json.templates[i], json.contact || json.contactInfo, a, minPriority + this.templates.length);
+                                this.templateConstructors.push(constructor);
+                                this.templates.push(constructor(this.selectedCanvas));
                             }
                         }
                     }
@@ -720,6 +783,7 @@
             return (Date.now() + averageDiff) / 1000;
         }
         update() {
+            this.selectBestCanvas();
             let cs = this.currentSeconds();
             for (let i = 0; i < this.templates.length; i++)
                 this.templates[i].update(this.percentage, this.randomness, cs);
@@ -1036,28 +1100,7 @@
     }
 
     let jsontemplate;
-    let canvasElement; // FIXME: This should probably be a list and the user can just select the correct one manually
-    function findCanvas(element) {
-        if (element instanceof HTMLCanvasElement) {
-            console.log('found canvas', element, window.location.href);
-            if (!canvasElement) {
-                if (element.width > 0 && element.height > 0) {
-                    canvasElement = element;
-                }
-            }
-            else if (element.width * element.height > canvasElement.width * canvasElement.height) {
-                canvasElement = element;
-            }
-        }
-        // find in Shadow DOM elements
-        if (element instanceof HTMLElement && element.shadowRoot) {
-            findCanvas(element.shadowRoot);
-        }
-        // find in children
-        for (let c = 0; c < element.children.length; c++) {
-            findCanvas(element.children[c]);
-        }
-    }
+    let canvasElements; // FIXME: This should probably be a list and the user can just select the correct one manually
     function topWindow() {
         console.log("top window code for", window.location.href);
         GM.setValue('canvasFound', false);
@@ -1068,7 +1111,7 @@
     async function canvasWindow() {
         console.log("canvas code for", window.location.href);
         let sleep$1 = 0;
-        while (!canvasElement) {
+        while (!canvasElements) {
             if (await GM.getValue('canvasFound', false) && !windowIsEmbedded()) {
                 console.log('canvas found by iframe');
                 return;
@@ -1076,13 +1119,13 @@
             await sleep(1000 * sleep$1);
             sleep$1++;
             console.log("trying to find canvas");
-            findCanvas(document.documentElement);
+            canvasElements = findElementOfType(document.documentElement, HTMLCanvasElement);
         }
         GM.setValue('canvasFound', true);
         sleep$1 = 0;
         while (true) {
             if (jsontemplate) {
-                runCanvas(jsontemplate, canvasElement);
+                runCanvas(jsontemplate, canvasElements);
                 break;
             }
             else if (windowIsEmbedded()) {
@@ -1092,8 +1135,8 @@
             sleep$1++;
         }
     }
-    function runCanvas(jsontemplate, canvasElement) {
-        let manager = new TemplateManager(canvasElement, jsontemplate);
+    function runCanvas(jsontemplate, canvasElements) {
+        let manager = new TemplateManager(canvasElements, jsontemplate);
         init(manager);
         window.setInterval(() => {
             manager.update();

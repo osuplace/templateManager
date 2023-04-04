@@ -17,10 +17,12 @@ export class TemplateManager {
     enabledNotifications = new Array<string>();
     whitelist = new Array<string>();
     blacklist = new Array<string>();
+    templateConstructors = new Array<(a: HTMLCanvasElement) => Template>();
     templates = new Array<Template>();
     responseDiffs = new Array<number>();
 
-    canvasElement: HTMLCanvasElement;
+    canvasElements: HTMLCanvasElement[] = [];
+    selectedCanvas: HTMLCanvasElement;
     startingUrl: string;
     randomness = Math.random();
     percentage = 1
@@ -28,9 +30,11 @@ export class TemplateManager {
     notificationManager = new NotificationManager();
     notificationSent = false;
 
-    constructor(canvasElement: HTMLCanvasElement, startingUrl: string) {
-        console.log('TemplateManager constructor ', canvasElement);
-        this.canvasElement = canvasElement;
+    constructor(canvasElements: HTMLCanvasElement[], startingUrl: string) {
+        console.log('TemplateManager constructor ', canvasElements);
+        this.canvasElements = canvasElements;
+        this.selectedCanvas = canvasElements[0];
+        this.selectBestCanvas();
         this.startingUrl = startingUrl
         this.initOrReloadTemplates(true)
 
@@ -39,12 +43,37 @@ export class TemplateManager {
         })
 
         let style = document.createElement('style')
+        style.id = 'osuplace-contactinfo-style'
         style.innerHTML = CONTACT_INFO_CSS
-        canvasElement.parentElement!.appendChild(style)
+        this.selectedCanvas.parentElement!.appendChild(style)
 
         let globalStyle = document.createElement("style")
         globalStyle.innerHTML = GLOBAL_CANVAS_CSS;
         document.body.appendChild(globalStyle);
+    }
+
+    selectBestCanvas() {
+        let selectionChanged = false;
+        let selectedBounds = this.selectedCanvas.getBoundingClientRect()
+        for (let i = 0; i < this.canvasElements.length; i++) {
+            let canvas = this.canvasElements[i];
+            let canvasBounds = canvas.getBoundingClientRect()
+            let selectedArea = selectedBounds.width * selectedBounds.height;
+            let canvasArea = canvasBounds.width * canvasBounds.height;
+            if (canvasArea > selectedArea) {
+                this.selectedCanvas = canvas;
+                selectedBounds = canvasBounds;
+                selectionChanged = true;
+            }
+        }
+        if (selectionChanged) {
+            while (this.templates.length) {
+                this.templates.shift()?.destroy()
+            }
+            for (let i = 0; i < this.templateConstructors.length; i++) {
+                this.templates.push(this.templateConstructors[i](this.selectedCanvas))
+            }
+        }
     }
 
     getCacheBustString() {
@@ -94,7 +123,9 @@ export class TemplateManager {
                 if (json.templates) {
                     for (let i = 0; i < json.templates.length; i++) {
                         if (this.templates.length < this.templatesToLoad) {
-                            this.templates.push(new Template(json.templates[i], json.contact || json.contactInfo, this.canvasElement, minPriority + this.templates.length));
+                            let constructor = (a: HTMLCanvasElement) => new Template(json.templates[i], json.contact || json.contactInfo, a, minPriority + this.templates.length)
+                            this.templateConstructors.push(constructor)
+                            this.templates.push(constructor(this.selectedCanvas));
                         }
                     }
                 }
@@ -235,6 +266,7 @@ export class TemplateManager {
     }
 
     update() {
+        this.selectBestCanvas()
         let cs = this.currentSeconds()
         for (let i = 0; i < this.templates.length; i++)
             this.templates[i].update(this.percentage, this.randomness, cs);

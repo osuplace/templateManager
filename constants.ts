@@ -21,6 +21,7 @@ export const CONTACT_INFO_CSS = css`
         transition: opacity 500ms, width 200ms, height 200ms;
         position: absolute;
         pointer-events: none;
+        z-index: 9999999;
     }
 `
 export const GLOBAL_CANVAS_CSS = css`
@@ -45,9 +46,6 @@ export const GLOBAL_CANVAS_CSS = css`
         pointer-events: auto;
         cursor: pointer;
         word-wrap: break-word;
-    }
-
-    .osuplaceNotification.hidden {
         height: 0px;
         opacity: 0;
         padding: 0px;
@@ -77,6 +75,7 @@ export const GLOBAL_CANVAS_CSS = css`
         text-align: center;
         user-select: none;
         overflow-y: auto;
+        font-size: 14px;
     }
 
     #settingsOverlay label,
@@ -88,7 +87,15 @@ export const GLOBAL_CANVAS_CSS = css`
         color: #eee;
     }
     #settingsOverlay input {
-        color: #111
+        width: auto;
+        max-width: 100%;
+        height: auto;
+        color: #eee;
+        background-color: #111;
+        -webkit-appearance: auto;
+        padding: 5px;
+        border-radius: 5px;
+        font-size: 14px;
     }
 
     .settingsWrapper {
