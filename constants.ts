@@ -8,10 +8,12 @@ export const ANIMATION_DEFAULT_PERCENTAGE = 1 / 3
 export const NO_JSON_TEMPLATE_IN_PARAMS = "no_json_template"
 export const CONTACT_INFO_CSS = css`
     div.iHasContactInfo {
-        max-width: 100px; 
+        max-width: 50px; 
         padding: 1px;
         border-radius: 1px;
-        font-size: 1px; /* these 4 will be overwritten, but oh well */ 
+        font-size: 1px; /* these 4 will be overwritten, but oh well */
+        width: max-content; 
+        white-space: nowrap;
         overflow: hidden;
         font-weight: bold;
         font-family: serif; /* this fixes firefox */

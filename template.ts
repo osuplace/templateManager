@@ -112,10 +112,12 @@ export class Template {
                 let contactInfos = this.globalCanvas.parentElement!.querySelectorAll('.iHasContactInfo')
                 for (let i = 0; i < contactInfos.length; i++) {
                     let child = contactInfos[i] as HTMLElement
+                    let childX = parseInt(child.getAttribute('contactX') ?? '0')
+                    let childY = parseInt(child.getAttribute('contactY') ?? '0')
                     if (
                         child
-                        && parseInt(child.getAttribute('contactX') ?? '0') === contactX
-                        && parseInt(child.getAttribute('contactY') ?? '0') === contactY
+                        && childX >= contactX && childX <= contactX + 50
+                        && childY === contactY
                     ) {
                         checkingCoords = true
                         contactX += 5
@@ -168,7 +170,7 @@ export class Template {
                     this.contactElement.style.top = `calc(${contactY * globalRatio}px + ${css.top})`
                 else
                     this.contactElement.style.top = `${contactY * globalRatio}px`
-                this.contactElement.style.maxWidth = `${100 * globalRatio}px`
+                this.contactElement.style.maxWidth = `${50 * globalRatio}px`
                 this.contactElement.style.padding = `${globalRatio}px`
                 this.contactElement.style.borderRadius = `${globalRatio}px`
                 this.contactElement.style.fontSize = `${globalRatio}px`

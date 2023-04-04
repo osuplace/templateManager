@@ -35,10 +35,12 @@
     const NO_JSON_TEMPLATE_IN_PARAMS = "no_json_template";
     const CONTACT_INFO_CSS = css `
     div.iHasContactInfo {
-        max-width: 100px; 
+        max-width: 50px; 
         padding: 1px;
         border-radius: 1px;
-        font-size: 1px; /* these 4 will be overwritten, but oh well */ 
+        font-size: 1px; /* these 4 will be overwritten, but oh well */
+        width: max-content; 
+        white-space: nowrap;
         overflow: hidden;
         font-weight: bold;
         font-family: serif; /* this fixes firefox */
@@ -342,9 +344,11 @@
                     let contactInfos = this.globalCanvas.parentElement.querySelectorAll('.iHasContactInfo');
                     for (let i = 0; i < contactInfos.length; i++) {
                         let child = contactInfos[i];
+                        let childX = parseInt((_a = child.getAttribute('contactX')) !== null && _a !== void 0 ? _a : '0');
+                        let childY = parseInt((_b = child.getAttribute('contactY')) !== null && _b !== void 0 ? _b : '0');
                         if (child
-                            && parseInt((_a = child.getAttribute('contactX')) !== null && _a !== void 0 ? _a : '0') === contactX
-                            && parseInt((_b = child.getAttribute('contactY')) !== null && _b !== void 0 ? _b : '0') === contactY) {
+                            && childX >= contactX && childX <= contactX + 50
+                            && childY === contactY) {
                             checkingCoords = true;
                             contactX += 5;
                             contactY += 5;
@@ -393,7 +397,7 @@
                         this.contactElement.style.top = `calc(${contactY * globalRatio}px + ${css.top})`;
                     else
                         this.contactElement.style.top = `${contactY * globalRatio}px`;
-                    this.contactElement.style.maxWidth = `${100 * globalRatio}px`;
+                    this.contactElement.style.maxWidth = `${50 * globalRatio}px`;
                     this.contactElement.style.padding = `${globalRatio}px`;
                     this.contactElement.style.borderRadius = `${globalRatio}px`;
                     this.contactElement.style.fontSize = `${globalRatio}px`;
