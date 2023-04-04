@@ -103,9 +103,9 @@ export class Template {
         })
 
         // add contact info container
+        let contactX = Math.round(this.x / 5) * 5
+        let contactY = Math.round(this.y / 5) * 5
         if (contact) {
-            let contactX = Math.round(this.x / 5) * 5
-            let contactY = Math.round(this.y / 5) * 5
             let checkingCoords = true
             while (checkingCoords) {
                 checkingCoords = false
@@ -151,16 +151,30 @@ export class Template {
                 this.canvasElement.style.left = `calc(${this.x * globalRatio}px + ${css.left})`
             else
                 this.canvasElement.style.left = `${this.x * globalRatio}px`
-            if (css.right !== "auto")
+            if (css.top !== "auto")
                 this.canvasElement.style.top = `calc(${this.y * globalRatio}px + ${css.top})`
             else
                 this.canvasElement.style.top = `${this.y * globalRatio}px`
             this.canvasElement.style.translate = css.translate
             this.canvasElement.style.transform = css.transform
-            this.canvasElement.style.zIndex = (parseInt(css.zIndex) + priority).toString()
+            this.canvasElement.style.zIndex = css.zIndex
 
             if (this.contactElement) {
-                let contactCSS = getComputedStyle(document.getElementById('osuplace-contactinfo-style')!)
+                if (css.left !== "auto")
+                    this.contactElement.style.left = `calc(${contactX * globalRatio}px + ${css.left})`
+                else
+                    this.contactElement.style.left = `${contactX * globalRatio}px`
+                if (css.top !== "auto")
+                    this.contactElement.style.top = `calc(${contactY * globalRatio}px + ${css.top})`
+                else
+                    this.contactElement.style.top = `${contactY * globalRatio}px`
+                this.contactElement.style.maxWidth = `${100 * globalRatio}px`
+                this.contactElement.style.padding = `${globalRatio}px`
+                this.contactElement.style.borderRadius = `${globalRatio}px`
+                this.contactElement.style.fontSize = `${globalRatio}px`
+                this.contactElement.style.translate = css.translate
+                this.contactElement.style.transform = css.transform
+                this.contactElement.style.zIndex = css.zIndex
             }
         }
         // observe changes in the canvas
