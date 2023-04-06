@@ -7,6 +7,10 @@ let SLIDERS_SVG = '<button><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 
 export async function init(manager: TemplateManager) {
     let settings = new Settings(manager);
 
+    while (window.innerWidth === 0 || window.innerHeight === 0) {
+        await utils.sleep(1000);
+    }
+
     let xKey = `${window.location.host}_settingsX`
     let yKey = `${window.location.host}_settingsY`
     let GMx = await GM.getValue(xKey, null) || 10
