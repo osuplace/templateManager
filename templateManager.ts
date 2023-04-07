@@ -29,6 +29,7 @@ export class TemplateManager {
     lastCacheBust = this.getCacheBustString();
     notificationManager = new NotificationManager();
     notificationSent = false;
+    canvasObserver: MutationObserver | undefined;
 
     constructor(canvasElements: HTMLCanvasElement[], startingUrl: string) {
         console.log('TemplateManager constructor ', canvasElements);
@@ -50,6 +51,23 @@ export class TemplateManager {
         let globalStyle = document.createElement("style")
         globalStyle.innerHTML = GLOBAL_CANVAS_CSS;
         document.body.appendChild(globalStyle);
+
+        this.canvasObserver = new MutationObserver(() => {
+            console.log('changing css')
+            let css = getComputedStyle(this.selectedCanvas);
+            let left = css.left;
+            let top = css.top;
+            let translate = css.translate;
+            let transform = css.transform;
+            let zIndex = css.zIndex;
+            let globalRatio = parseFloat(this.selectedCanvas.style.width) / this.selectedCanvas.width
+            for (let i = 0; i < this.templates.length; i++) {
+                this.templates[i].updateStyle(
+                    globalRatio, left, top, translate, transform, zIndex
+                );
+            }
+        })
+        this.canvasObserver.observe(this.selectedCanvas, { attributes: true })
     }
 
     selectBestCanvas() {
@@ -73,6 +91,8 @@ export class TemplateManager {
             for (let i = 0; i < this.templateConstructors.length; i++) {
                 this.templates.push(this.templateConstructors[i](this.selectedCanvas))
             }
+            this.canvasObserver?.disconnect()
+            this.canvasObserver?.observe(this.selectedCanvas, { attributes: true })
         }
     }
 
