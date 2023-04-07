@@ -53,7 +53,6 @@ export class TemplateManager {
         document.body.appendChild(globalStyle);
 
         this.canvasObserver = new MutationObserver(() => {
-            console.log('changing css')
             let css = getComputedStyle(this.selectedCanvas);
             let left = css.left;
             let top = css.top;
