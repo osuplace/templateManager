@@ -244,7 +244,10 @@ export class TemplateManager {
         return this.lastCacheBust !== this.getCacheBustString()
     }
 
-    initOrReloadTemplates(forced = false) {
+    initOrReloadTemplates(forced = false, contactInfo: boolean | null = null) {
+        if (contactInfo)
+            this.setContactInfoDisplay(contactInfo);
+
         if (!this.canReload() && !forced) {
             // fake a reload
             for (let i = 0; i < this.templates.length; i++) {

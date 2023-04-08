@@ -172,9 +172,8 @@ export class Template {
                 this.contactElement.style.top = `calc(${this.contactY! * globalRatio}px + ${top})`
             else
                 this.contactElement.style.top = `${this.contactY! * globalRatio}px`
-            this.contactElement.style.maxWidth = `${50 * globalRatio}px`
+            this.contactElement.style.maxWidth = `${30 * globalRatio}px`
             this.contactElement.style.padding = `${globalRatio}px`
-            this.contactElement.style.borderRadius = `${globalRatio}px`
             this.contactElement.style.fontSize = `${globalRatio}px`
             this.contactElement.style.translate = translate
             this.contactElement.style.transform = transform
@@ -185,6 +184,7 @@ export class Template {
     setContactInfoDisplay(enabled: boolean) {
         if (this.contactElement) {
             this.contactElement.style.opacity = enabled ? "1" : "0";
+            this.contactElement.style.pointerEvents = enabled ? "auto" : "none";
         }
     }
 

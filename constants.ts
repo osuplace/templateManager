@@ -8,10 +8,9 @@ export const ANIMATION_DEFAULT_PERCENTAGE = 1 / 3
 export const NO_JSON_TEMPLATE_IN_PARAMS = "no_json_template"
 export const CONTACT_INFO_CSS = css`
     div.iHasContactInfo {
-        max-width: 50px; 
+        max-width: 30px; 
         padding: 1px;
-        border-radius: 1px;
-        font-size: 1px; /* these 4 will be overwritten, but oh well */
+        font-size: 1px; /* these 3 will be overwritten, but oh well */
         width: max-content; 
         white-space: nowrap;
         overflow: hidden;
@@ -20,10 +19,16 @@ export const CONTACT_INFO_CSS = css`
         color: #eee;
         background-color: #111;
         opacity: 0;
-        transition: opacity 500ms, width 200ms, height 200ms;
+        transition: opacity 500ms, width 200ms, height 200ms, max-width 200ms;
         position: absolute;
         pointer-events: none;
         z-index: 9999999;
+    }
+
+    div.iHasContactInfo:hover {
+        z-index: 99999999;
+        max-width: 100%;
+        width: auto;
     }
 `
 export const GLOBAL_CANVAS_CSS = css`
@@ -88,6 +93,7 @@ export const GLOBAL_CANVAS_CSS = css`
         text-shadow: -1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111;
         color: #eee;
     }
+    
     #settingsOverlay input {
         width: auto;
         max-width: 100%;

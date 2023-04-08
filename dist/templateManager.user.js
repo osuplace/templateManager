@@ -35,10 +35,9 @@
     const NO_JSON_TEMPLATE_IN_PARAMS = "no_json_template";
     const CONTACT_INFO_CSS = css `
     div.iHasContactInfo {
-        max-width: 50px; 
+        max-width: 30px; 
         padding: 1px;
-        border-radius: 1px;
-        font-size: 1px; /* these 4 will be overwritten, but oh well */
+        font-size: 1px; /* these 3 will be overwritten, but oh well */
         width: max-content; 
         white-space: nowrap;
         overflow: hidden;
@@ -47,10 +46,16 @@
         color: #eee;
         background-color: #111;
         opacity: 0;
-        transition: opacity 500ms, width 200ms, height 200ms;
+        transition: opacity 500ms, width 200ms, height 200ms, max-width 200ms;
         position: absolute;
         pointer-events: none;
         z-index: 9999999;
+    }
+
+    div.iHasContactInfo:hover {
+        z-index: 99999999;
+        max-width: 100%;
+        width: auto;
     }
 `;
     const GLOBAL_CANVAS_CSS = css `
@@ -115,6 +120,7 @@
         text-shadow: -1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111;
         color: #eee;
     }
+    
     #settingsOverlay input {
         width: auto;
         max-width: 100%;
@@ -396,9 +402,8 @@
                     this.contactElement.style.top = `calc(${this.contactY * globalRatio}px + ${top})`;
                 else
                     this.contactElement.style.top = `${this.contactY * globalRatio}px`;
-                this.contactElement.style.maxWidth = `${50 * globalRatio}px`;
+                this.contactElement.style.maxWidth = `${30 * globalRatio}px`;
                 this.contactElement.style.padding = `${globalRatio}px`;
-                this.contactElement.style.borderRadius = `${globalRatio}px`;
                 this.contactElement.style.fontSize = `${globalRatio}px`;
                 this.contactElement.style.translate = translate;
                 this.contactElement.style.transform = transform;
@@ -408,6 +413,7 @@
         setContactInfoDisplay(enabled) {
             if (this.contactElement) {
                 this.contactElement.style.opacity = enabled ? "1" : "0";
+                this.contactElement.style.pointerEvents = enabled ? "auto" : "none";
             }
         }
         tryLoadSource() {
@@ -770,8 +776,10 @@
         canReload() {
             return this.lastCacheBust !== this.getCacheBustString();
         }
-        initOrReloadTemplates(forced = false) {
+        initOrReloadTemplates(forced = false, contactInfo = null) {
             var _a, _b;
+            if (contactInfo)
+                this.setContactInfoDisplay(contactInfo);
             if (!this.canReload() && !forced) {
                 // fake a reload
                 for (let i = 0; i < this.templates.length; i++) {
@@ -906,6 +914,7 @@
             this.templateLinksWrapper = document.createElement("div");
             this.notificationsWrapper = document.createElement("div");
             this.reloadTemplatesWhenClosed = false;
+            this.contactInfoDisabled = false;
             this.templateLinksWrapper.className = "settingsWrapper";
             this.templateLinksWrapper.id = "templateLinksWrapper";
             this.notificationsWrapper.className = "settingsWrapper";
@@ -931,7 +940,7 @@
             div.className = "settingsWrapper";
             div.appendChild(createLabel(".json Template settings"));
             div.appendChild(document.createElement('br'));
-            div.appendChild(createButton("Reload the template", () => manager.initOrReloadTemplates()));
+            div.appendChild(createButton("Reload the template", () => manager.initOrReloadTemplates(false, this.contactInfoDisabled)));
             div.appendChild(document.createElement('br'));
             div.appendChild(createSlider("Templates to load", "4", (n) => {
                 manager.templatesToLoad = (n + 1) * MAX_TEMPLATES / 5;
@@ -952,6 +961,7 @@
             div.appendChild(document.createElement('br'));
             div.appendChild(createBoldCheckbox('', "Show contact info besides templates", false, (a) => {
                 manager.setContactInfoDisplay(a);
+                this.contactInfoDisabled = a;
             }));
             div.appendChild(document.createElement('br'));
             this.overlay.appendChild(div);
@@ -967,7 +977,7 @@
             this.overlay.style.opacity = "0";
             this.overlay.style.pointerEvents = "none";
             if (this.reloadTemplatesWhenClosed) {
-                this.manager.initOrReloadTemplates(true);
+                this.manager.initOrReloadTemplates(true, this.contactInfoDisabled);
                 this.reloadTemplatesWhenClosed = false;
             }
         }
