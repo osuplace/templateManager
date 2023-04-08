@@ -136,7 +136,8 @@ export class TemplateManager {
                 if (json.whitelist) {
                     for (let i = 0; i < json.whitelist.length; i++) {
                         let entry = json.whitelist[i];
-                        entry.name = entry.name || lastContact
+                        let contactInfo = json.contact || json.contactInfo || lastContact
+                        entry.name = entry.name ? `${entry.name}, from: ${contactInfo}` : contactInfo
                         this.whitelist.push(json.whitelist[i]);
                     }
                 }
