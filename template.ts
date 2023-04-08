@@ -16,7 +16,7 @@ interface TemplateParams {
     looping: boolean | undefined
 }
 
-interface NamedURL {
+export interface NamedURL {
     name: string | undefined
     url: string
 }

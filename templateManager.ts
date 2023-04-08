@@ -1,5 +1,5 @@
 import { CACHE_BUST_PERIOD, CONTACT_INFO_CSS, GLOBAL_CANVAS_CSS, MAX_TEMPLATES, NO_JSON_TEMPLATE_IN_PARAMS } from './constants';
-import { Template, JsonParams } from './template';
+import { Template, JsonParams, NamedURL } from './template';
 import { NotificationManager } from './ui/notificationsManager';
 import * as utils from './utils';
 
@@ -15,7 +15,7 @@ export class TemplateManager {
     websockets = new Array<WebSocket>();
     notificationTypes = new Map<string, NotificationTopic[]>();
     enabledNotifications = new Array<string>();
-    whitelist = new Array<string>();
+    whitelist = new Array<NamedURL>();
     blacklist = new Array<string>();
     templateConstructors = new Array<(a: HTMLCanvasElement) => Template>();
     templates = new Array<Template>();
@@ -99,7 +99,7 @@ export class TemplateManager {
         return Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36)
     }
 
-    loadTemplatesFromJsonURL(url: string | URL, minPriority = 0) {
+    loadTemplatesFromJsonURL(url: string | URL, minPriority = 0, lastContact='') {
         let _url = new URL(url);
         let uniqueString = `${_url.origin}${_url.pathname}`;
 
@@ -135,14 +135,16 @@ export class TemplateManager {
                 // read whitelist. These will be loaded later
                 if (json.whitelist) {
                     for (let i = 0; i < json.whitelist.length; i++) {
-                        this.whitelist.push(json.whitelist[i].url);
+                        let entry = json.whitelist[i];
+                        entry.name = entry.name || lastContact
+                        this.whitelist.push(json.whitelist[i]);
                     }
                 }
                 // read templates
                 if (json.templates) {
                     for (let i = 0; i < json.templates.length; i++) {
                         if (this.templates.length < this.templatesToLoad) {
-                            let constructor = (a: HTMLCanvasElement) => new Template(json.templates[i], json.contact || json.contactInfo, a, minPriority + this.templates.length)
+                            let constructor = (a: HTMLCanvasElement) => new Template(json.templates[i], json.contact || json.contactInfo || lastContact, a, minPriority + this.templates.length)
                             this.templateConstructors.push(constructor)
                             this.templates.push(constructor(this.selectedCanvas));
                         }
@@ -292,7 +294,8 @@ export class TemplateManager {
         if (this.templates.length < this.templatesToLoad) {
             for (let i = 0; i < this.whitelist.length; i++) {
                 // yes this calls all whitelist all the time but the load will cancel if already loaded
-                this.loadTemplatesFromJsonURL(this.whitelist[i], i * this.templatesToLoad)
+                let entry = this.whitelist[i];
+                this.loadTemplatesFromJsonURL(entry.url, i * this.templatesToLoad, entry.name)
             }
         }
     }

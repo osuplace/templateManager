@@ -636,7 +636,7 @@
         getCacheBustString() {
             return Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36);
         }
-        loadTemplatesFromJsonURL(url, minPriority = 0) {
+        loadTemplatesFromJsonURL(url, minPriority = 0, lastContact = '') {
             let _url = new URL(url);
             let uniqueString = `${_url.origin}${_url.pathname}`;
             // exit if already loaded
@@ -669,14 +669,16 @@
                     // read whitelist. These will be loaded later
                     if (json.whitelist) {
                         for (let i = 0; i < json.whitelist.length; i++) {
-                            this.whitelist.push(json.whitelist[i].url);
+                            let entry = json.whitelist[i];
+                            entry.name = entry.name || lastContact;
+                            this.whitelist.push(json.whitelist[i]);
                         }
                     }
                     // read templates
                     if (json.templates) {
                         for (let i = 0; i < json.templates.length; i++) {
                             if (this.templates.length < this.templatesToLoad) {
-                                let constructor = (a) => new Template(json.templates[i], json.contact || json.contactInfo, a, minPriority + this.templates.length);
+                                let constructor = (a) => new Template(json.templates[i], json.contact || json.contactInfo || lastContact, a, minPriority + this.templates.length);
                                 this.templateConstructors.push(constructor);
                                 this.templates.push(constructor(this.selectedCanvas));
                             }
@@ -817,7 +819,8 @@
             if (this.templates.length < this.templatesToLoad) {
                 for (let i = 0; i < this.whitelist.length; i++) {
                     // yes this calls all whitelist all the time but the load will cancel if already loaded
-                    this.loadTemplatesFromJsonURL(this.whitelist[i], i * this.templatesToLoad);
+                    let entry = this.whitelist[i];
+                    this.loadTemplatesFromJsonURL(entry.url, i * this.templatesToLoad, entry.name);
                 }
             }
         }
