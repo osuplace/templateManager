@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.4.8
+// @version			0.5
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -267,7 +267,7 @@
         context.drawImage(image, gridX * frameWidth, gridY * frameHeight, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
         return context.getImageData(0, 0, frameWidth, frameHeight);
     }
-    function ditherData(imageData, randomness, percentage, x, y, frameWidth, frameHeight) {
+    function ditherData(imageData, priorityData, randomness, percentage, x, y, frameWidth, frameHeight) {
         let rv = new ImageData(frameWidth * 3, frameHeight * 3);
         let m = Math.round(1 / percentage); // which nth pixel should be displayed
         let r = Math.floor(randomness * m); // which nth pixel am I (everyone has different nth pixel)
@@ -275,7 +275,7 @@
             for (let j = 0; j < frameHeight; j++) {
                 let imageIndex = (j * frameWidth + i) * 4;
                 let middlePixelIndex = ((j * 3 + 1) * rv.width + i * 3 + 1) * 4;
-                let alpha = imageData.data[imageIndex + 3];
+                let alpha = priorityData ? priorityData.data[imageIndex] : imageData.data[imageIndex + 3];
                 let p = percentage > 0.99 ? 1 : Math.ceil(m / (alpha / 200));
                 if (negativeSafeModulo(i + x + (j + y) * 2 + r, p) !== 0) {
                     continue;
@@ -289,15 +289,77 @@
         return rv;
     }
 
+    class ImageLoadHelper {
+        constructor(name, sources) {
+            this.imageLoader = new Image();
+            this.loading = false;
+            this.name = name;
+            this.sources = sources || [];
+            if (this.sources.length === 0)
+                return; // do not attach imageLoader to DOM
+            this.imageLoader.style.position = 'absolute';
+            this.imageLoader.style.top = '0';
+            this.imageLoader.style.left = '0';
+            this.imageLoader.style.width = '1px';
+            this.imageLoader.style.height = '1px';
+            this.imageLoader.style.opacity = `${Number.MIN_VALUE}`;
+            this.imageLoader.style.pointerEvents = 'none';
+            document.body.appendChild(this.imageLoader); // firefox doesn't seem to load images outside of DOM
+            // set image loader event listeners
+            this.imageLoader.addEventListener('load', () => {
+                if (!this.name) {
+                    this.name = getFileStemFromUrl(this.imageLoader.src);
+                }
+                this.loading = false;
+            });
+            this.imageLoader.addEventListener('error', () => {
+                this.loading = false;
+                // assume loading from this source fails
+                this.sources.shift();
+            });
+            this.tryLoadSource();
+        }
+        tryLoadSource() {
+            if (this.loading)
+                return;
+            if (this.sources.length === 0)
+                return;
+            this.loading = true;
+            let candidateSource = this.sources[0];
+            let displayName = this.name ? this.name + ': ' : '';
+            console.log(`${displayName}trying to load ${candidateSource}`);
+            GM.xmlHttpRequest({
+                method: 'GET',
+                url: candidateSource,
+                responseType: 'blob',
+                onload: (response) => {
+                    this.imageLoader.src = URL.createObjectURL(response.response);
+                }
+            });
+        }
+        getImage() {
+            if (!this.imageLoader.complete || !this.imageLoader.src) {
+                this.tryLoadSource();
+                return;
+            }
+            return this.imageLoader;
+        }
+        destroy() {
+            var _a;
+            (_a = this.imageLoader.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(this.imageLoader);
+            this.imageLoader = new Image();
+        }
+    }
+
     class Template {
         constructor(params, contact, globalCanvas, priority) {
             var _a, _b;
-            this.imageLoader = new Image();
             this.canvasElement = document.createElement('canvas');
-            this.loading = false;
+            this.needsCanvasInitialization = true;
             // assign params
             this.name = params.name;
             this.sources = params.sources;
+            this.priorityMaskSources = params.priorityMaskSources;
             this.x = params.x;
             this.y = params.y;
             this.frameWidth = params.frameWidth;
@@ -313,33 +375,9 @@
             let period = SECONDS_SPENT_BLINKING * 1000 / AMOUNT_OF_BLINKING;
             this.blinkingPeriodMillis = Math.floor(period / UPDATE_PERIOD_MILLIS) * UPDATE_PERIOD_MILLIS;
             this.animationDuration = (this.frameCount * this.frameSpeed);
-            // initialize image loader
-            // set image loader style
-            this.imageLoader.style.position = 'absolute';
-            this.imageLoader.style.top = '0';
-            this.imageLoader.style.left = '0';
-            this.imageLoader.style.width = '1px';
-            this.imageLoader.style.height = '1px';
-            this.imageLoader.style.opacity = `${Number.MIN_VALUE}`;
-            this.imageLoader.style.pointerEvents = 'none';
-            document.body.appendChild(this.imageLoader); // firefox doesn't seem to load images outside of DOM
-            // set image loader event listeners
-            this.imageLoader.addEventListener('load', () => {
-                if (!this.frameWidth || !this.frameHeight) {
-                    this.frameWidth = this.imageLoader.naturalWidth;
-                    this.frameHeight = this.imageLoader.naturalHeight;
-                }
-                if (!this.name) {
-                    this.name = getFileStemFromUrl(this.imageLoader.src);
-                }
-                this.initCanvas();
-                this.loading = false;
-            });
-            this.imageLoader.addEventListener('error', () => {
-                this.loading = false;
-                // assume loading from this source fails
-                this.sources.shift();
-            });
+            //initialize image loaders
+            this.imageLoader = new ImageLoadHelper(this.name, this.sources);
+            this.priorityMaskLoader = new ImageLoadHelper(this.name, this.priorityMaskSources);
             // add contact info container
             this.contactX = Math.round(this.x / 5) * 5;
             this.contactY = Math.round(this.y / 5) * 5;
@@ -416,24 +454,6 @@
                 this.contactElement.style.pointerEvents = enabled ? "auto" : "none";
             }
         }
-        tryLoadSource() {
-            if (this.loading)
-                return;
-            if (this.sources.length === 0)
-                return;
-            this.loading = true;
-            let candidateSource = this.sources[0];
-            let displayName = this.name ? this.name + ': ' : '';
-            console.log(`${displayName}trying to load ${candidateSource}`);
-            GM.xmlHttpRequest({
-                method: 'GET',
-                url: candidateSource,
-                responseType: 'blob',
-                onload: (response) => {
-                    this.imageLoader.src = URL.createObjectURL(response.response);
-                }
-            });
-        }
         getCurrentFrameIndex(currentSeconds) {
             if (!this.looping && this.startTime + this.frameCount * this.frameSpeed < currentSeconds)
                 return this.frameCount - 1;
@@ -458,16 +478,23 @@
                 }
             }
         }
-        initCanvas() {
-            this.canvasElement.style.position = 'absolute';
-            this.canvasElement.style.top = `${this.y}px`;
-            this.canvasElement.style.left = `${this.x}px`;
-            this.canvasElement.style.width = `${this.frameWidth}px`;
-            this.canvasElement.style.height = `${this.frameHeight}px`;
-            this.canvasElement.style.pointerEvents = 'none';
-            this.canvasElement.style.imageRendering = 'pixelated';
-            this.canvasElement.setAttribute('priority', this.priority.toString());
-            this.insertPriorityElement(this.canvasElement);
+        initCanvasIfNeeded(image) {
+            if (this.needsCanvasInitialization) {
+                if (!this.frameWidth || !this.frameHeight) {
+                    this.frameWidth = image.naturalWidth;
+                    this.frameHeight = image.naturalHeight;
+                }
+                this.canvasElement.style.position = 'absolute';
+                this.canvasElement.style.top = `${this.y}px`;
+                this.canvasElement.style.left = `${this.x}px`;
+                this.canvasElement.style.width = `${this.frameWidth}px`;
+                this.canvasElement.style.height = `${this.frameHeight}px`;
+                this.canvasElement.style.pointerEvents = 'none';
+                this.canvasElement.style.imageRendering = 'pixelated';
+                this.canvasElement.setAttribute('priority', this.priority.toString());
+                this.insertPriorityElement(this.canvasElement);
+                this.needsCanvasInitialization = false;
+            }
         }
         frameStartTime(n = null) {
             return (this.startTime + (n || this.currentFrame || 0) * this.frameSpeed) % this.animationDuration;
@@ -478,11 +505,13 @@
             if (!this.looping && currentSeconds > this.startTime + this.frameSpeed * this.frameCount) {
                 return;
             }
+            let image = this.imageLoader.getImage();
+            let priorityMask = this.priorityMaskLoader.getImage();
             // return if image isn't loaded yet
-            if (!this.imageLoader.complete || !this.imageLoader.src) {
-                this.tryLoadSource();
+            if (!image)
                 return;
-            }
+            // else initialize canvas
+            this.initCanvasIfNeeded(image);
             // return if canvas not initialized (works because last step of canvas initialization is inserting it to DOM)
             if (!this.canvasElement.isConnected) {
                 return;
@@ -498,10 +527,14 @@
             }
             // update canvas if necessary
             if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage || this.currentRandomness !== randomness) {
-                let frameData = extractFrame(this.imageLoader, this.frameWidth, this.frameHeight, frameIndex);
+                let frameData = extractFrame(image, this.frameWidth, this.frameHeight, frameIndex);
                 if (!frameData)
                     return;
-                let ditheredData = ditherData(frameData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
+                let priorityData = null;
+                if (priorityMask) {
+                    priorityData = extractFrame(priorityMask, this.frameWidth, this.frameHeight, frameIndex);
+                }
+                let ditheredData = ditherData(frameData, priorityData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
                 this.canvasElement.width = ditheredData.width;
                 this.canvasElement.height = ditheredData.height;
                 (_a = this.canvasElement.getContext('2d')) === null || _a === void 0 ? void 0 : _a.putImageData(ditheredData, 0, 0);
@@ -527,12 +560,12 @@
             }
         }
         destroy() {
-            var _a, _b, _c, _d;
-            (_a = this.imageLoader.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(this.imageLoader);
-            this.imageLoader = new Image();
-            (_b = this.canvasElement.parentElement) === null || _b === void 0 ? void 0 : _b.removeChild(this.canvasElement);
+            var _a, _b, _c;
+            this.imageLoader.destroy();
+            this.priorityMaskLoader.destroy();
+            (_a = this.canvasElement.parentElement) === null || _a === void 0 ? void 0 : _a.removeChild(this.canvasElement);
             this.canvasElement = document.createElement('canvas');
-            (_d = (_c = this.contactElement) === null || _c === void 0 ? void 0 : _c.parentElement) === null || _d === void 0 ? void 0 : _d.removeChild(this.contactElement);
+            (_c = (_b = this.contactElement) === null || _b === void 0 ? void 0 : _b.parentElement) === null || _c === void 0 ? void 0 : _c.removeChild(this.contactElement);
             this.contactElement = undefined;
         }
         async fakeReload(time) {

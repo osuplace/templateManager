@@ -1,10 +1,12 @@
 import * as utils from './utils';
 import * as cf from './canvasFunctions'
 import { UPDATE_PERIOD_MILLIS, SECONDS_SPENT_BLINKING, AMOUNT_OF_BLINKING, ANIMATION_DEFAULT_PERCENTAGE } from './constants';
+import { ImageLoadHelper } from './imageLoadHelper';
 
 interface TemplateParams {
     name: string | undefined
     sources: string[];
+    priorityMaskSources: string[];
     x: number
     y: number
     frameWidth: number | undefined
@@ -33,6 +35,7 @@ export interface JsonParams {
 export class Template {
     name: string | undefined
     sources: string[];
+    priorityMaskSources: string[] | undefined;
     x: number
     y: number
     frameWidth: number | undefined
@@ -44,7 +47,8 @@ export class Template {
     priority: number
 
     globalCanvas: HTMLCanvasElement
-    imageLoader = new Image()
+    imageLoader: ImageLoadHelper;
+    priorityMaskLoader: ImageLoadHelper;
     canvasElement = document.createElement('canvas')
     contactElement: HTMLDivElement | undefined
     initialContactCSS: CSSStyleDeclaration | undefined
@@ -56,6 +60,7 @@ export class Template {
         // assign params
         this.name = params.name
         this.sources = params.sources
+        this.priorityMaskSources = params.priorityMaskSources
         this.x = params.x
         this.y = params.y
         this.frameWidth = params.frameWidth
@@ -73,34 +78,9 @@ export class Template {
         this.blinkingPeriodMillis = Math.floor(period / UPDATE_PERIOD_MILLIS) * UPDATE_PERIOD_MILLIS
         this.animationDuration = (this.frameCount * this.frameSpeed)
 
-        // initialize image loader
-        // set image loader style
-        this.imageLoader.style.position = 'absolute';
-        this.imageLoader.style.top = '0';
-        this.imageLoader.style.left = '0';
-        this.imageLoader.style.width = '1px';
-        this.imageLoader.style.height = '1px';
-        this.imageLoader.style.opacity = `${Number.MIN_VALUE}`;
-        this.imageLoader.style.pointerEvents = 'none';
-        document.body.appendChild(this.imageLoader) // firefox doesn't seem to load images outside of DOM
-
-        // set image loader event listeners
-        this.imageLoader.addEventListener('load', () => {
-            if (!this.frameWidth || !this.frameHeight) {
-                this.frameWidth = this.imageLoader.naturalWidth
-                this.frameHeight = this.imageLoader.naturalHeight
-            }
-            if (!this.name) {
-                this.name = utils.getFileStemFromUrl(this.imageLoader.src)
-            }
-            this.initCanvas()
-            this.loading = false
-        })
-        this.imageLoader.addEventListener('error', () => {
-            this.loading = false
-            // assume loading from this source fails
-            this.sources.shift()
-        })
+        //initialize image loaders
+        this.imageLoader = new ImageLoadHelper(this.name, this.sources)
+        this.priorityMaskLoader = new ImageLoadHelper(this.name, this.priorityMaskSources)
 
         // add contact info container
         this.contactX = Math.round(this.x / 5) * 5
@@ -188,24 +168,6 @@ export class Template {
         }
     }
 
-    loading = false
-    tryLoadSource() {
-        if (this.loading) return;
-        if (this.sources.length === 0) return;
-        this.loading = true
-        let candidateSource = this.sources[0]
-        let displayName = this.name ? this.name + ': ' : ''
-        console.log(`${displayName}trying to load ${candidateSource}`)
-        GM.xmlHttpRequest({
-            method: 'GET',
-            url: candidateSource,
-            responseType: 'blob',
-            onload: (response) => {
-                this.imageLoader.src = URL.createObjectURL(response.response)
-            }
-        })
-    }
-
     getCurrentFrameIndex(currentSeconds: number) {
         if (!this.looping && this.startTime + this.frameCount * this.frameSpeed < currentSeconds)
             return this.frameCount - 1
@@ -231,17 +193,27 @@ export class Template {
         }
     }
 
-    initCanvas() {
-        this.canvasElement.style.position = 'absolute'
-        this.canvasElement.style.top = `${this.y}px`;
-        this.canvasElement.style.left = `${this.x}px`;
-        this.canvasElement.style.width = `${this.frameWidth}px`;
-        this.canvasElement.style.height = `${this.frameHeight}px`;
-        this.canvasElement.style.pointerEvents = 'none'
-        this.canvasElement.style.imageRendering = 'pixelated'
-        this.canvasElement.setAttribute('priority', this.priority.toString())
+    needsCanvasInitialization = true;
 
-        this.insertPriorityElement(this.canvasElement)
+    initCanvasIfNeeded(image: HTMLImageElement) {
+        if (this.needsCanvasInitialization){
+            if (!this.frameWidth || !this.frameHeight) {
+                this.frameWidth = image.naturalWidth
+                this.frameHeight = image.naturalHeight
+            }
+
+            this.canvasElement.style.position = 'absolute'
+            this.canvasElement.style.top = `${this.y}px`;
+            this.canvasElement.style.left = `${this.x}px`;
+            this.canvasElement.style.width = `${this.frameWidth}px`;
+            this.canvasElement.style.height = `${this.frameHeight}px`;
+            this.canvasElement.style.pointerEvents = 'none'
+            this.canvasElement.style.imageRendering = 'pixelated'
+            this.canvasElement.setAttribute('priority', this.priority.toString())
+    
+            this.insertPriorityElement(this.canvasElement)
+            this.needsCanvasInitialization = false
+        }
     }
 
     currentFrame: number | undefined
@@ -258,12 +230,13 @@ export class Template {
             return;
         }
 
+        let image = this.imageLoader.getImage()
+        let priorityMask = this.priorityMaskLoader.getImage()
         // return if image isn't loaded yet
-        if (!this.imageLoader.complete || !this.imageLoader.src) {
-            this.tryLoadSource()
-            return;
-        }
-
+        if (!image) return;
+        // else initialize canvas
+        this.initCanvasIfNeeded(image)
+        
         // return if canvas not initialized (works because last step of canvas initialization is inserting it to DOM)
         if (!this.canvasElement.isConnected) {
             return;
@@ -280,9 +253,13 @@ export class Template {
         }
         // update canvas if necessary
         if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage || this.currentRandomness !== randomness) {
-            let frameData = cf.extractFrame(this.imageLoader, this.frameWidth!, this.frameHeight!, frameIndex)
+            let frameData = cf.extractFrame(image, this.frameWidth!, this.frameHeight!, frameIndex)
             if (!frameData) return;
-            let ditheredData = cf.ditherData(frameData, randomness, percentage, this.x, this.y, this.frameWidth!, this.frameHeight!)
+            let priorityData = null;
+            if (priorityMask) {
+                priorityData = cf.extractFrame(priorityMask, this.frameWidth!, this.frameHeight!, frameIndex)
+            }
+            let ditheredData = cf.ditherData(frameData, priorityData, randomness, percentage, this.x, this.y, this.frameWidth!, this.frameHeight!)
 
             this.canvasElement.width = ditheredData.width
             this.canvasElement.height = ditheredData.height
@@ -311,8 +288,8 @@ export class Template {
     }
 
     destroy() {
-        this.imageLoader.parentElement?.removeChild(this.imageLoader)
-        this.imageLoader = new Image();
+        this.imageLoader.destroy()
+        this.priorityMaskLoader.destroy()
         this.canvasElement.parentElement?.removeChild(this.canvasElement)
         this.canvasElement = document.createElement('canvas')
         this.contactElement?.parentElement?.removeChild(this.contactElement)

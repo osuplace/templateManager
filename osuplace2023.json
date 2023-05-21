@@ -15,8 +15,10 @@
         {
             "name": "bad apple video",
             "sources": [
-                "https://i.imgur.com/0W20DhY.png",
-                "https://files.catbox.moe/fzx1mj.png"
+                "https://cdn.discordapp.com/attachments/364902074858602498/1109838633478934599/uploaded-colordata-index.png"
+            ],
+            "priorityMaskSources": [
+                "https://cdn.discordapp.com/attachments/364902074858602498/1109838633780920320/uploaded-priority-mask-final-dither-index.png"
             ],
             "x": 662,
             "y": 673,
@@ -24,7 +26,7 @@
             "frameHeight": 30,
             "frameRate": 43,
             "frameCount": 6605,
-            "startTime": 1680354180,
+            "startTime": 1687525200,
             "looping": false
         }
     ],
@@ -32,10 +34,6 @@
         {
             "name": "Digital Clock",
             "url": "https://gist.githubusercontent.com/LittleEndu/318ed120e92150b2a45690bd2de672d1/raw/clock.json"
-        },
-        {
-            "name": "self reference (cyclical import check)",
-            "url": "https://rentry.org/osuplace2023/raw"
         },
         {
             "name": "Starwars",
