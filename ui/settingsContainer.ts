@@ -111,7 +111,7 @@ export class Settings {
         let div = document.createElement('div')
         div.className = "settingsWrapper"
 
-        div.appendChild(createLabel(".json Template settings"))
+        div.appendChild(createLabel(".json Template settings - v" + GM.info.script.version))
         div.appendChild(document.createElement('br'))
         div.appendChild(createButton("Reload the template", () => manager.initOrReloadTemplates(false, this.contactInfoDisabled)))
         div.appendChild(document.createElement('br'))

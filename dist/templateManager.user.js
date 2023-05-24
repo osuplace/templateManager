@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.5
+// @version			0.5.1
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -971,7 +971,7 @@
             });
             let div = document.createElement('div');
             div.className = "settingsWrapper";
-            div.appendChild(createLabel(".json Template settings"));
+            div.appendChild(createLabel(".json Template settings - v" + GM.info.script.version));
             div.appendChild(document.createElement('br'));
             div.appendChild(createButton("Reload the template", () => manager.initOrReloadTemplates(false, this.contactInfoDisabled)));
             div.appendChild(document.createElement('br'));
