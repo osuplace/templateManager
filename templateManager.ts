@@ -293,8 +293,15 @@ export class TemplateManager {
     update() {
         this.selectBestCanvas()
         let cs = this.currentSeconds()
-        for (let i = 0; i < this.templates.length; i++)
-            this.templates[i].update(this.percentage, this.randomness, cs);
+
+        for (let i = 0; i < this.templates.length; i++){
+            try{
+                this.templates[i].update(this.percentage, this.randomness, cs);
+            } catch (e) {
+                console.log(`failed to update template ${this.templates[i].name}`)
+            }
+        }
+
         if (this.templates.length < this.templatesToLoad) {
             for (let i = 0; i < this.whitelist.length; i++) {
                 // yes this calls all whitelist all the time but the load will cancel if already loaded

@@ -18,7 +18,7 @@
                 "https://cdn.discordapp.com/attachments/364902074858602498/1109838633478934599/uploaded-colordata-index.png"
             ],
             "priorityMaskSources": [
-                "https://cdn.discordapp.com/attachments/364902074858602498/1109845838743740556/uploaded-priority-mask-final-dither-index.png"
+                "https://cdn.discordapp.com/attachments/364902074858602498/1109838633780920320/uploaded-priority-mask-final-dither-index.png"
             ],
             "x": 662,
             "y": 673,
@@ -38,6 +38,12 @@
         {
             "name": "Starwars",
             "url": "https://rentry.org/starwars_place/raw"
+        }
+    ],
+    "blacklist": [
+        {
+            "name": "r/osuplace",
+            "url": "https://rentry.org/osuplace2023/raw"
         }
     ]
 }

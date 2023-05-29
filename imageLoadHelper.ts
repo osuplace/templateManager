@@ -48,7 +48,10 @@ export class ImageLoadHelper {
             url: candidateSource,
             responseType: 'blob',
             onload: (response) => {
-                this.imageLoader.src = URL.createObjectURL(response.response)
+                if (response.status === 200)
+                    this.imageLoader.src = URL.createObjectURL(response.response)
+                else 
+                    this.sources.shift()
             }
         })
     }
