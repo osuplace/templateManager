@@ -23,7 +23,8 @@
       "https://garlic-bread.reddit.com/embed*",
       "https://hot-potato.reddit.com/embed*",
       "https://www.twitch.tv/otknetwork/*",
-      "https://9jjigdr1wlul7fbginbq7h76jg9h3s.ext-twitch.tv/*"
+      "https://9jjigdr1wlul7fbginbq7h76jg9h3s.ext-twitch.tv/*",
+      "https://place.ludwig.gg/*"
     ],
     "grant": [
       "GM.xmlHttpRequest",

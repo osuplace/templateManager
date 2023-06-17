@@ -15,6 +15,7 @@
 // @match			https://hot-potato.reddit.com/embed*
 // @match			https://www.twitch.tv/otknetwork/*
 // @match			https://9jjigdr1wlul7fbginbq7h76jg9h3s.ext-twitch.tv/*
+// @match			https://place.ludwig.gg/*
 // @namespace		littleendu.xyz
 // @updateURL		https://github.com/osuplace/templateManager/raw/main/dist/templateManager.user.js
 // @downloadURL		https://github.com/osuplace/templateManager/raw/main/dist/templateManager.user.js
