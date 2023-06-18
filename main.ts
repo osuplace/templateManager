@@ -42,7 +42,12 @@ async function canvasWindow() {
     }
 }
 
-function runCanvas(jsontemplate: string, canvasElements: HTMLCanvasElement[]) {
+async function runCanvas(jsontemplate: string, canvasElements: HTMLCanvasElement[]) {
+    while (document.readyState !== 'complete') {
+        console.log("Template manager sleeping for 1 second because document isn't ready yet.")
+        await utils.sleep(1000)
+    }
+
     let manager = new TemplateManager(canvasElements, jsontemplate)
     settings.init(manager)
     window.setInterval(() => {

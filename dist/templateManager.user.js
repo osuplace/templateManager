@@ -1222,7 +1222,11 @@
             sleep$1++;
         }
     }
-    function runCanvas(jsontemplate, canvasElements) {
+    async function runCanvas(jsontemplate, canvasElements) {
+        while (document.readyState !== 'complete') {
+            console.log("Template manager sleeping for 1 second because document isn't ready yet.");
+            await sleep(1000);
+        }
         let manager = new TemplateManager(canvasElements, jsontemplate);
         init(manager);
         window.setInterval(() => {
