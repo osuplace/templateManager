@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.5.2
+// @version			0.5.3
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -1182,6 +1182,21 @@
         window.addEventListener('mousemove', (ev) => {
             if (dragged) {
                 setPosition(ev.clientX, ev.clientY);
+            }
+        });
+        iconElement.addEventListener('touchstart', (ev) => {
+            clicked = true;
+        });
+        window.addEventListener('touchend', (ev) => {
+            clicked = false;
+            dragged = false;
+        });
+        window.addEventListener('touchmove', (ev) => {
+            if (ev.touches.length === 1) {
+                if (iconElement !== document.elementFromPoint(ev.touches[0].pageX, ev.touches[0].pageY) && clicked)
+                    dragged = true;
+                if (dragged)
+                    setPosition(ev.touches[0].clientX, ev.touches[0].clientY);
             }
         });
     }
