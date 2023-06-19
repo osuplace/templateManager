@@ -60,8 +60,6 @@ export async function init(manager: TemplateManager) {
     let clicked = false
     let dragged = false
 
-
-
     iconElement.addEventListener('mousedown', (ev) => {
         if (ev.button === 0) {
             clicked = true
@@ -87,6 +85,20 @@ export async function init(manager: TemplateManager) {
     window.addEventListener('mousemove', (ev) => {
         if (dragged) {
             setPosition(ev.clientX, ev.clientY)
+        }
+    })
+
+    iconElement.addEventListener('touchstart', (ev) => {
+        clicked = true
+    })
+    window.addEventListener('touchend', (ev) => {
+        clicked = false
+        dragged = false
+    })
+    window.addEventListener('touchmove', (ev) => {
+        if (ev.touches.length === 1) {
+            if (iconElement !== document.elementFromPoint(ev.touches[0].pageX, ev.touches[0].pageY) && clicked) dragged = true;
+            if (dragged) setPosition(ev.touches[0].clientX, ev.touches[0].clientY)
         }
     })
 }
