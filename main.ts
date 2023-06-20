@@ -16,9 +16,14 @@ function topWindow() {
 }
 
 async function canvasWindow() {
+    while (document.readyState !== 'complete') {
+        console.log("Template manager sleeping for 1 second because document isn't ready yet.")
+        await utils.sleep(1000)
+    }
+
     console.log("canvas code for", window.location.href)
     let sleep = 0;
-    while (!canvasElements) {
+    while (canvasElements === undefined || canvasElements.length === 0) {
         if (await GM.getValue('canvasFound', false) && !utils.windowIsEmbedded()) {
             console.log('canvas found by iframe')
             return;
@@ -43,11 +48,6 @@ async function canvasWindow() {
 }
 
 async function runCanvas(jsontemplate: string, canvasElements: HTMLCanvasElement[]) {
-    while (document.readyState !== 'complete') {
-        console.log("Template manager sleeping for 1 second because document isn't ready yet.")
-        await utils.sleep(1000)
-    }
-
     let manager = new TemplateManager(canvasElements, jsontemplate)
     settings.init(manager)
     window.setInterval(() => {

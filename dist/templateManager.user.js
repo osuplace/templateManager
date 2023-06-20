@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.5.3
+// @version			0.5.4
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -620,7 +620,7 @@
             this.lastCacheBust = this.getCacheBustString();
             this.notificationManager = new NotificationManager();
             this.notificationSent = false;
-            console.log('TemplateManager constructor ', canvasElements);
+            console.log('TemplateManager constructor ', canvasElements, window.location);
             this.canvasElements = canvasElements;
             this.selectedCanvas = canvasElements[0];
             this.selectBestCanvas();
@@ -1211,9 +1211,13 @@
         GM.setValue('jsontemplate', jsontemplate);
     }
     async function canvasWindow() {
+        while (document.readyState !== 'complete') {
+            console.log("Template manager sleeping for 1 second because document isn't ready yet.");
+            await sleep(1000);
+        }
         console.log("canvas code for", window.location.href);
         let sleep$1 = 0;
-        while (!canvasElements) {
+        while (canvasElements === undefined || canvasElements.length === 0) {
             if (await GM.getValue('canvasFound', false) && !windowIsEmbedded()) {
                 console.log('canvas found by iframe');
                 return;
@@ -1238,10 +1242,6 @@
         }
     }
     async function runCanvas(jsontemplate, canvasElements) {
-        while (document.readyState !== 'complete') {
-            console.log("Template manager sleeping for 1 second because document isn't ready yet.");
-            await sleep(1000);
-        }
         let manager = new TemplateManager(canvasElements, jsontemplate);
         init(manager);
         window.setInterval(() => {

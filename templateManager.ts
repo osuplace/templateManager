@@ -32,7 +32,7 @@ export class TemplateManager {
     canvasObserver: MutationObserver | undefined;
 
     constructor(canvasElements: HTMLCanvasElement[], startingUrl: string) {
-        console.log('TemplateManager constructor ', canvasElements);
+        console.log('TemplateManager constructor ', canvasElements, window.location);
         this.canvasElements = canvasElements;
         this.selectedCanvas = canvasElements[0];
         this.selectBestCanvas();
