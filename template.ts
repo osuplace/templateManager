@@ -2,6 +2,7 @@ import * as utils from './utils';
 import * as cf from './canvasFunctions'
 import { UPDATE_PERIOD_MILLIS, SECONDS_SPENT_BLINKING, AMOUNT_OF_BLINKING, ANIMATION_DEFAULT_PERCENTAGE } from './constants';
 import { ImageLoadHelper } from './imageLoadHelper';
+import { ImageDataWithCoordinates } from './canvasFunctions';
 
 interface TemplateParams {
     name: string | undefined
@@ -50,6 +51,7 @@ export class Template {
     imageLoader: ImageLoadHelper;
     priorityMaskLoader: ImageLoadHelper;
     canvasElement = document.createElement('canvas')
+    frameData: ImageData | null | undefined;
     contactElement: HTMLDivElement | undefined
     initialContactCSS: CSSStyleDeclaration | undefined
 
@@ -224,7 +226,7 @@ export class Template {
         return (this.startTime + (n || this.currentFrame || 0) * this.frameSpeed) % this.animationDuration
     }
 
-    update(percentage: number, randomness: number, currentSeconds: number) {
+    update(higherTemplates: Template[], percentage: number, randomness: number, currentSeconds: number) {
         // return if the animation is finished
         if (!this.looping && currentSeconds > this.startTime + this.frameSpeed * this.frameCount) {
             return;
@@ -253,13 +255,22 @@ export class Template {
         }
         // update canvas if necessary
         if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage || this.currentRandomness !== randomness) {
-            let frameData = cf.extractFrame(image, this.frameWidth!, this.frameHeight!, frameIndex)
-            if (!frameData) return;
+            this.frameData = cf.extractFrame(image, this.frameWidth!, this.frameHeight!, frameIndex)
+            if (!this.frameData) return;
             let priorityData = null;
             if (priorityMask) {
                 priorityData = cf.extractFrame(priorityMask, this.frameWidth!, this.frameHeight!, frameIndex)
             }
-            let ditheredData = cf.ditherData(frameData, priorityData, randomness, percentage, this.x, this.y, this.frameWidth!, this.frameHeight!)
+
+            let frameDatas: ImageDataWithCoordinates[] = [];
+            for (let i = 0; i < higherTemplates.length; i++) {
+                let other = higherTemplates[i]
+                if (this.checkCollision(other) && other.frameData)
+                    frameDatas.push({ imagedata: other.frameData, x: this.x - other.x, y: this.y - other.y })
+            }
+            frameDatas.push({ imagedata: this.frameData, x: 0, y: 0 })
+
+            let ditheredData = cf.ditherData(frameDatas, priorityData, randomness, percentage, this.x, this.y, this.frameWidth!, this.frameHeight!)
 
             this.canvasElement.width = ditheredData.width
             this.canvasElement.height = ditheredData.height
@@ -275,7 +286,7 @@ export class Template {
 
     checkCollision(other: Template) {
         if (!this.frameWidth || !this.frameHeight || !other.frameWidth || !other.frameHeight)
-            throw new Error('Invalid frame state - frame size not initialized')
+            return false
         let thisRight = this.x + this.frameWidth
         let thisBottom = this.y + this.frameHeight
         let otherRight = other.x + other.frameWidth

@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.5.4
+// @version			0.5.5
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -256,6 +256,7 @@
         return rv;
     }
 
+    const ALPHA_THRESHOLD = 2;
     function extractFrame(image, frameWidth, frameHeight, frameIndex) {
         let canvas = document.createElement('canvas');
         canvas.width = frameWidth;
@@ -269,23 +270,38 @@
         context.drawImage(image, gridX * frameWidth, gridY * frameHeight, frameWidth, frameHeight, 0, 0, frameWidth, frameHeight);
         return context.getImageData(0, 0, frameWidth, frameHeight);
     }
-    function ditherData(imageData, priorityData, randomness, percentage, x, y, frameWidth, frameHeight) {
+    function getHighestRGBA(datas, x, y) {
+        for (let i = 0; i < datas.length; i++) {
+            let img = datas[i];
+            let xx = x - img.x;
+            let yy = y - img.y;
+            if (xx < 0 || xx > img.imagedata.width || yy < 0 || yy > img.imagedata.height)
+                continue;
+            let index = (yy * img.imagedata.width + xx) * 4;
+            if (img.imagedata.data[index + 3] > ALPHA_THRESHOLD) {
+                return { r: img.imagedata.data[index], g: img.imagedata.data[index + 1], b: img.imagedata.data[index + 2], a: img.imagedata.data[index + 3] };
+            }
+        }
+        return { r: 0, g: 0, b: 0, a: 0 };
+    }
+    function ditherData(imageDatas, priorityData, randomness, percentage, x, y, frameWidth, frameHeight) {
         let rv = new ImageData(frameWidth * 3, frameHeight * 3);
         let m = Math.round(1 / percentage); // which nth pixel should be displayed
         let r = Math.floor(randomness * m); // which nth pixel am I (everyone has different nth pixel)
         for (let i = 0; i < frameWidth; i++) {
             for (let j = 0; j < frameHeight; j++) {
+                let rgba = getHighestRGBA(imageDatas, i, j);
                 let imageIndex = (j * frameWidth + i) * 4;
                 let middlePixelIndex = ((j * 3 + 1) * rv.width + i * 3 + 1) * 4;
-                let alpha = priorityData ? priorityData.data[imageIndex] : imageData.data[imageIndex + 3];
+                let alpha = priorityData ? priorityData.data[imageIndex] : rgba.a;
                 let p = percentage > 0.99 ? 1 : Math.ceil(m / (alpha / 200));
                 if (negativeSafeModulo(i + x + (j + y) * 2 + r, p) !== 0) {
                     continue;
                 }
-                rv.data[middlePixelIndex] = imageData.data[imageIndex];
-                rv.data[middlePixelIndex + 1] = imageData.data[imageIndex + 1];
-                rv.data[middlePixelIndex + 2] = imageData.data[imageIndex + 2];
-                rv.data[middlePixelIndex + 3] = alpha > 2 ? 255 : 0;
+                rv.data[middlePixelIndex] = rgba.r;
+                rv.data[middlePixelIndex + 1] = rgba.g;
+                rv.data[middlePixelIndex + 2] = rgba.b;
+                rv.data[middlePixelIndex + 3] = alpha > ALPHA_THRESHOLD ? 255 : 0;
             }
         }
         return rv;
@@ -504,7 +520,7 @@
         frameStartTime(n = null) {
             return (this.startTime + (n || this.currentFrame || 0) * this.frameSpeed) % this.animationDuration;
         }
-        update(percentage, randomness, currentSeconds) {
+        update(higherTemplates, percentage, randomness, currentSeconds) {
             var _a;
             // return if the animation is finished
             if (!this.looping && currentSeconds > this.startTime + this.frameSpeed * this.frameCount) {
@@ -532,14 +548,21 @@
             }
             // update canvas if necessary
             if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage || this.currentRandomness !== randomness) {
-                let frameData = extractFrame(image, this.frameWidth, this.frameHeight, frameIndex);
-                if (!frameData)
+                this.frameData = extractFrame(image, this.frameWidth, this.frameHeight, frameIndex);
+                if (!this.frameData)
                     return;
                 let priorityData = null;
                 if (priorityMask) {
                     priorityData = extractFrame(priorityMask, this.frameWidth, this.frameHeight, frameIndex);
                 }
-                let ditheredData = ditherData(frameData, priorityData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
+                let frameDatas = [];
+                for (let i = 0; i < higherTemplates.length; i++) {
+                    let other = higherTemplates[i];
+                    if (this.checkCollision(other) && other.frameData)
+                        frameDatas.push({ imagedata: other.frameData, x: this.x - other.x, y: this.y - other.y });
+                }
+                frameDatas.push({ imagedata: this.frameData, x: 0, y: 0 });
+                let ditheredData = ditherData(frameDatas, priorityData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
                 this.canvasElement.width = ditheredData.width;
                 this.canvasElement.height = ditheredData.height;
                 (_a = this.canvasElement.getContext('2d')) === null || _a === void 0 ? void 0 : _a.putImageData(ditheredData, 0, 0);
@@ -549,6 +572,22 @@
             this.currentFrame = frameIndex;
             this.currentRandomness = randomness;
             this.blinking(currentSeconds);
+        }
+        checkCollision(other) {
+            if (!this.frameWidth || !this.frameHeight || !other.frameWidth || !other.frameHeight)
+                return false;
+            let thisRight = this.x + this.frameWidth;
+            let thisBottom = this.y + this.frameHeight;
+            let otherRight = other.x + other.frameWidth;
+            let otherBottom = other.y + other.frameHeight;
+            if (this.x > otherRight || // this template is to the right of the other template
+                thisRight < other.x || // this template is to the left of the other template
+                this.y > otherBottom || // this template is below the other template
+                thisBottom < other.y // this template is above the other template
+            ) {
+                return false;
+            }
+            return true;
         }
         blinking(currentSeconds) {
             // return if no blinking needed
@@ -672,6 +711,7 @@
                 }
                 for (let i = 0; i < this.templateConstructors.length; i++) {
                     this.templates.push(this.templateConstructors[i](this.selectedCanvas));
+                    this.sortTemplates();
                 }
                 (_b = this.canvasObserver) === null || _b === void 0 ? void 0 : _b.disconnect();
                 (_c = this.canvasObserver) === null || _c === void 0 ? void 0 : _c.observe(this.selectedCanvas, { attributes: true });
@@ -726,6 +766,7 @@
                                 let constructor = (a) => new Template(json.templates[i], json.contact || json.contactInfo || lastContact, a, minPriority + this.templates.length);
                                 this.templateConstructors.push(constructor);
                                 this.templates.push(constructor(this.selectedCanvas));
+                                this.sortTemplates();
                             }
                         }
                     }
@@ -735,6 +776,9 @@
                     }
                 }
             });
+        }
+        sortTemplates() {
+            this.templates.sort((a, b) => a.priority - b.priority);
         }
         setupNotifications(serverUrl, isTopLevelTemplate) {
             console.log('attempting to set up notification server ' + serverUrl);
@@ -863,7 +907,7 @@
             let cs = this.currentSeconds();
             for (let i = 0; i < this.templates.length; i++) {
                 try {
-                    this.templates[i].update(this.percentage, this.randomness, cs);
+                    this.templates[i].update(this.templates.slice(0, i), this.percentage, this.randomness, cs);
                 }
                 catch (e) {
                     console.log(`failed to update template ${this.templates[i].name}`);
