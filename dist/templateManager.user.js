@@ -548,12 +548,14 @@
             }
             // update canvas if necessary
             if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage || this.currentRandomness !== randomness) {
-                this.frameData = extractFrame(image, this.frameWidth, this.frameHeight, frameIndex);
+                if (!this.frameData || this.frameCount > 1)
+                    this.frameData = extractFrame(image, this.frameWidth, this.frameHeight, frameIndex);
                 if (!this.frameData)
                     return;
-                let priorityData = null;
                 if (priorityMask) {
-                    priorityData = extractFrame(priorityMask, this.frameWidth, this.frameHeight, frameIndex);
+                    if (!this.priorityData || this.frameCount > 1) {
+                        this.priorityData = extractFrame(priorityMask, this.frameWidth, this.frameHeight, frameIndex);
+                    }
                 }
                 let frameDatas = [];
                 for (let i = 0; i < higherTemplates.length; i++) {
@@ -562,7 +564,7 @@
                         frameDatas.push({ imagedata: other.frameData, x: this.x - other.x, y: this.y - other.y });
                 }
                 frameDatas.push({ imagedata: this.frameData, x: 0, y: 0 });
-                let ditheredData = ditherData(frameDatas, priorityData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
+                let ditheredData = ditherData(frameDatas, this.priorityData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
                 this.canvasElement.width = ditheredData.width;
                 this.canvasElement.height = ditheredData.height;
                 (_a = this.canvasElement.getContext('2d')) === null || _a === void 0 ? void 0 : _a.putImageData(ditheredData, 0, 0);

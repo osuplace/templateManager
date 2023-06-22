@@ -52,6 +52,7 @@ export class Template {
     priorityMaskLoader: ImageLoadHelper;
     canvasElement = document.createElement('canvas')
     frameData: ImageData | null | undefined;
+    priorityData: ImageData | null | undefined;
     contactElement: HTMLDivElement | undefined
     initialContactCSS: CSSStyleDeclaration | undefined
 
@@ -255,11 +256,14 @@ export class Template {
         }
         // update canvas if necessary
         if (this.currentFrame !== frameIndex || this.currentPercentage !== percentage || this.currentRandomness !== randomness) {
-            this.frameData = cf.extractFrame(image, this.frameWidth!, this.frameHeight!, frameIndex)
+            if (!this.frameData || this.frameCount > 1)
+                this.frameData = cf.extractFrame(image, this.frameWidth!, this.frameHeight!, frameIndex)
             if (!this.frameData) return;
-            let priorityData = null;
+
             if (priorityMask) {
-                priorityData = cf.extractFrame(priorityMask, this.frameWidth!, this.frameHeight!, frameIndex)
+                if (!this.priorityData || this.frameCount > 1) {
+                    this.priorityData = cf.extractFrame(priorityMask, this.frameWidth!, this.frameHeight!, frameIndex)
+                }
             }
 
             let frameDatas: ImageDataWithCoordinates[] = [];
@@ -270,7 +274,7 @@ export class Template {
             }
             frameDatas.push({ imagedata: this.frameData, x: 0, y: 0 })
 
-            let ditheredData = cf.ditherData(frameDatas, priorityData, randomness, percentage, this.x, this.y, this.frameWidth!, this.frameHeight!)
+            let ditheredData = cf.ditherData(frameDatas, this.priorityData, randomness, percentage, this.x, this.y, this.frameWidth!, this.frameHeight!)
 
             this.canvasElement.width = ditheredData.width
             this.canvasElement.height = ditheredData.height
