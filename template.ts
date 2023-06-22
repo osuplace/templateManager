@@ -196,7 +196,7 @@ export class Template {
     needsCanvasInitialization = true;
 
     initCanvasIfNeeded(image: HTMLImageElement) {
-        if (this.needsCanvasInitialization){
+        if (this.needsCanvasInitialization) {
             if (!this.frameWidth || !this.frameHeight) {
                 this.frameWidth = image.naturalWidth
                 this.frameHeight = image.naturalHeight
@@ -210,7 +210,7 @@ export class Template {
             this.canvasElement.style.pointerEvents = 'none'
             this.canvasElement.style.imageRendering = 'pixelated'
             this.canvasElement.setAttribute('priority', this.priority.toString())
-    
+
             this.insertPriorityElement(this.canvasElement)
             this.needsCanvasInitialization = false
         }
@@ -236,7 +236,7 @@ export class Template {
         if (!image) return;
         // else initialize canvas
         this.initCanvasIfNeeded(image)
-        
+
         // return if canvas not initialized (works because last step of canvas initialization is inserting it to DOM)
         if (!this.canvasElement.isConnected) {
             return;
@@ -271,6 +271,24 @@ export class Template {
         this.currentFrame = frameIndex
         this.currentRandomness = randomness
         this.blinking(currentSeconds)
+    }
+
+    checkCollision(other: Template) {
+        if (!this.frameWidth || !this.frameHeight || !other.frameWidth || !other.frameHeight)
+            throw new Error('Invalid frame state - frame size not initialized')
+        let thisRight = this.x + this.frameWidth
+        let thisBottom = this.y + this.frameHeight
+        let otherRight = other.x + other.frameWidth
+        let otherBottom = other.y + other.frameHeight
+        if (
+            this.x > otherRight ||   // this template is to the right of the other template
+            thisRight < other.x ||   // this template is to the left of the other template
+            this.y > otherBottom ||  // this template is below the other template
+            thisBottom < other.y     // this template is above the other template
+        ) {
+            return false
+        }
+        return true
     }
 
     blinking(currentSeconds: number) {
