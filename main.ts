@@ -1,4 +1,4 @@
-import { NO_JSON_TEMPLATE_IN_PARAMS, UPDATE_PERIOD_MILLIS } from "./constants";
+import { NO_JSON_TEMPLATE_IN_PARAMS, UPDATE_PERIOD_MILLIS, TEMPLATE_RELOAD_INTERVAL } from "./constants";
 import * as reddit from "./reddit";
 import { TemplateManager } from "./templateManager";
 import * as utils from "./utils";
@@ -53,6 +53,10 @@ async function runCanvas(jsontemplate: string, canvasElements: HTMLCanvasElement
     window.setInterval(() => {
         manager.update()
     }, UPDATE_PERIOD_MILLIS);
+    window.setInterval(() => {
+        console.log("Reloading template...");
+        manager.initOrReloadTemplates(false, null)
+    }, TEMPLATE_RELOAD_INTERVAL);
     GM.setValue('jsontemplate', '')
 }
 
