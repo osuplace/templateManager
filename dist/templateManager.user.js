@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.5.3
+// @version			0.5.4
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -30,6 +30,7 @@
     const MAX_TEMPLATES = 100;
     const CACHE_BUST_PERIOD = 1000 * 60 * 2;
     const UPDATE_PERIOD_MILLIS = 100;
+    const TEMPLATE_RELOAD_INTERVAL = 5000 * 60;
     const SECONDS_SPENT_BLINKING = 5;
     const AMOUNT_OF_BLINKING = 11;
     const ANIMATION_DEFAULT_PERCENTAGE = 1 / 3;
@@ -1247,6 +1248,10 @@
         window.setInterval(() => {
             manager.update();
         }, UPDATE_PERIOD_MILLIS);
+        window.setInterval(() => {
+            console.log("Reloading template...");
+            manager.initOrReloadTemplates(false, null);
+        }, TEMPLATE_RELOAD_INTERVAL);
         GM.setValue('jsontemplate', '');
     }
     console.log(`running templating script in ${window.location.href}`);
