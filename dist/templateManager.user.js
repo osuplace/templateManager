@@ -273,9 +273,9 @@
     function getHighestRGBA(datas, x, y) {
         for (let i = 0; i < datas.length; i++) {
             let img = datas[i];
-            let xx = x - img.x;
-            let yy = y - img.y;
-            if (xx < 0 || xx > img.imagedata.width || yy < 0 || yy > img.imagedata.height)
+            let xx = x + img.x;
+            let yy = y + img.y;
+            if (xx < 0 || xx >= img.imagedata.width || yy < 0 || yy >= img.imagedata.height)
                 continue;
             let index = (yy * img.imagedata.width + xx) * 4;
             if (img.imagedata.data[index + 3] > ALPHA_THRESHOLD) {
@@ -562,6 +562,7 @@
                     let other = higherTemplates[i];
                     if (this.checkCollision(other) && other.frameData)
                         frameDatas.push({ imagedata: other.frameData, x: this.x - other.x, y: this.y - other.y });
+                    // the x, y over here are our coords in relation to the other template
                 }
                 frameDatas.push({ imagedata: this.frameData, x: 0, y: 0 });
                 let ditheredData = ditherData(frameDatas, this.priorityData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);

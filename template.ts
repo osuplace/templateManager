@@ -270,7 +270,8 @@ export class Template {
             for (let i = 0; i < higherTemplates.length; i++) {
                 let other = higherTemplates[i]
                 if (this.checkCollision(other) && other.frameData)
-                    frameDatas.push({ imagedata: other.frameData, x: this.x - other.x, y: this.y - other.y })
+                    frameDatas.push({ imagedata: other.frameData, x: this.x - other.x, y: this.y - other.y }) 
+                    // the x, y over here are our coords in relation to the other template
             }
             frameDatas.push({ imagedata: this.frameData, x: 0, y: 0 })
 

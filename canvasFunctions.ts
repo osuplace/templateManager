@@ -38,9 +38,9 @@ interface RGBA {
 function getHighestRGBA(datas: ImageDataWithCoordinates[], x: number, y: number): RGBA {
     for (let i = 0; i < datas.length; i++) {
         let img = datas[i]
-        let xx = x - img.x
-        let yy = y - img.y
-        if (xx < 0 || xx > img.imagedata.width || yy < 0 || yy > img.imagedata.height)
+        let xx = x + img.x
+        let yy = y + img.y
+        if (xx < 0 || xx >= img.imagedata.width || yy < 0 || yy >= img.imagedata.height)
             continue
         let index = (yy * img.imagedata.width + xx) * 4
         if (img.imagedata.data[index + 3] > ALPHA_THRESHOLD) {
