@@ -13,6 +13,14 @@
             "y": 640
         },
         {
+            "name": "bad apple placeholder",
+            "sources": [
+                "https://i.imgur.com/hMWmsvu.png"
+            ],
+            "x": 662,
+            "y": 673
+        },
+        {
             "name": "bad apple video",
             "sources": [
                 "https://cdn.discordapp.com/attachments/364902074858602498/1109838633478934599/uploaded-colordata-index.png"
@@ -20,8 +28,8 @@
             "priorityMaskSources": [
                 "https://cdn.discordapp.com/attachments/364902074858602498/1109838633780920320/uploaded-priority-mask-final-dither-index.png"
             ],
-            "x": 662,
-            "y": 673,
+            "x": -662,
+            "y": -673,
             "frameWidth": 40,
             "frameHeight": 30,
             "frameRate": 43,
