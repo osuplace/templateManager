@@ -89,6 +89,7 @@ export class TemplateManager {
             }
             for (let i = 0; i < this.templateConstructors.length; i++) {
                 this.templates.push(this.templateConstructors[i](this.selectedCanvas))
+                this.sortTemplates()
             }
             this.canvasObserver?.disconnect()
             this.canvasObserver?.observe(this.selectedCanvas, { attributes: true })
@@ -99,7 +100,7 @@ export class TemplateManager {
         return Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36)
     }
 
-    loadTemplatesFromJsonURL(url: string | URL, minPriority = 0, lastContact='') {
+    loadTemplatesFromJsonURL(url: string | URL, minPriority = 0, lastContact = '') {
         let _url = new URL(url);
         let uniqueString = `${_url.origin}${_url.pathname}`;
 
@@ -148,6 +149,7 @@ export class TemplateManager {
                             let constructor = (a: HTMLCanvasElement) => new Template(json.templates[i], json.contact || json.contactInfo || lastContact, a, minPriority + this.templates.length)
                             this.templateConstructors.push(constructor)
                             this.templates.push(constructor(this.selectedCanvas));
+                            this.sortTemplates()
                         }
                     }
                 }
@@ -157,6 +159,10 @@ export class TemplateManager {
                 }
             }
         });
+    }
+
+    sortTemplates() {
+        this.templates.sort((a, b) => a.priority - b.priority)
     }
 
     setupNotifications(serverUrl: string, isTopLevelTemplate: boolean) {
@@ -294,9 +300,9 @@ export class TemplateManager {
         this.selectBestCanvas()
         let cs = this.currentSeconds()
 
-        for (let i = 0; i < this.templates.length; i++){
-            try{
-                this.templates[i].update(this.percentage, this.randomness, cs);
+        for (let i = 0; i < this.templates.length; i++) {
+            try {
+                this.templates[i].update(this.templates.slice(0, i), this.percentage, this.randomness, cs);
             } catch (e) {
                 console.log(`failed to update template ${this.templates[i].name}`)
             }
