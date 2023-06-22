@@ -271,6 +271,7 @@
         return context.getImageData(0, 0, frameWidth, frameHeight);
     }
     function getHighestRGBA(datas, x, y) {
+        let lastData = datas[datas.length - 1];
         for (let i = 0; i < datas.length; i++) {
             let img = datas[i];
             let xx = x + img.x;
@@ -278,7 +279,8 @@
             if (xx < 0 || xx >= img.imagedata.width || yy < 0 || yy >= img.imagedata.height)
                 continue;
             let index = (yy * img.imagedata.width + xx) * 4;
-            if (img.imagedata.data[index + 3] > ALPHA_THRESHOLD) {
+            let lastIndex = (y * lastData.imagedata.width + x) * 4;
+            if (img.imagedata.data[index + 3] > ALPHA_THRESHOLD && lastData.imagedata.data[lastIndex + 3] > ALPHA_THRESHOLD) {
                 return { r: img.imagedata.data[index], g: img.imagedata.data[index + 1], b: img.imagedata.data[index + 2], a: img.imagedata.data[index + 3] };
             }
         }
