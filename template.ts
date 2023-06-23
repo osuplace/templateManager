@@ -97,14 +97,19 @@ export class Template {
                     let child = contactInfos[i] as HTMLElement
                     let childX = parseInt(child.getAttribute('contactX') ?? '0')
                     let childY = parseInt(child.getAttribute('contactY') ?? '0')
+                    let thisRight = this.contactX + 35
+                    let childRight = childX + 35
+                    console.log(childX, childY)
+                    let collision = this.contactX <= childRight && this.contactX >= childX || thisRight <= childRight && thisRight >= childX
                     if (
                         child
-                        && childX >= this.contactX && childX <= this.contactX + 50
-                        && childY === this.contactY
+                        && collision
+                        && Math.round(childY) === Math.round(this.contactY)
                     ) {
                         checkingCoords = true
                         this.contactX += 5
                         this.contactY += 5
+                        break
                     }
                 }
             }
