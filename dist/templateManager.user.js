@@ -415,7 +415,6 @@
                         let childY = parseInt((_b = child.getAttribute('contactY')) !== null && _b !== void 0 ? _b : '0');
                         let thisRight = this.contactX + 35;
                         let childRight = childX + 35;
-                        console.log(childX, childY);
                         let collision = this.contactX <= childRight && this.contactX >= childX || thisRight <= childRight && thisRight >= childX;
                         if (child
                             && collision

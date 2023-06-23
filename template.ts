@@ -99,7 +99,6 @@ export class Template {
                     let childY = parseInt(child.getAttribute('contactY') ?? '0')
                     let thisRight = this.contactX + 35
                     let childRight = childX + 35
-                    console.log(childX, childY)
                     let collision = this.contactX <= childRight && this.contactX >= childX || thisRight <= childRight && thisRight >= childX
                     if (
                         child

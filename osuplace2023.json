@@ -1,6 +1,6 @@
 {
     "faction": "/r/osuplace",
-    "contact": "http://discord.io/osuplace littleendu#0 or emi.x#0",
+    "contact": "discord.osu.place - littleendu#0 or emi.x#0",
     "notifications": "https://broadcaster.osu.place",
     "templates": [
         {
@@ -9,7 +9,7 @@
                 "https://cdn.discordapp.com/attachments/364902074858602498/1121528323537895485/osu_logo.png"
             ],
             "priorityMaskSources": [
-                "https://cdn.discordapp.com/attachments/364902074858602498/1121529052155625512/osu_mask.png"
+                "https://cdn.discordapp.com/attachments/958285020433375252/1121581323321094225/osu_mask.png"
             ],
             "x": 648,
             "y": 672
@@ -56,6 +56,10 @@
         {
             "name": "touhou",
             "url": "https://rentry.org/touhouplace2023/raw"
+        },
+        {
+            "name": "Foxhole",
+            "url": "https://rentry.co/FoxholeTemplate/raw"
         }
     ],
     "blacklist": [
