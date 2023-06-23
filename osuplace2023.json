@@ -1,16 +1,18 @@
 {
     "faction": "/r/osuplace",
-    "contact": "https://discord.gg/NdMsJfCjkN littleendu#0 or emi.x#0",
+    "contact": "http://discord.io/osuplace littleendu#0 or emi.x#0",
     "notifications": "https://broadcaster.osu.place",
     "templates": [
         {
-            "name": "osu! logo; Bad Apple!! text; Border; Marisa and Reimu;",
+            "name": "osu! logo; Bad Apple!! text; Border;",
             "sources": [
-                "https://i.imgur.com/UvrvLg7.png",
-                "https://files.catbox.moe/za1jcl.png"
+                "https://cdn.discordapp.com/attachments/364902074858602498/1121528323537895485/osu_logo.png"
             ],
-            "x": 637,
-            "y": 640
+            "priorityMaskSources": [
+                "https://cdn.discordapp.com/attachments/364902074858602498/1121529052155625512/osu_mask.png"
+            ],
+            "x": 648,
+            "y": 672
         },
         {
             "name": "bad apple placeholder",
@@ -50,6 +52,10 @@
         {
             "name": "Starwars",
             "url": "https://rentry.org/starwars_place/raw"
+        },
+        {
+            "name": "touhou",
+            "url": "https://rentry.org/touhouplace2023/raw"
         }
     ],
     "blacklist": [

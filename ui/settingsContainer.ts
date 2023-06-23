@@ -82,7 +82,7 @@ export class Settings {
     notificationsWrapper = document.createElement("div");
     manager: TemplateManager;
     reloadTemplatesWhenClosed = false;
-    contactInfoDisabled = false;
+    contactInfoEnabled = false;
     constructor(manager: TemplateManager) {
         this.templateLinksWrapper.className = "settingsWrapper"
         this.templateLinksWrapper.id = "templateLinksWrapper"
@@ -113,7 +113,7 @@ export class Settings {
 
         div.appendChild(createLabel(".json Template settings - v" + GM.info.script.version))
         div.appendChild(document.createElement('br'))
-        div.appendChild(createButton("Reload the template", () => manager.initOrReloadTemplates(false, this.contactInfoDisabled)))
+        div.appendChild(createButton("Reload the template", () => manager.initOrReloadTemplates(false, this.contactInfoEnabled)))
         div.appendChild(document.createElement('br'))
         div.appendChild(createSlider("Templates to load", "4", (n) => {
             manager.templatesToLoad = (n + 1) * MAX_TEMPLATES / 5
@@ -134,7 +134,7 @@ export class Settings {
         div.appendChild(document.createElement('br'))
         div.appendChild(createBoldCheckbox('', "Show contact info besides templates", false, (a) => {
             manager.setContactInfoDisplay(a)
-            this.contactInfoDisabled = a
+            this.contactInfoEnabled = a
         }))
         div.appendChild(document.createElement('br'))
 
@@ -154,7 +154,7 @@ export class Settings {
         this.overlay.style.opacity = "0"
         this.overlay.style.pointerEvents = "none"
         if (this.reloadTemplatesWhenClosed) {
-            this.manager.initOrReloadTemplates(true, this.contactInfoDisabled)
+            this.manager.initOrReloadTemplates(true, this.contactInfoEnabled)
             this.reloadTemplatesWhenClosed = false
         }
     }

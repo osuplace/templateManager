@@ -665,6 +665,7 @@
             this.lastCacheBust = this.getCacheBustString();
             this.notificationManager = new NotificationManager();
             this.notificationSent = false;
+            this.contactInfoEnabled = false;
             console.log('TemplateManager constructor ', canvasElements, window.location);
             this.canvasElements = canvasElements;
             this.selectedCanvas = canvasElements[0];
@@ -770,7 +771,9 @@
                             if (this.templates.length < this.templatesToLoad) {
                                 let constructor = (a) => new Template(json.templates[i], json.contact || json.contactInfo || lastContact, a, minPriority + this.templates.length);
                                 this.templateConstructors.push(constructor);
-                                this.templates.push(constructor(this.selectedCanvas));
+                                let newTemplate = constructor(this.selectedCanvas);
+                                this.templates.push(newTemplate);
+                                newTemplate.setContactInfoDisplay(this.contactInfoEnabled);
                                 this.sortTemplates();
                             }
                         }
@@ -865,8 +868,9 @@
         }
         initOrReloadTemplates(forced = false, contactInfo = null) {
             var _a, _b;
-            if (contactInfo)
-                this.setContactInfoDisplay(contactInfo);
+            if (contactInfo !== null)
+                this.contactInfoEnabled = contactInfo;
+            this.setContactInfoDisplay(this.contactInfoEnabled);
             if (!this.canReload() && !forced) {
                 // fake a reload
                 for (let i = 0; i < this.templates.length; i++) {
@@ -1007,7 +1011,7 @@
             this.templateLinksWrapper = document.createElement("div");
             this.notificationsWrapper = document.createElement("div");
             this.reloadTemplatesWhenClosed = false;
-            this.contactInfoDisabled = false;
+            this.contactInfoEnabled = false;
             this.templateLinksWrapper.className = "settingsWrapper";
             this.templateLinksWrapper.id = "templateLinksWrapper";
             this.notificationsWrapper.className = "settingsWrapper";
@@ -1033,7 +1037,7 @@
             div.className = "settingsWrapper";
             div.appendChild(createLabel(".json Template settings - v" + GM.info.script.version));
             div.appendChild(document.createElement('br'));
-            div.appendChild(createButton("Reload the template", () => manager.initOrReloadTemplates(false, this.contactInfoDisabled)));
+            div.appendChild(createButton("Reload the template", () => manager.initOrReloadTemplates(false, this.contactInfoEnabled)));
             div.appendChild(document.createElement('br'));
             div.appendChild(createSlider("Templates to load", "4", (n) => {
                 manager.templatesToLoad = (n + 1) * MAX_TEMPLATES / 5;
@@ -1054,7 +1058,7 @@
             div.appendChild(document.createElement('br'));
             div.appendChild(createBoldCheckbox('', "Show contact info besides templates", false, (a) => {
                 manager.setContactInfoDisplay(a);
-                this.contactInfoDisabled = a;
+                this.contactInfoEnabled = a;
             }));
             div.appendChild(document.createElement('br'));
             this.overlay.appendChild(div);
@@ -1070,7 +1074,7 @@
             this.overlay.style.opacity = "0";
             this.overlay.style.pointerEvents = "none";
             if (this.reloadTemplatesWhenClosed) {
-                this.manager.initOrReloadTemplates(true, this.contactInfoDisabled);
+                this.manager.initOrReloadTemplates(true, this.contactInfoEnabled);
                 this.reloadTemplatesWhenClosed = false;
             }
         }

@@ -30,6 +30,7 @@ export class TemplateManager {
     notificationManager = new NotificationManager();
     notificationSent = false;
     canvasObserver: MutationObserver | undefined;
+    contactInfoEnabled = false;
 
     constructor(canvasElements: HTMLCanvasElement[], startingUrl: string) {
         console.log('TemplateManager constructor ', canvasElements, window.location);
@@ -148,7 +149,9 @@ export class TemplateManager {
                         if (this.templates.length < this.templatesToLoad) {
                             let constructor = (a: HTMLCanvasElement) => new Template(json.templates[i], json.contact || json.contactInfo || lastContact, a, minPriority + this.templates.length)
                             this.templateConstructors.push(constructor)
-                            this.templates.push(constructor(this.selectedCanvas));
+                            let newTemplate = constructor(this.selectedCanvas)
+                            this.templates.push(newTemplate);
+                            newTemplate.setContactInfoDisplay(this.contactInfoEnabled)
                             this.sortTemplates()
                         }
                     }
@@ -251,8 +254,10 @@ export class TemplateManager {
     }
 
     initOrReloadTemplates(forced = false, contactInfo: boolean | null = null) {
-        if (contactInfo)
-            this.setContactInfoDisplay(contactInfo);
+        if (contactInfo !== null)
+            this.contactInfoEnabled = contactInfo
+        this.setContactInfoDisplay(this.contactInfoEnabled)
+        
 
         if (!this.canReload() && !forced) {
             // fake a reload
