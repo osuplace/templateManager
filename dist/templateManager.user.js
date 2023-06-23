@@ -666,6 +666,7 @@
             this.notificationManager = new NotificationManager();
             this.notificationSent = false;
             this.contactInfoEnabled = false;
+            this.showTopLevelNotification = true;
             console.log('TemplateManager constructor ', canvasElements, window.location);
             this.canvasElements = canvasElements;
             this.selectedCanvas = canvasElements[0];
@@ -822,7 +823,10 @@
                 if (isTopLevelTemplate) {
                     let enabledKey = `${window.location.host}_notificationsEnabled`;
                     await GM.setValue(enabledKey, JSON.stringify(this.enabledNotifications));
-                    this.notificationManager.newNotification("template manager", `You were automatically set to recieve notifications from ${domain} as it's from your address-bar template`);
+                    if (this.showTopLevelNotification) {
+                        this.notificationManager.newNotification("template manager", `You were automatically set to recieve notifications from ${domain} as it's from your address-bar template`);
+                        this.showTopLevelNotification = false;
+                    }
                 }
                 // actually connecting to the websocket now
                 let wsUrl = new URL('/listen', serverUrl);

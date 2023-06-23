@@ -168,6 +168,8 @@ export class TemplateManager {
         this.templates.sort((a, b) => a.priority - b.priority)
     }
 
+    showTopLevelNotification = true;
+
     setupNotifications(serverUrl: string, isTopLevelTemplate: boolean) {
         console.log('attempting to set up notification server ' + serverUrl);
         // get topics
@@ -204,7 +206,10 @@ export class TemplateManager {
                 if (isTopLevelTemplate) {
                     let enabledKey = `${window.location.host}_notificationsEnabled`
                     await GM.setValue(enabledKey, JSON.stringify(this.enabledNotifications))
-                    this.notificationManager.newNotification("template manager", `You were automatically set to recieve notifications from ${domain} as it's from your address-bar template`);
+                    if (this.showTopLevelNotification) {
+                        this.notificationManager.newNotification("template manager", `You were automatically set to recieve notifications from ${domain} as it's from your address-bar template`);
+                        this.showTopLevelNotification = false;
+                    }
                 }
 
                 // actually connecting to the websocket now
@@ -257,7 +262,7 @@ export class TemplateManager {
         if (contactInfo !== null)
             this.contactInfoEnabled = contactInfo
         this.setContactInfoDisplay(this.contactInfoEnabled)
-        
+
 
         if (!this.canReload() && !forced) {
             // fake a reload
