@@ -132,7 +132,7 @@ export class Settings {
             manager.percentage = 1 / (n / 10 + 1)
         }))
         div.appendChild(document.createElement('br'))
-        div.appendChild(createBoldCheckbox('', "Show contact info besides templates", false, (a) => {
+        div.appendChild(createBoldCheckbox('', "Show contact info besides templates", this.contactInfoEnabled, (a) => {
             manager.setContactInfoDisplay(a)
             this.contactInfoEnabled = a
         }))
