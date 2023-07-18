@@ -1,4 +1,4 @@
-import { MAX_TEMPLATES } from "../constants";
+import { MAX_TEMPLATES, SETTINGS_CSS } from "../constants";
 import { TemplateManager } from "../templateManager";
 import * as utils from "../utils";
 
@@ -93,15 +93,7 @@ export class Settings {
 
         this.overlay.id = "settingsOverlay"
         this.overlay.style.opacity = "0"
-        this.overlay.onclick = (ev) => {
-            if (ev.target === ev.currentTarget)
-                this.close();
-        }
-        window.addEventListener("keydown", (ev) => {
-            if (ev.key === "Escape") {
-                this.close();
-            }
-        })
+
         this.overlay.addEventListener("wheel", (ev) => {
             ev.preventDefault();
             var direction = (ev.deltaY > 0) ? 1 : -1;
@@ -138,10 +130,33 @@ export class Settings {
         }))
         div.appendChild(document.createElement('br'))
 
+        let clickHandler = document.createElement('div')
+        clickHandler.style.width = '100vw'
+        clickHandler.style.height = '100vh'
+        clickHandler.style.position = 'absolute'
+        clickHandler.style.left = '-0.1px'
+        clickHandler.style.right = '-0.1px'
+        clickHandler.style.overflowY = 'auto'
 
-        this.overlay.appendChild(div)
-        this.overlay.appendChild(this.templateLinksWrapper)
-        this.overlay.appendChild(this.notificationsWrapper)
+        clickHandler.onclick = (ev) => {
+            if (ev.target === ev.currentTarget)
+                this.close();
+        }
+        window.addEventListener("keydown", (ev) => {
+            if (ev.key === "Escape") {
+                this.close();
+            }
+        })
+
+        this.overlay.attachShadow({ mode: 'open' })
+        let globalStyle = document.createElement("style")
+        globalStyle.innerHTML = SETTINGS_CSS;
+
+        this.overlay.shadowRoot!.appendChild(globalStyle)
+        this.overlay.shadowRoot!.appendChild(clickHandler)
+        clickHandler.appendChild(div)
+        clickHandler.appendChild(this.templateLinksWrapper)
+        clickHandler.appendChild(this.notificationsWrapper)
     }
 
     open() {

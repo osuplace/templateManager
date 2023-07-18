@@ -1,4 +1,4 @@
-import { CACHE_BUST_PERIOD, CONTACT_INFO_CSS, GLOBAL_CANVAS_CSS, MAX_TEMPLATES, NO_JSON_TEMPLATE_IN_PARAMS } from './constants';
+import { CACHE_BUST_PERIOD, CONTACT_INFO_CSS, GLOBAL_CSS, MAX_TEMPLATES, NO_JSON_TEMPLATE_IN_PARAMS } from './constants';
 import { Template, JsonParams, NamedURL } from './template';
 import { NotificationManager } from './ui/notificationsManager';
 import * as utils from './utils';
@@ -50,7 +50,7 @@ export class TemplateManager {
         this.selectedCanvas.parentElement!.appendChild(style)
 
         let globalStyle = document.createElement("style")
-        globalStyle.innerHTML = GLOBAL_CANVAS_CSS;
+        globalStyle.innerHTML = GLOBAL_CSS;
         document.body.appendChild(globalStyle);
 
         this.canvasObserver = new MutationObserver(() => {

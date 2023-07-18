@@ -32,7 +32,7 @@ export const CONTACT_INFO_CSS = css`
         width: auto;
     }
 `
-export const GLOBAL_CANVAS_CSS = css`
+export const GLOBAL_CSS = css`
     #osuplaceNotificationContainer {
         width: 200px;
         height: 66%;
@@ -85,24 +85,25 @@ export const GLOBAL_CANVAS_CSS = css`
         overflow-y: auto;
         font-size: 14px;
     }
+`
 
-    #settingsOverlay label,
-    #settingsOverlay button{
+export const SETTINGS_CSS = css`
+    label,
+    button{
         height: auto;
         white-space: normal;
         word-break: break-word;
         text-shadow: -1px -1px 1px #111, 1px 1px 1px #111, -1px 1px 1px #111, 1px -1px 1px #111;
         color: #eee;
     }
-    
-    #settingsOverlay input {
+
+    input {
         width: auto;
         max-width: 100%;
         height: auto;
         color: #eee;
         background-color: #111;
         -webkit-appearance: auto;
-        padding: 5px;
         border-radius: 5px;
         font-size: 14px;
     }
@@ -153,3 +154,4 @@ export const GLOBAL_CANVAS_CSS = css`
         background-color: rgba(128, 0, 0, 0.5);
     }
 `
+
