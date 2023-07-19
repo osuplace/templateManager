@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.5.6
+// @version			0.5.7
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -293,6 +293,8 @@
         for (let i = 0; i < frameWidth; i++) {
             for (let j = 0; j < frameHeight; j++) {
                 let rgba = getHighestRGBA(imageDatas, i, j);
+                if (rgba.a < ALPHA_THRESHOLD)
+                    continue;
                 let imageIndex = (j * frameWidth + i) * 4;
                 let middlePixelIndex = ((j * 3 + 1) * rv.width + i * 3 + 1) * 4;
                 let alpha = priorityData ? priorityData.data[imageIndex] : rgba.a;

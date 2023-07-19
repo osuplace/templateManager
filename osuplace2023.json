@@ -64,8 +64,12 @@
     ],
     "blacklist": [
         {
-            "name": "r/osuplace",
+            "name": "old r/osuplace",
             "url": "https://rentry.org/osuplace2023/raw"
+        },
+        {
+            "name": "old r/osuplace",
+            "url": "https://rentry.co/osuplace2023/raw"
         }
     ]
 }
