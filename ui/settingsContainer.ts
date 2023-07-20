@@ -210,6 +210,7 @@ export class Settings {
             this.templateLinksWrapper.appendChild(templateAdder)
             if (templates.length > 0) {
                 this.templateLinksWrapper.appendChild(createLabel("Click to remove template from always loading"))
+                this.templateLinksWrapper.appendChild(document.createElement('br'))
             }
             for (let i = 0; i < templates.length; i++) {
                 let button = createButton(templates[i], async () => {
