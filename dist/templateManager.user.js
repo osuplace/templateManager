@@ -489,6 +489,13 @@
                 this.contactElement.style.pointerEvents = enabled ? "auto" : "none";
             }
         }
+        setPreviewMode(enabled) {
+            var _a;
+            let data = enabled ? this.fullImageData : this.ditheredData;
+            this.canvasElement.width = data.width;
+            this.canvasElement.height = data.height;
+            (_a = this.canvasElement.getContext('2d')) === null || _a === void 0 ? void 0 : _a.putImageData(data, 0, 0);
+        }
         getCurrentFrameIndex(currentSeconds) {
             if (!this.looping && this.startTime + this.frameCount * this.frameSpeed < currentSeconds)
                 return this.frameCount - 1;
@@ -579,10 +586,11 @@
                     // the x, y over here are our coords in relation to the other template
                 }
                 frameDatas.push({ imagedata: this.frameData, x: 0, y: 0 });
-                let ditheredData = ditherData(frameDatas, this.priorityData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
-                this.canvasElement.width = ditheredData.width;
-                this.canvasElement.height = ditheredData.height;
-                (_a = this.canvasElement.getContext('2d')) === null || _a === void 0 ? void 0 : _a.putImageData(ditheredData, 0, 0);
+                this.fullImageData = frameDatas[frameDatas.length - 1].imagedata;
+                this.ditheredData = ditherData(frameDatas, this.priorityData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
+                this.canvasElement.width = this.ditheredData.width;
+                this.canvasElement.height = this.ditheredData.height;
+                (_a = this.canvasElement.getContext('2d')) === null || _a === void 0 ? void 0 : _a.putImageData(this.ditheredData, 0, 0);
             }
             // update done
             this.currentPercentage = percentage;
@@ -952,6 +960,11 @@
                 this.templates[i].setContactInfoDisplay(enabled);
             }
         }
+        setPreviewMode(enabled) {
+            for (let i = 0; i < this.templates.length; i++) {
+                this.templates[i].setPreviewMode(enabled);
+            }
+        }
     }
 
     function createLabel(text) {
@@ -1029,6 +1042,7 @@
             this.notificationsWrapper = document.createElement("div");
             this.reloadTemplatesWhenClosed = false;
             this.contactInfoEnabled = false;
+            this.previewModeEnabled = false;
             this.templateLinksWrapper.className = "settingsWrapper";
             this.templateLinksWrapper.id = "templateLinksWrapper";
             this.notificationsWrapper.className = "settingsWrapper";
@@ -1067,6 +1081,11 @@
             div.appendChild(createBoldCheckbox('', "Show contact info besides templates", this.contactInfoEnabled, (a) => {
                 manager.setContactInfoDisplay(a);
                 this.contactInfoEnabled = a;
+            }));
+            div.appendChild(document.createElement('br'));
+            div.appendChild(createBoldCheckbox('', "Preview template in full", this.previewModeEnabled, (a) => {
+                manager.setPreviewMode(a);
+                this.previewModeEnabled = a;
             }));
             div.appendChild(document.createElement('br'));
             let clickHandler = document.createElement('div');

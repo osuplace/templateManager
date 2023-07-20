@@ -133,8 +133,7 @@ export class Settings {
 
         div.appendChild(createBoldCheckbox('', "Preview template in full", this.previewModeEnabled, (a) => {
             manager.setPreviewMode(a)
-            this.previewEnabled = a
-            // manager.initOrReloadTemplates(false, this.contactInfoEnabled)
+            this.previewModeEnabled = a
         }))
         div.appendChild(document.createElement('br'))
 
