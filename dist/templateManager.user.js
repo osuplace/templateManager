@@ -1062,11 +1062,6 @@
             document.body.appendChild(this.overlay);
             this.overlay.id = "settingsOverlay";
             this.overlay.style.opacity = "0";
-            this.overlay.addEventListener("wheel", (ev) => {
-                ev.preventDefault();
-                var direction = (ev.deltaY > 0) ? 1 : -1;
-                this.overlay.scrollTop += direction * 100;
-            });
             let div = document.createElement('div');
             div.className = "settingsWrapper";
             div.appendChild(createLabel(".json Template settings - v" + GM.info.script.version));
@@ -1106,6 +1101,11 @@
             clickHandler.style.left = '-0.1px';
             clickHandler.style.right = '-0.1px';
             clickHandler.style.overflowY = 'auto';
+            clickHandler.addEventListener("wheel", (ev) => {
+                ev.preventDefault();
+                var direction = (ev.deltaY > 0) ? 1 : -1;
+                clickHandler.scrollTop += direction * 100;
+            });
             clickHandler.onclick = (ev) => {
                 if (ev.target === ev.currentTarget)
                     this.close();
