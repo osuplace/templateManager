@@ -1,11 +1,11 @@
 {
   "name": "template-manager",
-  "version": "0.5.11",
+  "version": "0.5.13",
   "description": "Manages your templates on various canvas games",
   "main": "main.ts",
   "scripts": {
     "test": "echo \\\"Test command\\\" && exit 0",
-    "build": "gorilla --input ./main.ts --output ./dist/templateManager.user.js --config gorilla.json"
+    "build": "gorilla --input ./src/main.ts --output ./dist/templateManager.user.js --config gorilla.json"
   },
   "author": "LittleEndu, Mikarific, April",
   "license": "MIT",

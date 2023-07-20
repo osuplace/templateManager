@@ -16,7 +16,7 @@
 // @grant			GM.getValue
 // @connect			*
 // @name			template-manager
-// @version			0.5.11
+// @version			0.5.13
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -815,6 +815,17 @@
         }
         setupNotifications(serverUrl, isTopLevelTemplate) {
             console.log('attempting to set up notification server ' + serverUrl);
+            // check if we're not already connected
+            let wsUrl = new URL('/listen', serverUrl);
+            wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
+            this.websockets.forEach((socket) => {
+                if (socket.url == wsUrl.toString()) {
+                    if (socket.readyState != socket.CLOSING && socket.readyState != socket.CLOSED) {
+                        console.log(`we are already connected to ${wsUrl}, skipping!`);
+                        return;
+                    }
+                }
+            });
             // get topics
             let domain = new URL(serverUrl).hostname.replace('broadcaster.', '');
             fetch(`${serverUrl}/topics`)
@@ -853,8 +864,6 @@
                     }
                 }
                 // actually connecting to the websocket now
-                let wsUrl = new URL('/listen', serverUrl);
-                wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
                 let ws = new WebSocket(wsUrl);
                 ws.addEventListener('open', (_) => {
                     console.log(`successfully connected to websocket for ${serverUrl}`);
@@ -879,12 +888,14 @@
                     }
                 });
                 ws.addEventListener('close', (_) => {
+                    console.log(`websocket on ${ws.url} closing!`);
                     removeItem(this.websockets, ws);
                     setTimeout(() => {
                         this.setupNotifications(serverUrl, isTopLevelTemplate);
-                    }, 1000 * 60);
+                    }, 1000 * 30);
                 });
                 ws.addEventListener('error', (_) => {
+                    console.log(`websocket error on ${ws.url}, closing!`);
                     ws.close();
                 });
             }).catch((error) => {
@@ -913,6 +924,7 @@
                 (_a = this.templates.shift()) === null || _a === void 0 ? void 0 : _a.destroy();
             }
             while (this.websockets.length) {
+                console.log('initOrReloadTemplates is closing connection ' + this.websockets[0].url);
                 (_b = this.websockets.shift()) === null || _b === void 0 ? void 0 : _b.close();
             }
             this.templates = [];
@@ -1059,11 +1071,6 @@
             document.body.appendChild(this.overlay);
             this.overlay.id = "settingsOverlay";
             this.overlay.style.opacity = "0";
-            this.overlay.addEventListener("wheel", (ev) => {
-                ev.preventDefault();
-                var direction = (ev.deltaY > 0) ? 1 : -1;
-                this.overlay.scrollTop += direction * 100;
-            });
             let div = document.createElement('div');
             div.className = "settingsWrapper";
             div.appendChild(createLabel(".json Template settings - v" + GM.info.script.version));
@@ -1107,6 +1114,11 @@
             clickHandler.style.left = '-0.1px';
             clickHandler.style.right = '-0.1px';
             clickHandler.style.overflowY = 'auto';
+            clickHandler.addEventListener("wheel", (ev) => {
+                ev.preventDefault();
+                var direction = (ev.deltaY > 0) ? 1 : -1;
+                clickHandler.scrollTop += direction * 100;
+            });
             clickHandler.onclick = (ev) => {
                 if (ev.target === ev.currentTarget)
                     this.close();
