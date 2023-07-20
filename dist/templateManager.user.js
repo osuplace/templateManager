@@ -16,7 +16,7 @@
 // @grant			GM.getValue
 // @connect			*
 // @name			template-manager
-// @version			0.5.9
+// @version			0.5.10
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -1082,7 +1082,6 @@
                 manager.setContactInfoDisplay(a);
                 this.contactInfoEnabled = a;
             }));
-            div.appendChild(document.createElement('br'));
             div.appendChild(createBoldCheckbox('', "Preview template in full", this.previewModeEnabled, (a) => {
                 manager.setPreviewMode(a);
                 this.previewModeEnabled = a;
