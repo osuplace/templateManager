@@ -16,7 +16,7 @@
 // @grant			GM.getValue
 // @connect			*
 // @name			template-manager
-// @version			0.5.8
+// @version			0.5.9
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -186,9 +186,8 @@
     function run() {
         let reticuleStyleSetter = setInterval(() => {
             var _a, _b;
-            let embed = document.querySelector("mona-lisa-embed");
-            let camera = (_a = embed === null || embed === void 0 ? void 0 : embed.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector("mona-lisa-camera");
-            let preview = camera === null || camera === void 0 ? void 0 : camera.querySelector("mona-lisa-pixel-preview");
+            let embed = document.querySelector('garlic-bread-embed');
+            let preview = (_a = embed === null || embed === void 0 ? void 0 : embed.shadowRoot) === null || _a === void 0 ? void 0 : _a.querySelector('garlic-bread-pixel-preview');
             if (preview) {
                 clearInterval(reticuleStyleSetter);
                 let style = document.createElement('style');
@@ -796,7 +795,8 @@
                     if (json.notifications) {
                         this.setupNotifications(json.notifications, url == this.startingUrl);
                     }
-                }
+                },
+                onerror: console.error
             });
         }
         sortTemplates() {

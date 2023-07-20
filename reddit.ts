@@ -2,9 +2,8 @@ import { UPDATE_PERIOD_MILLIS } from "./constants";
 
 export function run() {
     let reticuleStyleSetter = setInterval(() => {
-        let embed = document.querySelector("mona-lisa-embed")
-        let camera = embed?.shadowRoot?.querySelector("mona-lisa-camera")
-        let preview = camera?.querySelector("mona-lisa-pixel-preview")
+        let embed = document.querySelector('garlic-bread-embed')
+        let preview = embed?.shadowRoot?.querySelector('garlic-bread-pixel-preview')
         if (preview) {
             clearInterval(reticuleStyleSetter)
             let style = document.createElement('style')

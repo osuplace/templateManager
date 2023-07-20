@@ -160,7 +160,8 @@ export class TemplateManager {
                 if (json.notifications) {
                     this.setupNotifications(json.notifications, url == this.startingUrl);
                 }
-            }
+            },
+            onerror: console.error
         });
     }
 
