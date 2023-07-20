@@ -16,7 +16,7 @@
 // @grant			GM.getValue
 // @connect			*
 // @name			template-manager
-// @version			0.6.0
+// @version			0.6.1
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -647,11 +647,39 @@
         }
     }
 
+    const NOTIFICATION_SOUND_KEYWORDS = ['!important!'];
+    const NOTIFICATION_SOUND_URL = 'https://files.catbox.moe/c9nwlu.mp3';
+    const context = new AudioContext();
     class NotificationManager {
         constructor() {
             this.container = document.createElement('div');
             this.container.id = 'osuplaceNotificationContainer';
             document.body.appendChild(this.container);
+            const error = (err) => {
+                console.error(`failed to load the notification sound`, err);
+                this.newNotification('notifications manager', 'Failed to load the notifications sound. It will not play.');
+            };
+            GM.xmlHttpRequest({
+                method: 'GET',
+                url: NOTIFICATION_SOUND_URL,
+                responseType: 'arraybuffer',
+                onload: (response) => {
+                    try {
+                        context.decodeAudioData(response.response, (buffer) => {
+                            this.notificationSound = context.createBufferSource();
+                            this.notificationSound.buffer = buffer;
+                            this.notificationSound.connect(context.destination);
+                        }, error);
+                    }
+                    catch (e) {
+                        error(e);
+                    }
+                },
+                onerror: error
+            });
+        }
+        messageNeedsSound(message) {
+            return NOTIFICATION_SOUND_KEYWORDS.some((kw) => message.includes(kw));
         }
         newNotification(url, message) {
             let div = document.createElement('div');
@@ -667,6 +695,14 @@
             setTimeout(() => {
                 div.classList.add('visible');
             }, 100);
+            if (this.messageNeedsSound(message) && this.notificationSound) {
+                try {
+                    this.notificationSound.start(0);
+                }
+                catch (err) {
+                    console.error('failed to play notification audio', err);
+                }
+            }
         }
     }
 
