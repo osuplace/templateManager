@@ -173,6 +173,20 @@ export class TemplateManager {
 
     setupNotifications(serverUrl: string, isTopLevelTemplate: boolean) {
         console.log('attempting to set up notification server ' + serverUrl);
+        
+        // check if we're not already connected
+        let wsUrl = new URL('/listen', serverUrl)
+        wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
+
+        this.websockets.forEach((socket) => {
+            if (socket.url == wsUrl.toString()) {
+                if (socket.readyState != socket.CLOSING && socket.readyState != socket.CLOSED) {
+                    console.log(`we are already connected to ${wsUrl}, skipping!`);
+                    return;
+                }
+            }
+        });
+
         // get topics
         let domain = new URL(serverUrl).hostname.replace('broadcaster.', '');
         fetch(`${serverUrl}/topics`)
@@ -214,8 +228,6 @@ export class TemplateManager {
                 }
 
                 // actually connecting to the websocket now
-                let wsUrl = new URL('/listen', serverUrl)
-                wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
                 let ws = new WebSocket(wsUrl);
 
                 ws.addEventListener('open', (_) => {
@@ -241,6 +253,7 @@ export class TemplateManager {
                 });
 
                 ws.addEventListener('close', (_) => {
+                    console.log(`websocket on ${ws.url} closing!`);
                     utils.removeItem(this.websockets, ws);
                     setTimeout(() => {
                         this.setupNotifications(serverUrl, isTopLevelTemplate);
@@ -248,6 +261,7 @@ export class TemplateManager {
                 });
 
                 ws.addEventListener('error', (_) => {
+                    console.log(`websocket error on ${ws.url}, closing!`);
                     ws.close();
                 });
             }).catch((error) => {
@@ -280,6 +294,7 @@ export class TemplateManager {
             this.templates.shift()?.destroy()
         }
         while (this.websockets.length) {
+            console.log('initOrReloadTemplates is closing connection ' + this.websockets[0].url );
             this.websockets.shift()?.close()
         }
         this.templates = []
