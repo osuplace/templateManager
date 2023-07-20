@@ -1,7 +1,7 @@
 
 // ==UserScript==
 // @name			template-manager
-// @version			0.5.7
+// @version			0.5.8
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -314,6 +314,7 @@
     class ImageLoadHelper {
         constructor(name, sources) {
             this.imageLoader = new Image();
+            this.imageBitmap = undefined;
             this.loading = false;
             this.name = name;
             this.sources = sources || [];
@@ -355,8 +356,13 @@
                 url: candidateSource,
                 responseType: 'blob',
                 onload: (response) => {
-                    if (response.status === 200)
-                        this.imageLoader.src = URL.createObjectURL(response.response);
+                    if (response.status === 200) {
+                        let a = new FileReader();
+                        a.onload = (e) => {
+                            this.imageLoader.src = e.target.result.toString();
+                        };
+                        a.readAsDataURL(response.response);
+                    }
                     else
                         this.sources.shift();
                 }

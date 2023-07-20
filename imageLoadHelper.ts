@@ -4,6 +4,7 @@ export class ImageLoadHelper {
     name: string | undefined;
     sources: string[];
     imageLoader = new Image()
+    imageBitmap: any = undefined
     loading = false;
     constructor(name: string | undefined, sources: string[] | undefined) {
         this.name = name;
@@ -48,9 +49,15 @@ export class ImageLoadHelper {
             url: candidateSource,
             responseType: 'blob',
             onload: (response) => {
-                if (response.status === 200)
-                    this.imageLoader.src = URL.createObjectURL(response.response)
-                else 
+                if (response.status === 200) {
+                    let a = new FileReader()
+                    a.onload = (e) => {
+                        this.imageLoader.src = e.target!.result!.toString()
+                    }
+                    a.readAsDataURL(response.response)
+                    
+                }
+                else
                     this.sources.shift()
             }
         })
@@ -61,7 +68,7 @@ export class ImageLoadHelper {
             this.tryLoadSource()
             return;
         }
-        return this.imageLoader;
+        return this.imageLoader
     }
 
     destroy() {
