@@ -394,7 +394,7 @@ export class TemplateManager {
             this.websockets.shift()?.close()
         }
         while (this.intervals.length) {
-            clearTimeout(this.intervals.shift())
+            clearInterval(this.intervals.shift())
         }
         this.templates = []
         this.websockets = []
