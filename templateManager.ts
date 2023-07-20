@@ -333,4 +333,10 @@ export class TemplateManager {
             this.templates[i].setContactInfoDisplay(enabled)
         }
     }
+
+    setPreviewMode(enabled: boolean) {
+        for (let i = 0; i < this.templates.length; i++) {
+            this.templates[i].setPreviewMode(enabled)
+        }
+    }
 }
