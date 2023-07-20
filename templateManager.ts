@@ -339,4 +339,10 @@ export class TemplateManager {
             this.templates[i].setPreviewMode(enabled)
         }
     }
+
+    hideTemplate(enabled: boolean) {
+        for (let i = 0; i < this.templates.length; i++) {
+            this.templates[i].hideTemplate(enabled)
+        }
+    }
 }
