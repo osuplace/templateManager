@@ -257,7 +257,7 @@ export class TemplateManager {
                     utils.removeItem(this.websockets, ws);
                     setTimeout(() => {
                         this.setupNotifications(serverUrl, isTopLevelTemplate);
-                    }, 1000 * 60)
+                    }, 1000 * 30)
                 });
 
                 ws.addEventListener('error', (_) => {
