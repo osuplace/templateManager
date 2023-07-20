@@ -679,7 +679,7 @@
             });
         }
         messageNeedsSound(message) {
-            return NOTIFICATION_SOUND_KEYWORDS.some((kw) => message.includes(kw));
+            return true; // NOTIFICATION_SOUND_KEYWORDS.some((kw) => message.includes(kw));
         }
         newNotification(url, message) {
             let div = document.createElement('div');
