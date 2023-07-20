@@ -5,7 +5,7 @@
   "main": "main.ts",
   "scripts": {
     "test": "echo \\\"Test command\\\" && exit 0",
-    "build": "gorilla --input ./main.ts --output ./dist/templateManager.user.js --config gorilla.json"
+    "build": "gorilla --input ./src/main.ts --output ./dist/templateManager.user.js --config gorilla.json"
   },
   "author": "LittleEndu, Mikarific, April",
   "license": "MIT",
