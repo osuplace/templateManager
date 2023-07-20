@@ -672,6 +672,8 @@
             this.templatesToLoad = MAX_TEMPLATES;
             this.alreadyLoaded = new Array();
             this.websockets = new Array();
+            this.intervals = new Array();
+            this.seenNotifications = new Array();
             this.notificationTypes = new Map();
             this.enabledNotifications = new Array();
             this.whitelist = new Array();
@@ -716,6 +718,10 @@
                 }
             });
             this.canvasObserver.observe(this.selectedCanvas, { attributes: true });
+            setInterval(() => {
+                const now = Math.floor(+new Date() / 1000);
+                this.seenNotifications = this.seenNotifications.filter((d) => d && ((d.seenAt - now) < 10));
+            }, 60 * 1000);
         }
         selectBestCanvas() {
             var _a, _b, _c;
@@ -810,93 +816,173 @@
         sortTemplates() {
             this.templates.sort((a, b) => a.priority - b.priority);
         }
-        setupNotifications(serverUrl, isTopLevelTemplate) {
-            console.log('attempting to set up notification server ' + serverUrl);
+        setupNotifications(serverUrl, isTopLevelTemplate, doPoll = false) {
+            console.log('attempting to set up notification server ' + serverUrl, doPoll ? "polling" : "websocket");
             // check if we're not already connected
             let wsUrl = new URL('/listen', serverUrl);
             wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
-            this.websockets.forEach((socket) => {
+            for (const socket of this.websockets) {
                 if (socket.url == wsUrl.toString()) {
                     if (socket.readyState != socket.CLOSING && socket.readyState != socket.CLOSED) {
                         console.log(`we are already connected to ${wsUrl}, skipping!`);
                         return;
                     }
                 }
-            });
+            }
             // get topics
-            let domain = new URL(serverUrl).hostname.replace('broadcaster.', '');
-            fetch(`${serverUrl}/topics`)
-                .then((response) => {
-                if (!response.ok) {
-                    console.error(`error getting ${serverUrl}/topics, trying again in 10s...`);
-                    setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 10000);
-                    return false;
-                }
-                return response.json();
-            })
-                .then(async (data) => {
-                if (data == false)
-                    return;
-                let topics = [];
-                data.forEach((topicFromApi) => {
-                    if (!topicFromApi.id || !topicFromApi.description) {
-                        console.error('Invalid topic: ' + topicFromApi);
+            let domain = new URL(serverUrl).hostname.replace(/[\.\-_]?broadcaster/, '');
+            if (domain[0] === '.')
+                domain = domain.substring(1);
+            // do some cache busting
+            let _url = new URL(serverUrl + "/topics");
+            this.lastCacheBust = this.getCacheBustString();
+            _url.searchParams.append("date", this.lastCacheBust);
+            GM.xmlHttpRequest({
+                method: 'GET',
+                url: _url.href,
+                responseType: 'text',
+                onload: async (response) => {
+                    if (response.status !== 200) {
+                        console.error(`error getting ${serverUrl}/topics, trying again in 10s...`);
+                        setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 10000);
+                        return false;
+                    }
+                    let data = response.response;
+                    try {
+                        data = JSON.parse(data);
+                    }
+                    catch (ex) {
+                        console.error(`error parsing ${serverUrl} topics: ${ex}, trying again in 10s...`);
+                        setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 10000);
+                        return false;
+                    }
+                    if (data == false)
                         return;
-                    }
-                    let topic = topicFromApi;
-                    if (isTopLevelTemplate) {
-                        topic.forced = true;
-                        removeItem(this.enabledNotifications, `${domain}??${topic.id}`);
-                        this.enabledNotifications.push(`${domain}??${topic.id}`);
-                    }
-                    topics.push(topic);
-                });
-                this.notificationTypes.set(domain, topics);
-                if (isTopLevelTemplate) {
-                    let enabledKey = `${window.location.host}_notificationsEnabled`;
-                    await GM.setValue(enabledKey, JSON.stringify(this.enabledNotifications));
-                    if (this.showTopLevelNotification) {
-                        this.notificationManager.newNotification("template manager", `You were automatically set to recieve notifications from ${domain} as it's from your address-bar template`);
-                        this.showTopLevelNotification = false;
-                    }
-                }
-                // actually connecting to the websocket now
-                let ws = new WebSocket(wsUrl);
-                ws.addEventListener('open', (_) => {
-                    console.log(`successfully connected to websocket for ${serverUrl}`);
-                    this.websockets.push(ws);
-                });
-                ws.addEventListener('message', async (event) => {
-                    // https://github.com/osuplace/broadcaster/blob/main/API.md
-                    let data = JSON.parse(await event.data);
-                    if (data.e == 1) {
-                        if (!data.t || !data.c) {
-                            console.error(`Malformed event from ${serverUrl}: ${data}`);
-                        }
-                        let topic = topics.find(t => t.id == data.t); // FIXME: if we add dynamically updating topics, this will use the old topic list instead of the up to date one
-                        if (!topic)
+                    let topics = [];
+                    data.forEach((topicFromApi) => {
+                        if (!topicFromApi.id || !topicFromApi.description) {
+                            console.error('Invalid topic: ' + topicFromApi);
                             return;
-                        if (this.enabledNotifications.includes(`${domain}??${data.t}`) || topic.forced) {
-                            this.notificationManager.newNotification(domain, data.c);
                         }
+                        let topic = topicFromApi;
+                        if (isTopLevelTemplate) {
+                            topic.forced = true;
+                            removeItem(this.enabledNotifications, `${domain}??${topic.id}`);
+                            this.enabledNotifications.push(`${domain}??${topic.id}`);
+                        }
+                        topics.push(topic);
+                    });
+                    this.notificationTypes.set(domain, topics);
+                    if (isTopLevelTemplate) {
+                        let enabledKey = `${window.location.host}_notificationsEnabled`;
+                        await GM.setValue(enabledKey, JSON.stringify(this.enabledNotifications));
+                        if (this.showTopLevelNotification) {
+                            this.notificationManager.newNotification("template manager", `You were automatically set to recieve notifications from ${domain} as it's from your address-bar template`);
+                            this.showTopLevelNotification = false;
+                        }
+                    }
+                    const handleNotificationEvent = (data) => {
+                        // https://github.com/osuplace/broadcaster/blob/main/API.md
+                        if (data.e == 1) {
+                            if (!data.t || !data.c) {
+                                console.error(`Malformed event from ${serverUrl}: ${data}`);
+                            }
+                            let topic = topics.find(t => t.id == data.t); // FIXME: if we add dynamically updating topics, this will use the old topic list instead of the up to date one
+                            if (!topic)
+                                return;
+                            if (data.i) {
+                                const id = `${domain}:${data.i}`;
+                                if (this.seenNotifications.some((v) => v.id == id))
+                                    return;
+                                this.seenNotifications.push({
+                                    id,
+                                    seenAt: Math.floor(+new Date() / 1000)
+                                });
+                            }
+                            if (this.enabledNotifications.includes(`${domain}??${data.t}`) || topic.forced) {
+                                this.notificationManager.newNotification(domain, data.c);
+                            }
+                        }
+                        else {
+                            console.log(`Received unknown event from ${serverUrl}: ${data}`);
+                        }
+                    };
+                    if (doPoll) {
+                        let timer = setInterval(() => {
+                            let pollUrl = new URL(serverUrl + "/listen-poll");
+                            pollUrl.searchParams.append("date", (+new Date()).toString());
+                            GM.xmlHttpRequest({
+                                method: 'GET',
+                                url: pollUrl.href,
+                                responseType: 'text',
+                                onload: async (response) => {
+                                    if (response.status === 404) {
+                                        console.error(`${serverUrl} does not have polling support, trying again with websocket in 30s...`);
+                                        setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 30000);
+                                        clearInterval(timer);
+                                        return false;
+                                    }
+                                    if (response.status !== 200) {
+                                        console.error(`error getting ${serverUrl}/listen-poll, trying again in 10s...`);
+                                        setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 10000);
+                                        clearInterval(timer);
+                                        return false;
+                                    }
+                                    let data = response.response;
+                                    try {
+                                        data = JSON.parse(data);
+                                        if (!Array.isArray(data))
+                                            throw new Error();
+                                    }
+                                    catch (ex) {
+                                        console.error(`error parsing ${serverUrl} listen (poll): ${ex}, trying again in 10s...`);
+                                        setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 10000);
+                                        clearInterval(timer);
+                                        return false;
+                                    }
+                                    for (const event of data)
+                                        handleNotificationEvent(event);
+                                },
+                                onerror: (err) => {
+                                    console.error(`error getting ${serverUrl}/listen-poll, trying again in 10s...`, err);
+                                    setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 10000);
+                                    clearInterval(timer);
+                                }
+                            });
+                        }, 1 * 1000);
+                        this.intervals.push(timer);
                     }
                     else {
-                        console.log(`Received unknown event from ${serverUrl}: ${data}`);
+                        // actually connecting to the websocket now
+                        let ws = new WebSocket(wsUrl);
+                        ws.addEventListener('open', (_) => {
+                            console.log(`successfully connected to websocket for ${serverUrl}`);
+                            this.websockets.push(ws);
+                        });
+                        ws.addEventListener('message', async (event) => {
+                            let data = JSON.parse(await event.data);
+                            handleNotificationEvent(data);
+                        });
+                        ws.addEventListener('close', (_) => {
+                            console.log(`websocket on ${ws.url} closing!`);
+                            removeItem(this.websockets, ws);
+                            setTimeout(() => {
+                                this.setupNotifications(serverUrl, isTopLevelTemplate);
+                            }, 1000 * 30);
+                        });
+                        ws.addEventListener('error', (_) => {
+                            console.log(`websocket error on ${ws.url}, closing!`);
+                            ws.close();
+                            console.error(`failed to create a websocket connection to ${serverUrl}, trying polling...`);
+                            setTimeout(() => {
+                                this.setupNotifications(serverUrl, isTopLevelTemplate, true);
+                            }, 1000 * 1);
+                        });
                     }
-                });
-                ws.addEventListener('close', (_) => {
-                    console.log(`websocket on ${ws.url} closing!`);
-                    removeItem(this.websockets, ws);
-                    setTimeout(() => {
-                        this.setupNotifications(serverUrl, isTopLevelTemplate);
-                    }, 1000 * 30);
-                });
-                ws.addEventListener('error', (_) => {
-                    console.log(`websocket error on ${ws.url}, closing!`);
-                    ws.close();
-                });
-            }).catch((error) => {
-                console.error(`Couldn\'t get topics from ${serverUrl}: ${error}`);
+                },
+                onerror: (error) => {
+                    console.error(`Couldn\'t get topics from ${serverUrl}: ${error}`);
+                }
             });
         }
         canReload() {
@@ -924,8 +1010,12 @@
                 console.log('initOrReloadTemplates is closing connection ' + this.websockets[0].url);
                 (_b = this.websockets.shift()) === null || _b === void 0 ? void 0 : _b.close();
             }
+            while (this.intervals.length) {
+                clearTimeout(this.intervals.shift());
+            }
             this.templates = [];
             this.websockets = [];
+            this.intervals = [];
             this.alreadyLoaded = [];
             this.whitelist = [];
             this.blacklist = [];
