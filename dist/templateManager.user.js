@@ -16,7 +16,7 @@
 // @grant			GM.getValue
 // @connect			*
 // @name			template-manager
-// @version			0.5.12
+// @version			0.5.13
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -495,6 +495,9 @@
             this.canvasElement.width = data.width;
             this.canvasElement.height = data.height;
             (_a = this.canvasElement.getContext('2d')) === null || _a === void 0 ? void 0 : _a.putImageData(data, 0, 0);
+        }
+        hideTemplate(enabled) {
+            this.canvasElement.style.opacity = enabled ? "0" : "1";
         }
         getCurrentFrameIndex(currentSeconds) {
             if (!this.looping && this.startTime + this.frameCount * this.frameSpeed < currentSeconds)
@@ -977,6 +980,11 @@
                 this.templates[i].setPreviewMode(enabled);
             }
         }
+        hideTemplate(enabled) {
+            for (let i = 0; i < this.templates.length; i++) {
+                this.templates[i].hideTemplate(enabled);
+            }
+        }
     }
 
     function createLabel(text) {
@@ -1055,6 +1063,7 @@
             this.reloadTemplatesWhenClosed = false;
             this.contactInfoEnabled = false;
             this.previewModeEnabled = false;
+            this.hideTemplate = false;
             this.templateLinksWrapper.className = "settingsWrapper";
             this.templateLinksWrapper.id = "templateLinksWrapper";
             this.notificationsWrapper.className = "settingsWrapper";
@@ -1092,6 +1101,10 @@
             div.appendChild(createBoldCheckbox('', "Preview template in full", this.previewModeEnabled, (a) => {
                 manager.setPreviewMode(a);
                 this.previewModeEnabled = a;
+            }));
+            div.appendChild(createBoldCheckbox('', "Hide template", this.hideTemplate, (a) => {
+                manager.hideTemplate(a);
+                this.hideTemplate = a;
             }));
             div.appendChild(document.createElement('br'));
             let clickHandler = document.createElement('div');
