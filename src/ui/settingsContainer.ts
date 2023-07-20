@@ -77,14 +77,16 @@ function createBoldCheckbox(boldText: string, regularText: string, checked: bool
 
 
 export class Settings {
-    overlay = document.createElement("div");
-    templateLinksWrapper = document.createElement("div");
-    notificationsWrapper = document.createElement("div");
-    manager: TemplateManager;
-    reloadTemplatesWhenClosed = false;
-    contactInfoEnabled = false;
-    previewModeEnabled = false;
-    hideTemplate = false;
+    overlay = document.createElement("div")
+    templateLinksWrapper = document.createElement("div")
+    notificationsWrapper = document.createElement("div")
+    previewModeCheckbox: HTMLDivElement | undefined
+    manager: TemplateManager
+    reloadTemplatesWhenClosed = false
+    contactInfoEnabled = false
+    previewModeEnabled = false
+    hideTemplate = false
+
     constructor(manager: TemplateManager) {
         this.templateLinksWrapper.className = "settingsWrapper"
         this.templateLinksWrapper.id = "templateLinksWrapper"
@@ -118,13 +120,23 @@ export class Settings {
         div.appendChild(document.createElement('br'))
         div.appendChild(createSlider("Dither amount", "1", (n) => {
             manager.percentage = 1 / (n / 10 + 1)
+
+            if(this.previewModeEnabled){
+                // disable 'preview template in full', because changing percentage
+                // overrides the template rendering anyway
+                this.previewModeEnabled = false
+                const previewModeInput = this.previewModeCheckbox?.children[0] as HTMLInputElement
+                
+                if(previewModeInput)
+                    previewModeInput.checked = false
+            }
         }))
         div.appendChild(document.createElement('br'))
         div.appendChild(createBoldCheckbox('', "Show contact info besides templates", this.contactInfoEnabled, (a) => {
             manager.setContactInfoDisplay(a)
             this.contactInfoEnabled = a
         }))
-        div.appendChild(createBoldCheckbox('', "Preview template in full", this.previewModeEnabled, (a) => {
+        this.previewModeCheckbox = div.appendChild(createBoldCheckbox('', "Preview template in full", this.previewModeEnabled, (a) => {
             manager.setPreviewMode(a)
             this.previewModeEnabled = a
         }))
