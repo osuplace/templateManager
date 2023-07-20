@@ -948,6 +948,8 @@
                     };
                     if (doPoll) {
                         let timer = setInterval(() => {
+                            if (!this.enabledNotifications.some((en) => en.startsWith(domain)))
+                                return;
                             let pollUrl = new URL(serverUrl + "/listen-poll");
                             pollUrl.searchParams.append("date", (+new Date()).toString());
                             GM.xmlHttpRequest({
