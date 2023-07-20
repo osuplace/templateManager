@@ -1,13 +1,8 @@
 
 // ==UserScript==
-// @name			template-manager
-// @version			0.5.7
-// @description		Manages your templates on various canvas games
-// @author			LittleEndu, Mikarific, April
-// @license			MIT
-// @grant			GM.xmlHttpRequest
-// @grant			GM.setValue
-// @grant			GM.getValue
+// @namespace		littleendu.xyz
+// @downloadURL		https://github.com/osuplace/templateManager/raw/main/dist/templateManager.user.js
+// @updateURL		https://github.com/osuplace/templateManager/raw/main/dist/templateManager.user.js
 // @match			https://pxls.space/
 // @match			https://new.reddit.com/r/place/*
 // @match			https://www.reddit.com/r/place/*
@@ -16,9 +11,15 @@
 // @match			https://www.twitch.tv/otknetwork/*
 // @match			https://9jjigdr1wlul7fbginbq7h76jg9h3s.ext-twitch.tv/*
 // @match			https://place.ludwig.gg/*
-// @namespace		littleendu.xyz
-// @updateURL		https://github.com/osuplace/templateManager/raw/main/dist/templateManager.user.js
-// @downloadURL		https://github.com/osuplace/templateManager/raw/main/dist/templateManager.user.js
+// @grant			GM.xmlHttpRequest
+// @grant			GM.setValue
+// @grant			GM.getValue
+// @connect			*
+// @name			template-manager
+// @version			0.5.7
+// @description		Manages your templates on various canvas games
+// @author			LittleEndu, Mikarific, April
+// @license			MIT
 //
 // Created with love using Gorilla
 // ==/UserScript==
