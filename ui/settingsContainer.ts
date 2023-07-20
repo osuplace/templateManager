@@ -129,8 +129,6 @@ export class Settings {
             manager.setContactInfoDisplay(a)
             this.contactInfoEnabled = a
         }))
-        div.appendChild(document.createElement('br'))
-
         div.appendChild(createBoldCheckbox('', "Preview template in full", this.previewModeEnabled, (a) => {
             manager.setPreviewMode(a)
             this.previewModeEnabled = a
