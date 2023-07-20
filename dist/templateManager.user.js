@@ -16,7 +16,7 @@
 // @grant			GM.getValue
 // @connect			*
 // @name			template-manager
-// @version			0.5.12
+// @version			0.6.0
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -1011,7 +1011,7 @@
                 (_b = this.websockets.shift()) === null || _b === void 0 ? void 0 : _b.close();
             }
             while (this.intervals.length) {
-                clearTimeout(this.intervals.shift());
+                clearInterval(this.intervals.shift());
             }
             this.templates = [];
             this.websockets = [];
