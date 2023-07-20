@@ -38,7 +38,7 @@ export class NotificationManager {
     }
 
     messageNeedsSound(message: string): boolean {
-        return NOTIFICATION_SOUND_KEYWORDS.some((kw) => message.includes(kw));
+        return true; // NOTIFICATION_SOUND_KEYWORDS.some((kw) => message.includes(kw));
     }
 
     newNotification(url: string, message: string) {
