@@ -51,6 +51,8 @@ export class Template {
     imageLoader: ImageLoadHelper;
     priorityMaskLoader: ImageLoadHelper;
     canvasElement = document.createElement('canvas')
+    fullImageData: ImageData | undefined;
+    ditheredData: ImageData | undefined;
     frameData: ImageData | null | undefined;
     priorityData: ImageData | null | undefined;
     contactElement: HTMLDivElement | undefined
@@ -175,6 +177,13 @@ export class Template {
         }
     }
 
+    setPreviewMode(enabled: boolean) {
+        let data = enabled ? this.fullImageData! : this.ditheredData!
+        this.canvasElement.width = data.width
+        this.canvasElement.height = data.height
+        this.canvasElement.getContext('2d')?.putImageData(data, 0, 0)
+    }
+
     getCurrentFrameIndex(currentSeconds: number) {
         if (!this.looping && this.startTime + this.frameCount * this.frameSpeed < currentSeconds)
             return this.frameCount - 1
@@ -279,11 +288,12 @@ export class Template {
             }
             frameDatas.push({ imagedata: this.frameData, x: 0, y: 0 })
 
-            let ditheredData = cf.ditherData(frameDatas, this.priorityData, randomness, percentage, this.x, this.y, this.frameWidth!, this.frameHeight!)
+            this.fullImageData = frameDatas[frameDatas.length - 1].imagedata
+            this.ditheredData = cf.ditherData(frameDatas, this.priorityData, randomness, percentage, this.x, this.y, this.frameWidth!, this.frameHeight!)
 
-            this.canvasElement.width = ditheredData.width
-            this.canvasElement.height = ditheredData.height
-            this.canvasElement.getContext('2d')?.putImageData(ditheredData, 0, 0)
+            this.canvasElement.width = this.ditheredData.width
+            this.canvasElement.height = this.ditheredData.height
+            this.canvasElement.getContext('2d')?.putImageData(this.ditheredData, 0, 0)
         }
 
         // update done
