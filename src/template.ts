@@ -184,6 +184,10 @@ export class Template {
         this.canvasElement.getContext('2d')?.putImageData(data, 0, 0)
     }
 
+    hideTemplate(enabled: boolean) {
+        this.canvasElement.style.opacity = enabled ? "0" : "1";
+    }
+
     getCurrentFrameIndex(currentSeconds: number) {
         if (!this.looping && this.startTime + this.frameCount * this.frameSpeed < currentSeconds)
             return this.frameCount - 1

@@ -84,6 +84,7 @@ export class Settings {
     reloadTemplatesWhenClosed = false;
     contactInfoEnabled = false;
     previewModeEnabled = false;
+    hideTemplate = false;
     constructor(manager: TemplateManager) {
         this.templateLinksWrapper.className = "settingsWrapper"
         this.templateLinksWrapper.id = "templateLinksWrapper"
@@ -126,6 +127,10 @@ export class Settings {
         div.appendChild(createBoldCheckbox('', "Preview template in full", this.previewModeEnabled, (a) => {
             manager.setPreviewMode(a)
             this.previewModeEnabled = a
+        }))
+        div.appendChild(createBoldCheckbox('', "Hide template", this.hideTemplate, (a) => {
+            manager.hideTemplate(a)
+            this.hideTemplate = a
         }))
         div.appendChild(document.createElement('br'))
 

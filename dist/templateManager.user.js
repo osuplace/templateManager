@@ -496,6 +496,9 @@
             this.canvasElement.height = data.height;
             (_a = this.canvasElement.getContext('2d')) === null || _a === void 0 ? void 0 : _a.putImageData(data, 0, 0);
         }
+        hideTemplate(enabled) {
+            this.canvasElement.style.opacity = enabled ? "0" : "1";
+        }
         getCurrentFrameIndex(currentSeconds) {
             if (!this.looping && this.startTime + this.frameCount * this.frameSpeed < currentSeconds)
                 return this.frameCount - 1;
@@ -1067,6 +1070,11 @@
                 this.templates[i].setPreviewMode(enabled);
             }
         }
+        hideTemplate(enabled) {
+            for (let i = 0; i < this.templates.length; i++) {
+                this.templates[i].hideTemplate(enabled);
+            }
+        }
     }
 
     function createLabel(text) {
@@ -1145,6 +1153,7 @@
             this.reloadTemplatesWhenClosed = false;
             this.contactInfoEnabled = false;
             this.previewModeEnabled = false;
+            this.hideTemplate = false;
             this.templateLinksWrapper.className = "settingsWrapper";
             this.templateLinksWrapper.id = "templateLinksWrapper";
             this.notificationsWrapper.className = "settingsWrapper";
@@ -1182,6 +1191,10 @@
             div.appendChild(createBoldCheckbox('', "Preview template in full", this.previewModeEnabled, (a) => {
                 manager.setPreviewMode(a);
                 this.previewModeEnabled = a;
+            }));
+            div.appendChild(createBoldCheckbox('', "Hide template", this.hideTemplate, (a) => {
+                manager.hideTemplate(a);
+                this.hideTemplate = a;
             }));
             div.appendChild(document.createElement('br'));
             let clickHandler = document.createElement('div');
