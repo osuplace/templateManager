@@ -647,38 +647,93 @@
         }
     }
 
-    const NOTIFICATION_SOUND_URL = 'https://files.catbox.moe/c9nwlu.mp3';
     const context = new AudioContext();
+    class UserscriptAudio {
+        constructor(_src) {
+            this.ready = false;
+            if (_src)
+                this.src = _src;
+        }
+        load() {
+            return new Promise((resolve, reject) => {
+                if (!this.src)
+                    return reject(new Error('Source is not set.'));
+                if (this._buffer) {
+                    delete this._buffer;
+                }
+                const error = (errText) => {
+                    return (err) => {
+                        console.error(`failed to load the sound from source`, this.src, ':', err);
+                        reject(new Error(errText));
+                    };
+                };
+                GM.xmlHttpRequest({
+                    method: 'GET',
+                    url: this.src,
+                    responseType: 'arraybuffer',
+                    onload: (response) => {
+                        const errText = 'Failed to decode audio';
+                        try {
+                            context.decodeAudioData(response.response, (buffer) => {
+                                this._buffer = buffer;
+                                this.ready = true;
+                                resolve();
+                            }, error(errText));
+                        }
+                        catch (e) {
+                            error(errText)(e);
+                        }
+                    },
+                    onerror: error('Failed to fetch audio from URL')
+                });
+            });
+        }
+        play() {
+            if (!this.ready || !this._buffer) {
+                throw new Error('Audio not ready. Please load the audio with .load()');
+            }
+            if (this._sound) {
+                try {
+                    this._sound.disconnect(context.destination);
+                }
+                catch (_a) { }
+                delete this._sound;
+            }
+            this._sound = context.createBufferSource();
+            this._sound.buffer = this._buffer;
+            this._sound.connect(context.destination);
+            this._sound.start(0);
+        }
+    }
+
+    const NOTIFICATION_SOUND_SETTINGS_KEY = 'notificationSound';
+    const DEFAULT_NOTIFICATION_SOUND_URL = 'https://files.catbox.moe/c9nwlu.mp3';
     class NotificationManager {
         constructor() {
             this.container = document.createElement('div');
             this.container.id = 'osuplaceNotificationContainer';
             document.body.appendChild(this.container);
-            const error = (err) => {
-                console.error(`failed to load the notification sound`, err);
-                this.newNotification('notifications manager', 'Failed to load the notifications sound. It will not play.');
-            };
-            GM.xmlHttpRequest({
-                method: 'GET',
-                url: NOTIFICATION_SOUND_URL,
-                responseType: 'arraybuffer',
-                onload: (response) => {
-                    try {
-                        context.decodeAudioData(response.response, (buffer) => {
-                            this.notificationSound = context.createBufferSource();
-                            this.notificationSound.buffer = buffer;
-                            this.notificationSound.connect(context.destination);
-                        }, error);
-                    }
-                    catch (e) {
-                        error(e);
-                    }
-                },
-                onerror: error
+            this.getNotificationSound()
+                .then((src) => {
+                this.initNotificationSound(src)
+                    .catch((ex) => {
+                    console.error('failed to init notification sound:', ex);
+                    this.newNotification('notifications manager', 'Failed to load the notifications sound. It will not play.');
+                });
             });
         }
-        messageNeedsSound(message) {
-            return true; // NOTIFICATION_SOUND_KEYWORDS.some((kw) => message.includes(kw));
+        async getNotificationSound() {
+            return await GM.getValue(NOTIFICATION_SOUND_SETTINGS_KEY, DEFAULT_NOTIFICATION_SOUND_URL);
+        }
+        async setNotificationSound(sound) {
+            await this.initNotificationSound(sound);
+            await GM.setValue(NOTIFICATION_SOUND_SETTINGS_KEY, sound);
+        }
+        async initNotificationSound(src) {
+            const newAudio = new UserscriptAudio(src);
+            await newAudio.load();
+            delete this.notificationSound;
+            this.notificationSound = newAudio;
         }
         newNotification(url, message) {
             let div = document.createElement('div');
@@ -694,9 +749,9 @@
             setTimeout(() => {
                 div.classList.add('visible');
             }, 100);
-            if (this.messageNeedsSound(message) && this.notificationSound) {
+            if (this.notificationSound) {
                 try {
-                    this.notificationSound.start(0);
+                    this.notificationSound.play();
                 }
                 catch (err) {
                     console.error('failed to play notification audio', err);
@@ -1141,7 +1196,7 @@
         textInput.placeholder = placeholder;
         textInput.className = "settingsTextInput";
         let button = createButton(buttonText, () => {
-            callback(textInput.value);
+            callback(textInput.value, textInput);
         });
         div.appendChild(textInput);
         div.appendChild(button);
@@ -1241,6 +1296,7 @@
                 manager.hideTemplate(a);
                 this.hideTemplate = a;
             }));
+            this.populateSoundOptions(div);
             div.appendChild(document.createElement('br'));
             let clickHandler = document.createElement('div');
             clickHandler.style.width = '100vw';
@@ -1300,6 +1356,36 @@
         populateAll() {
             this.populateTemplateLinks();
             this.populateNotifications();
+        }
+        populateSoundOptions(div) {
+            const audioDiv = document.createElement('div');
+            div.appendChild(document.createElement('br'));
+            div.appendChild(audioDiv);
+            this.manager.notificationManager.getNotificationSound()
+                .then((value) => {
+                let linkLabel = document.createElement('label');
+                let updateLinkLabel = (url) => {
+                    linkLabel.innerHTML = `Current sound: <a target="_blank" rel="noopener noreferrer" href="${url}">${url}</a>`;
+                };
+                updateLinkLabel(value);
+                audioDiv.appendChild(createLabel('Set new notification sound:'));
+                audioDiv.appendChild(document.createElement('br'));
+                audioDiv.appendChild(linkLabel);
+                audioDiv.appendChild(createTextInput('Apply', 'Sound URL', (newSound, input) => {
+                    if (!newSound.trim().length) {
+                        return;
+                    }
+                    this.manager.notificationManager.setNotificationSound(newSound)
+                        .then(() => {
+                        this.manager.notificationManager.newNotification('settings', 'Applied new sound!');
+                        input.value = '';
+                        updateLinkLabel(newSound);
+                    })
+                        .catch((err) => {
+                        this.manager.notificationManager.newNotification('settings', 'Failed to apply new sound:\n' + err);
+                    });
+                }));
+            });
         }
         populateTemplateLinks() {
             while (this.templateLinksWrapper.children.length) {

@@ -1,39 +1,40 @@
+import { UserscriptAudio } from "../userscriptAudio";
 import * as utils from "../utils";
 
-const NOTIFICATION_SOUND_URL = 'https://files.catbox.moe/c9nwlu.mp3';
-
-const context = new AudioContext();
+const NOTIFICATION_SOUND_SETTINGS_KEY = 'notificationSound';
+const DEFAULT_NOTIFICATION_SOUND_URL = 'https://files.catbox.moe/c9nwlu.mp3';
 
 export class NotificationManager {
     container = document.createElement('div');
-    notificationSound?: AudioBufferSourceNode;
+    notificationSound?: UserscriptAudio;
 
     constructor() {
         this.container.id = 'osuplaceNotificationContainer'
         document.body.appendChild(this.container)
 
-        const error = (err: any) => {
-            console.error(`failed to load the notification sound`, err);
-            this.newNotification('notifications manager', 'Failed to load the notifications sound. It will not play.');
-        };
-
-        GM.xmlHttpRequest({
-            method: 'GET',
-            url: NOTIFICATION_SOUND_URL,
-            responseType: 'arraybuffer',
-            onload: (response) => {
-                try {
-                    context.decodeAudioData(response.response, (buffer) => {
-                        this.notificationSound = context.createBufferSource();
-                        this.notificationSound.buffer = buffer;
-                        this.notificationSound.connect(context.destination);
-                    }, error);
-                } catch (e) {
-                    error(e);
-                }
-            },
-            onerror: error
+        this.getNotificationSound()
+        .then((src) => {
+            this.initNotificationSound(src)
+            .catch((ex) => {
+                console.error('failed to init notification sound:', ex);
+                this.newNotification('notifications manager', 'Failed to load the notifications sound. It will not play.');
+            });
         });
+    }
+
+    async getNotificationSound() {
+        return await GM.getValue(NOTIFICATION_SOUND_SETTINGS_KEY, DEFAULT_NOTIFICATION_SOUND_URL);
+    }
+    async setNotificationSound(sound: string) {
+        await this.initNotificationSound(sound);
+        await GM.setValue(NOTIFICATION_SOUND_SETTINGS_KEY, sound);
+    }
+
+    async initNotificationSound(src: string) {
+        const newAudio = new UserscriptAudio(src);
+        await newAudio.load();
+        delete this.notificationSound;
+        this.notificationSound = newAudio;
     }
 
     newNotification(url: string, message: string) {
@@ -54,7 +55,7 @@ export class NotificationManager {
 
         if (this.notificationSound) {
             try {
-                this.notificationSound.start(0);
+                this.notificationSound.play();
             } catch (err) {
                 console.error('failed to play notification audio', err);
             }
