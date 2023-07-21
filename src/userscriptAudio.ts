@@ -14,10 +14,6 @@ export class UserscriptAudio {
             if (!this.src)
                 return reject(new Error('Source is not set.'));
 
-            if (this._buffer) {
-                delete this._buffer;
-            }
-
             const error = (errText: string) => {
                 return (err: any) => {
                     console.error(`failed to load the sound from source`, this.src, ':', err);
@@ -55,7 +51,6 @@ export class UserscriptAudio {
             try {
                 this._sound.disconnect(context.destination);
             } catch {}
-            delete this._sound;
         }
 
         this._sound = context.createBufferSource();

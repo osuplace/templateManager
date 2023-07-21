@@ -33,7 +33,6 @@ export class NotificationManager {
     async initNotificationSound(src: string) {
         const newAudio = new UserscriptAudio(src);
         await newAudio.load();
-        delete this.notificationSound;
         this.notificationSound = newAudio;
     }
 

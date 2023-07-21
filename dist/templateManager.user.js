@@ -16,7 +16,7 @@
 // @grant			GM.getValue
 // @connect			*
 // @name			template-manager
-// @version			0.6.1
+// @version			0.6.2
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -658,9 +658,6 @@
             return new Promise((resolve, reject) => {
                 if (!this.src)
                     return reject(new Error('Source is not set.'));
-                if (this._buffer) {
-                    delete this._buffer;
-                }
                 const error = (errText) => {
                     return (err) => {
                         console.error(`failed to load the sound from source`, this.src, ':', err);
@@ -697,7 +694,6 @@
                     this._sound.disconnect(context.destination);
                 }
                 catch (_a) { }
-                delete this._sound;
             }
             this._sound = context.createBufferSource();
             this._sound.buffer = this._buffer;
@@ -732,7 +728,6 @@
         async initNotificationSound(src) {
             const newAudio = new UserscriptAudio(src);
             await newAudio.load();
-            delete this.notificationSound;
             this.notificationSound = newAudio;
         }
         newNotification(url, message) {
