@@ -1,6 +1,5 @@
 import * as utils from "../utils";
 
-const NOTIFICATION_SOUND_KEYWORDS = ['!important!'];
 const NOTIFICATION_SOUND_URL = 'https://files.catbox.moe/c9nwlu.mp3';
 
 const context = new AudioContext();
@@ -37,10 +36,6 @@ export class NotificationManager {
         });
     }
 
-    messageNeedsSound(message: string): boolean {
-        return true; // NOTIFICATION_SOUND_KEYWORDS.some((kw) => message.includes(kw));
-    }
-
     newNotification(url: string, message: string) {
         let div = document.createElement('div');
         div.appendChild(utils.wrapInHtml('i', `${url} says:`));
@@ -57,7 +52,7 @@ export class NotificationManager {
             div.classList.add('visible');
         }, 100)
 
-        if (this.messageNeedsSound(message) && this.notificationSound) {
+        if (this.notificationSound) {
             try {
                 this.notificationSound.start(0);
             } catch (err) {
