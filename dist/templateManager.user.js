@@ -16,7 +16,7 @@
 // @grant			GM.getValue
 // @connect			*
 // @name			template-manager
-// @version			0.6.2
+// @version			0.6.3
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -755,7 +755,7 @@
         }
     }
 
-    const WS_FORCE_CLOSE_CODE = 1006;
+    const WS_FORCE_CLOSE_CODE = 3006;
     class TemplateManager {
         constructor(canvasElements, startingUrl) {
             this.templatesToLoad = MAX_TEMPLATES;

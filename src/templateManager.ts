@@ -14,7 +14,7 @@ interface NotificationSeenData {
     seenAt: number;
 }
 
-const WS_FORCE_CLOSE_CODE = 1006;
+const WS_FORCE_CLOSE_CODE = 3006;
 
 export class TemplateManager {
     templatesToLoad = MAX_TEMPLATES;
