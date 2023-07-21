@@ -710,8 +710,8 @@
         constructor(canvasElements, startingUrl) {
             this.templatesToLoad = MAX_TEMPLATES;
             this.alreadyLoaded = new Array();
-            this.websockets = new Array();
-            this.intervals = new Array();
+            this.websockets = new Map();
+            this.intervals = new Map();
             this.seenNotifications = new Array();
             this.notificationTypes = new Map();
             this.enabledNotifications = new Array();
@@ -860,7 +860,7 @@
             // check if we're not already connected
             let wsUrl = new URL('/listen', serverUrl);
             wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
-            for (const socket of this.websockets) {
+            for (const socket of this.websockets.values()) {
                 if (socket.url == wsUrl.toString()) {
                     if (socket.readyState != socket.CLOSING && socket.readyState != socket.CLOSED) {
                         console.log(`we are already connected to ${wsUrl}, skipping!`);
@@ -990,23 +990,31 @@
                                     clearInterval(timer);
                                 }
                             });
-                        }, 1 * 1000);
-                        this.intervals.push(timer);
+                        }, 10 * 1000);
+                        if (this.intervals.has(domain))
+                            clearInterval(this.intervals.get(domain));
+                        this.intervals.set(domain, timer);
                     }
                     else {
+                        const FORCE_CLOSE_CODE = 1006;
                         // actually connecting to the websocket now
                         let ws = new WebSocket(wsUrl);
                         ws.addEventListener('open', (_) => {
+                            var _a;
                             console.log(`successfully connected to websocket for ${serverUrl}`);
-                            this.websockets.push(ws);
+                            if (this.websockets.has(domain))
+                                (_a = this.websockets.get(domain)) === null || _a === void 0 ? void 0 : _a.close(FORCE_CLOSE_CODE);
+                            this.websockets.set(domain, ws);
                         });
                         ws.addEventListener('message', async (event) => {
                             let data = JSON.parse(await event.data);
                             handleNotificationEvent(data);
                         });
-                        ws.addEventListener('close', (_) => {
+                        ws.addEventListener('close', (event) => {
+                            if (event.code === FORCE_CLOSE_CODE)
+                                return;
                             console.log(`websocket on ${ws.url} closing!`);
-                            removeItem(this.websockets, ws);
+                            this.websockets.delete(domain);
                             setTimeout(() => {
                                 this.setupNotifications(serverUrl, isTopLevelTemplate);
                             }, 1000 * 30);
@@ -1030,7 +1038,7 @@
             return this.lastCacheBust !== this.getCacheBustString();
         }
         initOrReloadTemplates(forced = false, contactInfo = null) {
-            var _a, _b;
+            var _a;
             if (contactInfo !== null)
                 this.contactInfoEnabled = contactInfo;
             this.setContactInfoDisplay(this.contactInfoEnabled);
@@ -1047,16 +1055,16 @@
             while (this.templates.length) {
                 (_a = this.templates.shift()) === null || _a === void 0 ? void 0 : _a.destroy();
             }
-            while (this.websockets.length) {
-                console.log('initOrReloadTemplates is closing connection ' + this.websockets[0].url);
-                (_b = this.websockets.shift()) === null || _b === void 0 ? void 0 : _b.close();
+            for (const ws of this.websockets.values()) {
+                console.log('initOrReloadTemplates is closing connection ' + ws.url);
+                ws === null || ws === void 0 ? void 0 : ws.close();
             }
-            while (this.intervals.length) {
-                clearInterval(this.intervals.shift());
+            for (const interval of this.intervals.values()) {
+                clearInterval(interval);
             }
             this.templates = [];
-            this.websockets = [];
-            this.intervals = [];
+            this.websockets.clear();
+            this.intervals.clear();
             this.alreadyLoaded = [];
             this.whitelist = [];
             this.blacklist = [];
