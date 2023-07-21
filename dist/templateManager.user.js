@@ -647,7 +647,6 @@
         }
     }
 
-    const NOTIFICATION_SOUND_KEYWORDS = ['!important!'];
     const NOTIFICATION_SOUND_URL = 'https://files.catbox.moe/c9nwlu.mp3';
     const context = new AudioContext();
     class NotificationManager {
@@ -706,6 +705,7 @@
         }
     }
 
+    const WS_FORCE_CLOSE_CODE = 1006;
     class TemplateManager {
         constructor(canvasElements, startingUrl) {
             this.templatesToLoad = MAX_TEMPLATES;
@@ -996,14 +996,13 @@
                         this.intervals.set(domain, timer);
                     }
                     else {
-                        const FORCE_CLOSE_CODE = 1006;
                         // actually connecting to the websocket now
                         let ws = new WebSocket(wsUrl);
                         ws.addEventListener('open', (_) => {
                             var _a;
                             console.log(`successfully connected to websocket for ${serverUrl}`);
                             if (this.websockets.has(domain))
-                                (_a = this.websockets.get(domain)) === null || _a === void 0 ? void 0 : _a.close(FORCE_CLOSE_CODE);
+                                (_a = this.websockets.get(domain)) === null || _a === void 0 ? void 0 : _a.close(WS_FORCE_CLOSE_CODE);
                             this.websockets.set(domain, ws);
                         });
                         ws.addEventListener('message', async (event) => {
@@ -1011,7 +1010,7 @@
                             handleNotificationEvent(data);
                         });
                         ws.addEventListener('close', (event) => {
-                            if (event.code === FORCE_CLOSE_CODE)
+                            if (event.code === WS_FORCE_CLOSE_CODE)
                                 return;
                             console.log(`websocket on ${ws.url} closing!`);
                             this.websockets.delete(domain);
@@ -1057,7 +1056,7 @@
             }
             for (const ws of this.websockets.values()) {
                 console.log('initOrReloadTemplates is closing connection ' + ws.url);
-                ws === null || ws === void 0 ? void 0 : ws.close();
+                ws === null || ws === void 0 ? void 0 : ws.close(WS_FORCE_CLOSE_CODE);
             }
             for (const interval of this.intervals.values()) {
                 clearInterval(interval);
