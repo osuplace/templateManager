@@ -1181,14 +1181,23 @@
             }));
             div.appendChild(document.createElement('br'));
             div.appendChild(createSlider("Dither amount", "1", (n) => {
+                var _a;
                 manager.percentage = 1 / (n / 10 + 1);
+                if (this.previewModeEnabled) {
+                    // disable 'preview template in full', because changing percentage
+                    // overrides the template rendering anyway
+                    this.previewModeEnabled = false;
+                    const previewModeInput = (_a = this.previewModeCheckbox) === null || _a === void 0 ? void 0 : _a.children[0];
+                    if (previewModeInput)
+                        previewModeInput.checked = false;
+                }
             }));
             div.appendChild(document.createElement('br'));
             div.appendChild(createBoldCheckbox('', "Show contact info besides templates", this.contactInfoEnabled, (a) => {
                 manager.setContactInfoDisplay(a);
                 this.contactInfoEnabled = a;
             }));
-            div.appendChild(createBoldCheckbox('', "Preview template in full", this.previewModeEnabled, (a) => {
+            this.previewModeCheckbox = div.appendChild(createBoldCheckbox('', "Preview template in full", this.previewModeEnabled, (a) => {
                 manager.setPreviewMode(a);
                 this.previewModeEnabled = a;
             }));
