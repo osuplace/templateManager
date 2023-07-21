@@ -16,14 +16,14 @@ function createButton(text: string, callback: () => void) {
     return button;
 }
 
-function createTextInput(buttonText: string, placeholder: string, callback: (value: string) => void) {
+function createTextInput(buttonText: string, placeholder: string, callback: (value: string, input: HTMLInputElement) => void) {
     let div = document.createElement("div")
     let textInput = document.createElement("input")
     textInput.type = "text"
     textInput.placeholder = placeholder
     textInput.className = "settingsTextInput"
     let button = createButton(buttonText, () => {
-        callback(textInput.value)
+        callback(textInput.value, textInput)
     })
     div.appendChild(textInput)
     div.appendChild(button)
@@ -144,6 +144,7 @@ export class Settings {
             manager.hideTemplate(a)
             this.hideTemplate = a
         }))
+        this.populateSoundOptions(div);
         div.appendChild(document.createElement('br'))
 
         let clickHandler = document.createElement('div')
@@ -211,6 +212,41 @@ export class Settings {
     populateAll() {
         this.populateTemplateLinks()
         this.populateNotifications()
+    }
+
+    populateSoundOptions(div: HTMLDivElement) {
+        const audioDiv = document.createElement('div');
+
+        div.appendChild(document.createElement('br'));
+        div.appendChild(audioDiv);
+
+        this.manager.notificationManager.getNotificationSound()
+        .then((value) => {
+            let linkLabel = document.createElement('label');
+            let updateLinkLabel = (url: string) => {
+                linkLabel.innerHTML = `Current sound: <a target="_blank" rel="noopener noreferrer" href="${url}">${url}</a>`;
+            };
+            updateLinkLabel(value);
+            audioDiv.appendChild(createLabel('Set new notification sound:'));
+            audioDiv.appendChild(document.createElement('br'));
+            audioDiv.appendChild(linkLabel);
+            audioDiv.appendChild(createTextInput('Apply', 'Sound URL', (newSound, input) => {
+                if (!newSound.trim().length) {
+                    return;
+                }
+
+                this.manager.notificationManager.setNotificationSound(newSound)
+                .then(() => {
+                    this.manager.notificationManager.newNotification('settings', 'Applied new sound!');
+
+                    input.value = '';
+                    updateLinkLabel(newSound);
+                })
+                .catch((err) => {
+                    this.manager.notificationManager.newNotification('settings', 'Failed to apply new sound:\n' + err);
+                });
+            }));
+        });
     }
 
     populateTemplateLinks() {

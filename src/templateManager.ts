@@ -14,11 +14,13 @@ interface NotificationSeenData {
     seenAt: number;
 }
 
+const WS_FORCE_CLOSE_CODE = 1006;
+
 export class TemplateManager {
     templatesToLoad = MAX_TEMPLATES;
     alreadyLoaded = new Array<string>();
-    websockets = new Array<WebSocket>();
-    intervals = new Array<any>();
+    websockets = new Map<string, WebSocket>();
+    intervals = new Map<string, any>();
     seenNotifications = new Array<NotificationSeenData>();
     notificationTypes = new Map<string, NotificationTopic[]>();
     enabledNotifications = new Array<string>();
@@ -190,7 +192,7 @@ export class TemplateManager {
         let wsUrl = new URL('/listen', serverUrl)
         wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
 
-        for (const socket of this.websockets) {
+        for (const socket of this.websockets.values()) {
             if (socket.url == wsUrl.toString()) {
                 if (socket.readyState != socket.CLOSING && socket.readyState != socket.CLOSED) {
                     console.log(`we are already connected to ${wsUrl}, skipping!`);
@@ -281,6 +283,8 @@ export class TemplateManager {
 
                 if (doPoll) {
                     let timer = setInterval(() => {
+                        if (!this.enabledNotifications.some((en) => en.startsWith(domain))) return;
+
                         let pollUrl = new URL(serverUrl + "/listen-poll");
                         pollUrl.searchParams.append("date", (+new Date()).toString());
 
@@ -323,15 +327,19 @@ export class TemplateManager {
                                 clearInterval(timer);
                             }
                         });
-                    }, 1 * 1000);
-                    this.intervals.push(timer);
+                    }, 10 * 1000);
+                    if (this.intervals.has(domain))
+                        clearInterval(this.intervals.get(domain));
+                    this.intervals.set(domain, timer);
                 } else {
                     // actually connecting to the websocket now
                     let ws = new WebSocket(wsUrl);
 
                     ws.addEventListener('open', (_) => {
                         console.log(`successfully connected to websocket for ${serverUrl}`);
-                        this.websockets.push(ws);
+                        if (this.websockets.has(domain))
+                            this.websockets.get(domain)?.close(WS_FORCE_CLOSE_CODE);
+                        this.websockets.set(domain, ws);
                     });
 
                     ws.addEventListener('message', async (event) => {
@@ -339,9 +347,10 @@ export class TemplateManager {
                         handleNotificationEvent(data);
                     });
 
-                    ws.addEventListener('close', (_) => {
+                    ws.addEventListener('close', (event) => {
+                        if (event.code === WS_FORCE_CLOSE_CODE) return;
                         console.log(`websocket on ${ws.url} closing!`);
-                        utils.removeItem(this.websockets, ws);
+                        this.websockets.delete(domain);
                         setTimeout(() => {
                             this.setupNotifications(serverUrl, isTopLevelTemplate);
                         }, 1000 * 30)
@@ -389,16 +398,16 @@ export class TemplateManager {
         while (this.templates.length) {
             this.templates.shift()?.destroy()
         }
-        while (this.websockets.length) {
-            console.log('initOrReloadTemplates is closing connection ' + this.websockets[0].url );
-            this.websockets.shift()?.close()
+        for (const ws of this.websockets.values()) {
+            console.log('initOrReloadTemplates is closing connection ' + ws.url );
+            ws?.close(WS_FORCE_CLOSE_CODE);
         }
-        while (this.intervals.length) {
-            clearInterval(this.intervals.shift())
+        for (const interval of this.intervals.values()) {
+            clearInterval(interval);
         }
         this.templates = []
-        this.websockets = []
-        this.intervals = []
+        this.websockets.clear()
+        this.intervals.clear()
         this.alreadyLoaded = []
         this.whitelist = []
         this.blacklist = []
