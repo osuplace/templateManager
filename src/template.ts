@@ -244,7 +244,7 @@ export class Template {
         return (this.startTime + (n || this.currentFrame || 0) * this.frameSpeed) % this.animationDuration
     }
 
-    update(higherTemplates: Template[], percentage: number, randomness: number, currentSeconds: number) {
+    async update(higherTemplates: Template[], percentage: number, randomness: number, currentSeconds: number) {
         // return if the animation is finished
         if (!this.looping && currentSeconds > this.startTime + this.frameSpeed * this.frameCount) {
             return;
@@ -293,7 +293,7 @@ export class Template {
             frameDatas.push({ imagedata: this.frameData, x: 0, y: 0 })
 
             this.fullImageData = frameDatas[frameDatas.length - 1].imagedata
-            this.ditheredData = cf.ditherData(frameDatas, this.priorityData, randomness, percentage, this.x, this.y, this.frameWidth!, this.frameHeight!)
+            this.ditheredData = await cf.ditherData(frameDatas, this.priorityData, randomness, percentage, this.x, this.y, this.frameWidth!, this.frameHeight!)
 
             this.canvasElement.width = this.ditheredData.width
             this.canvasElement.height = this.ditheredData.height
