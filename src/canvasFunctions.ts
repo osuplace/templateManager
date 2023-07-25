@@ -52,12 +52,17 @@ function getHighestRGBA(datas: ImageDataWithCoordinates[], x: number, y: number)
     return { r: 0, g: 0, b: 0, a: 0 }
 }
 
-export function ditherData(imageDatas: ImageDataWithCoordinates[], priorityData: ImageData | undefined | null, randomness: number, percentage: number, x: number, y: number, frameWidth: number, frameHeight: number): ImageData {
+export async function ditherData(imageDatas: ImageDataWithCoordinates[], priorityData: ImageData | undefined | null, randomness: number, percentage: number, x: number, y: number, frameWidth: number, frameHeight: number): Promise<ImageData> {
     let rv = new ImageData(frameWidth * 3, frameHeight * 3)
     let m = Math.round(1 / percentage) // which nth pixel should be displayed
     let r = Math.floor(randomness * m) // which nth pixel am I (everyone has different nth pixel)
+    let sleepCounter = 0
     for (let i = 0; i < frameWidth; i++) {
         for (let j = 0; j < frameHeight; j++) {
+            sleepCounter++
+            if (sleepCounter%100===0){
+                await utils.sleep(0.1)
+            }
             let rgba = getHighestRGBA(imageDatas, i, j)
             if (rgba.a < ALPHA_THRESHOLD)
                 continue

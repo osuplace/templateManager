@@ -16,7 +16,7 @@
 // @grant			GM.getValue
 // @connect			*
 // @name			template-manager
-// @version			0.6.3
+// @version			0.6.4
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -286,12 +286,17 @@
         }
         return { r: 0, g: 0, b: 0, a: 0 };
     }
-    function ditherData(imageDatas, priorityData, randomness, percentage, x, y, frameWidth, frameHeight) {
+    async function ditherData(imageDatas, priorityData, randomness, percentage, x, y, frameWidth, frameHeight) {
         let rv = new ImageData(frameWidth * 3, frameHeight * 3);
         let m = Math.round(1 / percentage); // which nth pixel should be displayed
         let r = Math.floor(randomness * m); // which nth pixel am I (everyone has different nth pixel)
+        let sleepCounter = 0;
         for (let i = 0; i < frameWidth; i++) {
             for (let j = 0; j < frameHeight; j++) {
+                sleepCounter++;
+                if (sleepCounter % 100 === 0) {
+                    await sleep(0.1);
+                }
                 let rgba = getHighestRGBA(imageDatas, i, j);
                 if (rgba.a < ALPHA_THRESHOLD)
                     continue;
@@ -544,7 +549,7 @@
         frameStartTime(n = null) {
             return (this.startTime + (n || this.currentFrame || 0) * this.frameSpeed) % this.animationDuration;
         }
-        update(higherTemplates, percentage, randomness, currentSeconds) {
+        async update(higherTemplates, percentage, randomness, currentSeconds) {
             var _a;
             // return if the animation is finished
             if (!this.looping && currentSeconds > this.startTime + this.frameSpeed * this.frameCount) {
@@ -590,7 +595,7 @@
                 }
                 frameDatas.push({ imagedata: this.frameData, x: 0, y: 0 });
                 this.fullImageData = frameDatas[frameDatas.length - 1].imagedata;
-                this.ditheredData = ditherData(frameDatas, this.priorityData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
+                this.ditheredData = await ditherData(frameDatas, this.priorityData, randomness, percentage, this.x, this.y, this.frameWidth, this.frameHeight);
                 this.canvasElement.width = this.ditheredData.width;
                 this.canvasElement.height = this.ditheredData.height;
                 (_a = this.canvasElement.getContext('2d')) === null || _a === void 0 ? void 0 : _a.putImageData(this.ditheredData, 0, 0);
@@ -1141,7 +1146,7 @@
             let cs = this.currentSeconds();
             for (let i = 0; i < this.templates.length; i++) {
                 try {
-                    this.templates[i].update(this.templates.slice(0, i), this.percentage, this.randomness, cs);
+                    this.templates[i].update(this.templates.slice(0, i), this.percentage, this.randomness, cs).then();
                 }
                 catch (e) {
                     console.log(`failed to update template ${this.templates[i].name}`);

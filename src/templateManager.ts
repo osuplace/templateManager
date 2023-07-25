@@ -437,7 +437,7 @@ export class TemplateManager {
 
         for (let i = 0; i < this.templates.length; i++) {
             try {
-                this.templates[i].update(this.templates.slice(0, i), this.percentage, this.randomness, cs);
+                this.templates[i].update(this.templates.slice(0, i), this.percentage, this.randomness, cs).then();
             } catch (e) {
                 console.log(`failed to update template ${this.templates[i].name}`)
             }
