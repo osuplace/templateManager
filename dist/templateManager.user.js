@@ -847,6 +847,15 @@
         getCacheBustString() {
             return Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36);
         }
+        validateJSON(str) {
+            try {
+                JSON.parse(str);
+                return true;
+            }
+            catch (_a) {
+                return false;
+            }
+        }
         loadTemplatesFromJsonURL(url, minPriority = 0, lastContact = '') {
             let _url = new URL(url);
             let uniqueString = `${_url.origin}${_url.pathname}`;
@@ -870,6 +879,10 @@
                         this.responseDiffs.push(responseTime - Date.now());
                     }
                     // parse the response
+                    if (this.validateJSON(response.responseText) === false) {
+                        console.error(`Invalid JSON from ${_url}`);
+                        return;
+                    }
                     let json = JSON.parse(response.responseText);
                     // read blacklist. These will never be loaded
                     if (json.blacklist) {
