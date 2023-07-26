@@ -10,7 +10,8 @@
         "https://hot-potato.reddit.com/embed*",
         "https://www.twitch.tv/otknetwork/*",
         "https://9jjigdr1wlul7fbginbq7h76jg9h3s.ext-twitch.tv/*",
-        "https://place.ludwig.gg/*"
+        "https://place.ludwig.gg/*",
+        "https://pixelplace.io/*"
     ],
     "grant": [
         "GM.xmlHttpRequest",
