@@ -97,6 +97,13 @@
         margin: 8px;
     }
 
+    .osuplaceTooltip {
+        color: #eee;
+        background-color: rgba(0, 0, 0, 0.5);
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
     #settingsOverlay {
         transition: opacity 300ms ease 0s;
         width: 100vw;
@@ -115,17 +122,7 @@
         overflow-y: auto;
         font-size: 14px;
     }
-
-    #osuplaceSettingsButton {
-        position: absolute;
-        width: 32px;
-        height: 32px;
-        background-color: #fff;
-        padding: 5px;
-        border-radius: 5px;
-        z-index: 2147483647;
-        cursor: pointer;
-    }`;
+`;
     const SETTINGS_CSS = css `
     label,
     button{
@@ -1483,68 +1480,89 @@
         }
     }
 
-    var ICON_SETTINGS_SVG = '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Pro 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 416c0-17.7 14.3-32 32-32l54.7 0c12.3-28.3 40.5-48 73.3-48s61 19.7 73.3 48L480 384c17.7 0 32 14.3 32 32s-14.3 32-32 32l-246.7 0c-12.3 28.3-40.5 48-73.3 48s-61-19.7-73.3-48L32 448c-17.7 0-32-14.3-32-32zm192 0a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM384 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm-32-80c32.8 0 61 19.7 73.3 48l54.7 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-54.7 0c-12.3 28.3-40.5 48-73.3 48s-61-19.7-73.3-48L32 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l246.7 0c12.3-28.3 40.5-48 73.3-48zM192 64a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm73.3 0L480 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l-214.7 0c-12.3 28.3-40.5 48-73.3 48s-61-19.7-73.3-48L32 128C14.3 128 0 113.7 0 96S14.3 64 32 64l86.7 0C131 35.7 159.2 16 192 16s61 19.7 73.3 48z"/></svg>';
-    var URL_IMAGE_YCDI = "https://cdn.discordapp.com/attachments/773872895813484554/1133840838422700113/you-can-drag-it.png";
-    // change after pull: var URL_IMAGE_YCDI = "https://raw.githubusercontent.com/osuplace/templateManager/main/image/you-can-drag-it-296x256.png";
+    let SLIDERS_SVG = '<button><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Pro 6.3.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license (Commercial License) Copyright 2023 Fonticons, Inc. --><path d="M0 416c0-17.7 14.3-32 32-32l54.7 0c12.3-28.3 40.5-48 73.3-48s61 19.7 73.3 48L480 384c17.7 0 32 14.3 32 32s-14.3 32-32 32l-246.7 0c-12.3 28.3-40.5 48-73.3 48s-61-19.7-73.3-48L32 448c-17.7 0-32-14.3-32-32zm192 0a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zM384 256a32 32 0 1 0 -64 0 32 32 0 1 0 64 0zm-32-80c32.8 0 61 19.7 73.3 48l54.7 0c17.7 0 32 14.3 32 32s-14.3 32-32 32l-54.7 0c-12.3 28.3-40.5 48-73.3 48s-61-19.7-73.3-48L32 288c-17.7 0-32-14.3-32-32s14.3-32 32-32l246.7 0c12.3-28.3 40.5-48 73.3-48zM192 64a32 32 0 1 0 0 64 32 32 0 1 0 0-64zm73.3 0L480 64c17.7 0 32 14.3 32 32s-14.3 32-32 32l-214.7 0c-12.3 28.3-40.5 48-73.3 48s-61-19.7-73.3-48L32 128C14.3 128 0 113.7 0 96S14.3 64 32 64l86.7 0C131 35.7 159.2 16 192 16s61 19.7 73.3 48z"/></svg></button>';
+    function createTooltip(content, width = 100) {
+        let tooltipElement = document.createElement('span');
+        tooltipElement.classList.add('osuplaceTooltip');
+        tooltipElement.textContent = content;
+        tooltipElement.style.width = `${width}px`;
+        tooltipElement.style.position = "relative";
+        return tooltipElement;
+    }
     async function init(manager) {
         let settings = new Settings(manager);
-        while (window.innerWidth === 0 || window.innerHeight === 0)
+        while (window.innerWidth === 0 || window.innerHeight === 0) {
             await sleep(1000);
-        const KEY_X = `${window.location.host}_settingsX`;
-        const KEY_Y = `${window.location.host}_settingsY`;
-        let imageElement = document.createElement('img');
-        imageElement.src = URL_IMAGE_YCDI;
-        imageElement.height = 96;
-        imageElement.style.display = "none";
-        imageElement.style.transform = "translate(-120px, -70px)";
+        }
+        let xKey = `${window.location.host}_settingsX`;
+        let yKey = `${window.location.host}_settingsY`;
+        let GMx = await GM.getValue(xKey, null) || 10;
+        let GMy = await GM.getValue(yKey, null) || 10;
+        let tooltipElement = createTooltip('You can click and drag this icon around');
+        tooltipElement.style.display = "none";
+        tooltipElement.style.top = `-44px`;
         settings.onToggle(isOpened => {
-            imageElement.style.display = isOpened ? "block" : "none";
+            tooltipElement.style.display = isOpened ? "block" : "none";
         });
-        let settingsButton = document.createElement('button');
-        settingsButton.id = 'osuplaceSettingsButton';
-        settingsButton.appendChild(stringToHtml(ICON_SETTINGS_SVG));
-        settingsButton.appendChild(imageElement);
-        document.body.append(settingsButton);
-        let setPosition = async (x, y) => {
-            var x = x * (100 / window.innerWidth);
-            var y = y * (100 / window.innerHeight);
-            await GM.setValue(KEY_X, x);
-            await GM.setValue(KEY_Y, y);
-            updateButtonPosition(x, y);
+        let iconElement = stringToHtml(SLIDERS_SVG);
+        iconElement.appendChild(tooltipElement);
+        document.body.append(iconElement);
+        let setPosition = async (mouseX, mouseY) => {
+            let xMin = 16 / window.innerWidth * 100;
+            let yMin = 16 / window.innerHeight * 100;
+            let x = (mouseX) / window.innerWidth * 100;
+            let y = (mouseY) / window.innerHeight * 100;
+            await GM.setValue(xKey, x);
+            await GM.setValue(yKey, y);
+            let tooltipXMargin = 126 / window.innerWidth * 100;
+            let left = x < tooltipXMargin ? 42 : -110;
+            tooltipElement.style.left = `${left}px`;
+            if (x < 50) {
+                x = Math.max(xMin, x - xMin);
+                iconElement.style.left = `${x}vw`;
+                iconElement.style.right = 'unset';
+            }
+            else {
+                x = Math.max(xMin, 100 - x - xMin);
+                iconElement.style.right = `${x}vw`;
+                iconElement.style.left = 'unset';
+            }
+            if (y < 50) {
+                y = Math.max(yMin, y - yMin);
+                iconElement.style.top = `${y}vh`;
+                iconElement.style.bottom = 'unset';
+            }
+            else {
+                y = Math.max(yMin, 100 - y - yMin);
+                iconElement.style.bottom = `${y}vh`;
+                iconElement.style.top = 'unset';
+            }
         };
-        let updateButtonPosition = function (x, y) {
-            var xConvertToPercent = 100 / window.innerWidth;
-            var yConvertToPercent = 100 / window.innerHeight;
-            let xMin = 16 * xConvertToPercent;
-            let xMax = 100 - 48 * xConvertToPercent;
-            x = Math.min(xMax, Math.max(xMin, x));
-            settingsButton.style.left = `${x}vw`;
-            let yMin = 16 * yConvertToPercent;
-            let yMax = 100 - 48 * yConvertToPercent;
-            y = Math.min(yMax, Math.max(yMin, y));
-            settingsButton.style.top = `${y}vh`;
-        };
-        let GMx = await GM.getValue(KEY_X, 10);
-        let GMy = await GM.getValue(KEY_Y, 10);
-        updateButtonPosition(GMx, GMy);
+        await setPosition(GMx / 100 * window.innerWidth, GMy / 100 * window.innerHeight);
+        iconElement.style.position = 'absolute';
+        iconElement.style.width = "32px";
+        iconElement.style.height = "32px";
+        iconElement.style.backgroundColor = '#fff';
+        iconElement.style.padding = "5px";
+        iconElement.style.borderRadius = "5px";
+        iconElement.style.zIndex = `${Number.MAX_SAFE_INTEGER - 1}`;
+        iconElement.style.cursor = "pointer";
         let clicked = false;
         let dragged = false;
-        settingsButton.addEventListener('mousedown', event => {
-            if (event.button === 0) {
+        iconElement.addEventListener('mousedown', (ev) => {
+            if (ev.button === 0) {
                 clicked = true;
                 settings.changeMouseEvents(true);
-                event.preventDefault(); // prevent text from getting selected
+                ev.preventDefault(); // prevent text from getting selected
             }
         });
-        settingsButton.addEventListener('mouseleave', event => {
-            if (clicked)
+        iconElement.addEventListener('mouseleave', (ev) => {
+            if (clicked) {
                 dragged = true;
+            }
         });
-        settingsButton.addEventListener('touchstart', event => {
-            clicked = true;
-        });
-        window.addEventListener('mouseup', event => {
-            if (event.button === 0) {
+        window.addEventListener('mouseup', (ev) => {
+            if (ev.button === 0) {
                 if (clicked && !dragged) {
                     settings.toggle();
                 }
@@ -1553,20 +1571,24 @@
                 settings.changeMouseEvents(false);
             }
         });
-        window.addEventListener('mousemove', event => {
-            if (dragged)
-                setPosition(event.clientX, event.clientY);
+        window.addEventListener('mousemove', (ev) => {
+            if (dragged) {
+                setPosition(ev.clientX, ev.clientY);
+            }
         });
-        window.addEventListener('touchend', event => {
+        iconElement.addEventListener('touchstart', (ev) => {
+            clicked = true;
+        });
+        window.addEventListener('touchend', (ev) => {
             clicked = false;
             dragged = false;
         });
-        window.addEventListener('touchmove', event => {
-            if (event.touches.length === 1) {
-                if (settingsButton !== document.elementFromPoint(event.touches[0].pageX, event.touches[0].pageY) && clicked)
+        window.addEventListener('touchmove', (ev) => {
+            if (ev.touches.length === 1) {
+                if (iconElement !== document.elementFromPoint(ev.touches[0].pageX, ev.touches[0].pageY) && clicked)
                     dragged = true;
                 if (dragged)
-                    setPosition(event.touches[0].clientX, event.touches[0].clientY);
+                    setPosition(ev.touches[0].clientX, ev.touches[0].clientY);
             }
         });
     }
