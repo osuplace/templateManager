@@ -85,17 +85,7 @@ export const GLOBAL_CSS = css`
         overflow-y: auto;
         font-size: 14px;
     }
-
-    #osuplaceSettingsButton {
-        position: absolute;
-        width: 32px;
-        height: 32px;
-        background-color: #fff;
-        padding: 5px;
-        border-radius: 5px;
-        z-index: 2147483647;
-        cursor: pointer;
-    }`;
+`
 
 export const SETTINGS_CSS = css`
     label,
@@ -164,4 +154,3 @@ export const SETTINGS_CSS = css`
         background-color: rgba(128, 0, 0, 0.5);
     }
 `
-
