@@ -67,6 +67,13 @@ export const GLOBAL_CSS = css`
         margin: 8px;
     }
 
+    .osuplaceTooltip {
+        color: #eee;
+        background-color: rgba(0, 0, 0, 0.5);
+        border-radius: 5px;
+        font-size: 14px;
+    }
+
     #settingsOverlay {
         transition: opacity 300ms ease 0s;
         width: 100vw;
