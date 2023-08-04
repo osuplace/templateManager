@@ -28,7 +28,6 @@ export class TemplateManager {
     blacklist = new Array<string>();
     templateConstructors = new Array<(a: HTMLCanvasElement) => Template>();
     templates = new Array<Template>();
-    responseDiffs = new Array<number>();
 
     canvasElements: HTMLCanvasElement[] = [];
     selectedCanvas: HTMLCanvasElement;
@@ -134,12 +133,6 @@ export class TemplateManager {
             method: 'GET',
             url: _url.href,
             onload: (response) => {
-                // use this request to callibrate the latency to general internet requests
-                let responseMatch = response.responseHeaders.match(/date:(.*)\r/i);
-                if (responseMatch) {
-                    let responseTime = Date.parse(responseMatch[1]);
-                    this.responseDiffs.push(responseTime - Date.now());
-                }
                 // parse the response
                 let json: JsonParams = JSON.parse(response.responseText);
                 // read blacklist. These will never be loaded
@@ -427,8 +420,7 @@ export class TemplateManager {
     }
 
     currentSeconds() {
-        let averageDiff = this.responseDiffs.reduce((a, b) => a + b, 0) / (this.responseDiffs.length)
-        return (Date.now() + averageDiff) / 1000;
+        return Date.now() / 1000;
     }
 
     update() {
