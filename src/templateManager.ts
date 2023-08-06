@@ -114,6 +114,15 @@ export class TemplateManager {
         return Math.floor(Date.now() / CACHE_BUST_PERIOD).toString(36)
     }
 
+    validateJSON(str: string) {
+        try {
+            JSON.parse(str);
+            return true;
+        } catch {
+            return false;
+        }
+    }
+
     loadTemplatesFromJsonURL(url: string | URL, minPriority = 0, lastContact = '') {
         let _url = new URL(url);
         let uniqueString = `${_url.origin}${_url.pathname}`;
@@ -134,6 +143,10 @@ export class TemplateManager {
             url: _url.href,
             onload: (response) => {
                 // parse the response
+                if (this.validateJSON(response.responseText) === false) {
+                    console.error(`Invalid JSON from ${_url}`);
+                    return;
+                }
                 let json: JsonParams = JSON.parse(response.responseText);
                 // read blacklist. These will never be loaded
                 if (json.blacklist) {
