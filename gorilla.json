@@ -11,7 +11,8 @@
         "https://www.twitch.tv/otknetwork/*",
         "https://9jjigdr1wlul7fbginbq7h76jg9h3s.ext-twitch.tv/*",
         "https://place.ludwig.gg/*",
-        "https://pixelplace.io/*"
+        "https://pixelplace.io/*",
+        "https://canvas.calamitymod.com/*"
     ],
     "grant": [
         "GM.xmlHttpRequest",
