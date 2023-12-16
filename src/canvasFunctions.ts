@@ -3,6 +3,8 @@ import * as utils from './utils'
 const ALPHA_THRESHOLD = 2
 
 export function extractFrame(image: HTMLImageElement, frameWidth: number, frameHeight: number, frameIndex: number): ImageData | null {
+    if (!image.complete) return null;
+    if (image.naturalWidth === 0 || image.naturalHeight === 0) return null;
     let canvas = document.createElement('canvas')
     canvas.width = frameWidth
     canvas.height = frameHeight

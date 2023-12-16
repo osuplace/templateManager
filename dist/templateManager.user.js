@@ -9,7 +9,9 @@
 // @match			https://garlic-bread.reddit.com/embed*
 // @match			https://hot-potato.reddit.com/embed*
 // @match			https://www.twitch.tv/otknetwork/*
+// @match			https://www.twitch.tv/streamcanvas/*
 // @match			https://9jjigdr1wlul7fbginbq7h76jg9h3s.ext-twitch.tv/*
+// @match			https://8q5oz45uh8llq89kny7vkt7phuxr0b.ext-twitch.tv/*
 // @match			https://place.ludwig.gg/*
 // @match			https://pixelplace.io/*
 // @grant			GM.xmlHttpRequest
@@ -17,7 +19,7 @@
 // @grant			GM.getValue
 // @connect			*
 // @name			template-manager
-// @version			0.6.4
+// @version			0.6.5
 // @description		Manages your templates on various canvas games
 // @author			LittleEndu, Mikarific, April
 // @license			MIT
@@ -259,6 +261,10 @@
 
     const ALPHA_THRESHOLD = 2;
     function extractFrame(image, frameWidth, frameHeight, frameIndex) {
+        if (!image.complete)
+            return null;
+        if (image.naturalWidth === 0 || image.naturalHeight === 0)
+            return null;
         let canvas = document.createElement('canvas');
         canvas.width = frameWidth;
         canvas.height = frameHeight;
@@ -799,23 +805,25 @@
             let globalStyle = document.createElement("style");
             globalStyle.innerHTML = GLOBAL_CSS;
             document.body.appendChild(globalStyle);
-            this.canvasObserver = new MutationObserver(() => {
-                let css = getComputedStyle(this.selectedCanvas);
-                let left = css.left;
-                let top = css.top;
-                let translate = css.translate;
-                let transform = css.transform;
-                let zIndex = css.zIndex;
-                let globalRatio = parseFloat(this.selectedCanvas.style.width) / this.selectedCanvas.width;
-                for (let i = 0; i < this.templates.length; i++) {
-                    this.templates[i].updateStyle(globalRatio, left, top, translate, transform, zIndex);
-                }
-            });
-            this.canvasObserver.observe(this.selectedCanvas, { attributes: true });
+            this.canvasObserver = new MutationObserver(() => this.applyComputedStyle());
+            this.canvasObserver.observe(document, { attributes: true, childList: true, subtree: true, attributeFilter: ['style'] });
             setInterval(() => {
                 const now = Math.floor(+new Date() / 1000);
                 this.seenNotifications = this.seenNotifications.filter((d) => d && ((d.seenAt - now) < 10));
             }, 60 * 1000);
+        }
+        applyComputedStyle() {
+            let css = getComputedStyle(this.selectedCanvas);
+            let left = css.left;
+            let top = css.top;
+            let translate = css.translate;
+            let transform = css.transform;
+            let zIndex = css.zIndex;
+            let globalWidth = parseFloat(this.selectedCanvas.style.width) || parseFloat(css.width);
+            let globalRatio = globalWidth / this.selectedCanvas.width;
+            for (let i = 0; i < this.templates.length; i++) {
+                this.templates[i].updateStyle(globalRatio, left, top, translate, transform, zIndex);
+            }
         }
         selectBestCanvas() {
             var _a, _b, _c;
@@ -864,7 +872,14 @@
                 url: _url.href,
                 onload: (response) => {
                     // parse the response
-                    let json = JSON.parse(response.responseText);
+                    let json;
+                    try {
+                        json = JSON.parse(response.responseText);
+                    }
+                    catch (e) {
+                        console.error(`failed to parse json from ${_url.href}`);
+                        return;
+                    }
                     // read blacklist. These will never be loaded
                     if (json.blacklist) {
                         for (let i = 0; i < json.blacklist.length; i++) {
@@ -893,194 +908,12 @@
                             }
                         }
                     }
-                    // connect to websocket
-                    if (json.notifications) {
-                        this.setupNotifications(json.notifications, url == this.startingUrl);
-                    }
                 },
                 onerror: console.error
             });
         }
         sortTemplates() {
             this.templates.sort((a, b) => a.priority - b.priority);
-        }
-        setupNotifications(serverUrl, isTopLevelTemplate, doPoll = false) {
-            console.log('attempting to set up notification server ' + serverUrl, doPoll ? "polling" : "websocket");
-            // check if we're not already connected
-            let wsUrl = new URL('/listen', serverUrl);
-            wsUrl.protocol = wsUrl.protocol == 'https:' ? 'wss:' : 'ws:';
-            for (const socket of this.websockets.values()) {
-                if (socket.url == wsUrl.toString()) {
-                    if (socket.readyState != socket.CLOSING && socket.readyState != socket.CLOSED) {
-                        console.log(`we are already connected to ${wsUrl}, skipping!`);
-                        return;
-                    }
-                }
-            }
-            // get topics
-            let domain = new URL(serverUrl).hostname.replace(/[\.\-_]?broadcaster/, '');
-            if (domain[0] === '.')
-                domain = domain.substring(1);
-            // do some cache busting
-            let _url = new URL(serverUrl + "/topics");
-            this.lastCacheBust = this.getCacheBustString();
-            _url.searchParams.append("date", this.lastCacheBust);
-            GM.xmlHttpRequest({
-                method: 'GET',
-                url: _url.href,
-                responseType: 'text',
-                onload: async (response) => {
-                    if (response.status !== 200) {
-                        console.error(`error getting ${serverUrl}/topics, trying again in 10s...`);
-                        setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 10000);
-                        return false;
-                    }
-                    let data = response.response;
-                    try {
-                        data = JSON.parse(data);
-                    }
-                    catch (ex) {
-                        console.error(`error parsing ${serverUrl} topics: ${ex}, trying again in 10s...`);
-                        setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 10000);
-                        return false;
-                    }
-                    if (data == false)
-                        return;
-                    let topics = [];
-                    data.forEach((topicFromApi) => {
-                        if (!topicFromApi.id || !topicFromApi.description) {
-                            console.error('Invalid topic: ' + topicFromApi);
-                            return;
-                        }
-                        let topic = topicFromApi;
-                        if (isTopLevelTemplate) {
-                            topic.forced = true;
-                            removeItem(this.enabledNotifications, `${domain}??${topic.id}`);
-                            this.enabledNotifications.push(`${domain}??${topic.id}`);
-                        }
-                        topics.push(topic);
-                    });
-                    this.notificationTypes.set(domain, topics);
-                    if (isTopLevelTemplate) {
-                        let enabledKey = `${window.location.host}_notificationsEnabled`;
-                        await GM.setValue(enabledKey, JSON.stringify(this.enabledNotifications));
-                        if (this.showTopLevelNotification) {
-                            this.notificationManager.newNotification("template manager", `You were automatically set to recieve notifications from ${domain} as it's from your address-bar template`);
-                            this.showTopLevelNotification = false;
-                        }
-                    }
-                    const handleNotificationEvent = (data) => {
-                        // https://github.com/osuplace/broadcaster/blob/main/API.md
-                        if (data.e == 1) {
-                            if (!data.t || !data.c) {
-                                console.error(`Malformed event from ${serverUrl}: ${data}`);
-                            }
-                            let topic = topics.find(t => t.id == data.t); // FIXME: if we add dynamically updating topics, this will use the old topic list instead of the up to date one
-                            if (!topic)
-                                return;
-                            if (data.i) {
-                                const id = `${domain}:${data.i}`;
-                                if (this.seenNotifications.some((v) => v.id == id))
-                                    return;
-                                this.seenNotifications.push({
-                                    id,
-                                    seenAt: Math.floor(+new Date() / 1000)
-                                });
-                            }
-                            if (this.enabledNotifications.includes(`${domain}??${data.t}`) || topic.forced) {
-                                this.notificationManager.newNotification(domain, data.c);
-                            }
-                        }
-                        else {
-                            console.log(`Received unknown event from ${serverUrl}: ${data}`);
-                        }
-                    };
-                    if (doPoll) {
-                        let timer = setInterval(() => {
-                            if (!this.enabledNotifications.some((en) => en.startsWith(domain)))
-                                return;
-                            let pollUrl = new URL(serverUrl + "/listen-poll");
-                            pollUrl.searchParams.append("date", (+new Date()).toString());
-                            GM.xmlHttpRequest({
-                                method: 'GET',
-                                url: pollUrl.href,
-                                responseType: 'text',
-                                onload: async (response) => {
-                                    if (response.status === 404) {
-                                        console.error(`${serverUrl} does not have polling support, trying again with websocket in 30s...`);
-                                        setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 30000);
-                                        clearInterval(timer);
-                                        return false;
-                                    }
-                                    if (response.status !== 200) {
-                                        console.error(`error getting ${serverUrl}/listen-poll, trying again in 10s...`);
-                                        setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 10000);
-                                        clearInterval(timer);
-                                        return false;
-                                    }
-                                    let data = response.response;
-                                    try {
-                                        data = JSON.parse(data);
-                                        if (!Array.isArray(data))
-                                            throw new Error();
-                                    }
-                                    catch (ex) {
-                                        console.error(`error parsing ${serverUrl} listen (poll): ${ex}, trying again in 10s...`);
-                                        setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 10000);
-                                        clearInterval(timer);
-                                        return false;
-                                    }
-                                    for (const event of data)
-                                        handleNotificationEvent(event);
-                                },
-                                onerror: (err) => {
-                                    console.error(`error getting ${serverUrl}/listen-poll, trying again in 10s...`, err);
-                                    setTimeout(() => { this.setupNotifications(serverUrl, isTopLevelTemplate); }, 10000);
-                                    clearInterval(timer);
-                                }
-                            });
-                        }, 10 * 1000);
-                        if (this.intervals.has(domain))
-                            clearInterval(this.intervals.get(domain));
-                        this.intervals.set(domain, timer);
-                    }
-                    else {
-                        // actually connecting to the websocket now
-                        let ws = new WebSocket(wsUrl);
-                        ws.addEventListener('open', (_) => {
-                            var _a;
-                            console.log(`successfully connected to websocket for ${serverUrl}`);
-                            if (this.websockets.has(domain))
-                                (_a = this.websockets.get(domain)) === null || _a === void 0 ? void 0 : _a.close(WS_FORCE_CLOSE_CODE);
-                            this.websockets.set(domain, ws);
-                        });
-                        ws.addEventListener('message', async (event) => {
-                            let data = JSON.parse(await event.data);
-                            handleNotificationEvent(data);
-                        });
-                        ws.addEventListener('close', (event) => {
-                            if (event.code === WS_FORCE_CLOSE_CODE)
-                                return;
-                            console.log(`websocket on ${ws.url} closing!`);
-                            this.websockets.delete(domain);
-                            setTimeout(() => {
-                                this.setupNotifications(serverUrl, isTopLevelTemplate);
-                            }, 1000 * 30);
-                        });
-                        ws.addEventListener('error', (_) => {
-                            console.log(`websocket error on ${ws.url}, closing!`);
-                            ws.close();
-                            console.error(`failed to create a websocket connection to ${serverUrl}, trying polling...`);
-                            setTimeout(() => {
-                                this.setupNotifications(serverUrl, isTopLevelTemplate, true);
-                            }, 1000 * 1);
-                        });
-                    }
-                },
-                onerror: (error) => {
-                    console.error(`Couldn\'t get topics from ${serverUrl}: ${error}`);
-                }
-            });
         }
         canReload() {
             return this.lastCacheBust !== this.getCacheBustString();
@@ -1298,7 +1131,6 @@
                 manager.hideTemplate(a);
                 this.hideTemplate = a;
             }));
-            this.populateSoundOptions(div);
             div.appendChild(document.createElement('br'));
             let clickHandler = document.createElement('div');
             clickHandler.style.width = '100vw';
@@ -1358,36 +1190,6 @@
         populateAll() {
             this.populateTemplateLinks();
             this.populateNotifications();
-        }
-        populateSoundOptions(div) {
-            const audioDiv = document.createElement('div');
-            div.appendChild(document.createElement('br'));
-            div.appendChild(audioDiv);
-            this.manager.notificationManager.getNotificationSound()
-                .then((value) => {
-                let linkLabel = document.createElement('label');
-                let updateLinkLabel = (url) => {
-                    linkLabel.innerHTML = `Current sound: <a target="_blank" rel="noopener noreferrer" href="${url}">${url}</a>`;
-                };
-                updateLinkLabel(value);
-                audioDiv.appendChild(createLabel('Set new notification sound:'));
-                audioDiv.appendChild(document.createElement('br'));
-                audioDiv.appendChild(linkLabel);
-                audioDiv.appendChild(createTextInput('Apply', 'Sound URL', (newSound, input) => {
-                    if (!newSound.trim().length) {
-                        return;
-                    }
-                    this.manager.notificationManager.setNotificationSound(newSound)
-                        .then(() => {
-                        this.manager.notificationManager.newNotification('settings', 'Applied new sound!');
-                        input.value = '';
-                        updateLinkLabel(newSound);
-                    })
-                        .catch((err) => {
-                        this.manager.notificationManager.newNotification('settings', 'Failed to apply new sound:\n' + err);
-                    });
-                }));
-            });
         }
         populateTemplateLinks() {
             while (this.templateLinksWrapper.children.length) {
