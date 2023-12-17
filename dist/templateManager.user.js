@@ -659,88 +659,11 @@
         }
     }
 
-    const context = new AudioContext();
-    class UserscriptAudio {
-        constructor(_src) {
-            this.ready = false;
-            if (_src)
-                this.src = _src;
-        }
-        load() {
-            return new Promise((resolve, reject) => {
-                if (!this.src)
-                    return reject(new Error('Source is not set.'));
-                const error = (errText) => {
-                    return (err) => {
-                        console.error(`failed to load the sound from source`, this.src, ':', err);
-                        reject(new Error(errText));
-                    };
-                };
-                GM.xmlHttpRequest({
-                    method: 'GET',
-                    url: this.src,
-                    responseType: 'arraybuffer',
-                    onload: (response) => {
-                        const errText = 'Failed to decode audio';
-                        try {
-                            context.decodeAudioData(response.response, (buffer) => {
-                                this._buffer = buffer;
-                                this.ready = true;
-                                resolve();
-                            }, error(errText));
-                        }
-                        catch (e) {
-                            error(errText)(e);
-                        }
-                    },
-                    onerror: error('Failed to fetch audio from URL')
-                });
-            });
-        }
-        play() {
-            if (!this.ready || !this._buffer) {
-                throw new Error('Audio not ready. Please load the audio with .load()');
-            }
-            if (this._sound) {
-                try {
-                    this._sound.disconnect(context.destination);
-                }
-                catch (_a) { }
-            }
-            this._sound = context.createBufferSource();
-            this._sound.buffer = this._buffer;
-            this._sound.connect(context.destination);
-            this._sound.start(0);
-        }
-    }
-
-    const NOTIFICATION_SOUND_SETTINGS_KEY = 'notificationSound';
-    const DEFAULT_NOTIFICATION_SOUND_URL = 'https://files.catbox.moe/c9nwlu.mp3';
     class NotificationManager {
         constructor() {
             this.container = document.createElement('div');
             this.container.id = 'osuplaceNotificationContainer';
             document.body.appendChild(this.container);
-            this.getNotificationSound()
-                .then((src) => {
-                this.initNotificationSound(src)
-                    .catch((ex) => {
-                    console.error('failed to init notification sound:', ex);
-                    this.newNotification('notifications manager', 'Failed to load the notifications sound. It will not play.');
-                });
-            });
-        }
-        async getNotificationSound() {
-            return await GM.getValue(NOTIFICATION_SOUND_SETTINGS_KEY, DEFAULT_NOTIFICATION_SOUND_URL);
-        }
-        async setNotificationSound(sound) {
-            await this.initNotificationSound(sound);
-            await GM.setValue(NOTIFICATION_SOUND_SETTINGS_KEY, sound);
-        }
-        async initNotificationSound(src) {
-            const newAudio = new UserscriptAudio(src);
-            await newAudio.load();
-            this.notificationSound = newAudio;
         }
         newNotification(url, message) {
             let div = document.createElement('div');
@@ -756,14 +679,6 @@
             setTimeout(() => {
                 div.classList.add('visible');
             }, 100);
-            if (this.notificationSound) {
-                try {
-                    this.notificationSound.play();
-                }
-                catch (err) {
-                    console.error('failed to play notification audio', err);
-                }
-            }
         }
     }
 

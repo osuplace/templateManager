@@ -7,6 +7,8 @@ export const SECONDS_SPENT_BLINKING = 5;
 export const AMOUNT_OF_BLINKING = 11
 export const ANIMATION_DEFAULT_PERCENTAGE = 1 / 3
 export const NO_JSON_TEMPLATE_IN_PARAMS = "no_json_template"
+export const NOTIFICATION_SOUND_SETTINGS_KEY = 'notificationSound';
+export const DEFAULT_NOTIFICATION_SOUND_URL = 'https://files.catbox.moe/c9nwlu.mp3';
 export const CONTACT_INFO_CSS = css`
     div.iHasContactInfo {
         max-width: 30px; 
