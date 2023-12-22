@@ -39,9 +39,7 @@ export function removeItem<T>(array: Array<T>, item: T): void {
 
 function findJSONTemplateInParams(urlString: string): string | null {
     const urlSearchParams = new URLSearchParams(urlString);
-    const params = Object.fromEntries(urlSearchParams.entries());
-    console.log(params)
-    return params.jsontemplate ? params.jsontemplate : null;
+    return urlSearchParams.get('jsontemplate');
 }
 
 export function findJSONTemplateInURL(url: URL | Location): string | null {

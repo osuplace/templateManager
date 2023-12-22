@@ -236,9 +236,7 @@
     }
     function findJSONTemplateInParams(urlString) {
         const urlSearchParams = new URLSearchParams(urlString);
-        const params = Object.fromEntries(urlSearchParams.entries());
-        console.log(params);
-        return params.jsontemplate ? params.jsontemplate : null;
+        return urlSearchParams.get('jsontemplate');
     }
     function findJSONTemplateInURL(url) {
         return findJSONTemplateInParams(url.hash.substring(1)) || findJSONTemplateInParams(url.search.substring(1));
