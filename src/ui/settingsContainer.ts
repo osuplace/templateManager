@@ -86,6 +86,7 @@ export class Settings {
     contactInfoEnabled = false
     previewModeEnabled = false
     hideTemplate = false
+    onToggleListeners: ((isOpened: boolean) => void)[] = [];
 
     constructor(manager: TemplateManager) {
         this.templateLinksWrapper.className = "settingsWrapper"
@@ -181,12 +182,14 @@ export class Settings {
     }
 
     open() {
+        this.callOnToggleListeners(true);
         this.overlay.style.opacity = "1"
         this.overlay.style.pointerEvents = "auto"
         this.populateAll()
     }
 
     close() {
+        this.callOnToggleListeners(false);
         this.overlay.style.opacity = "0"
         this.overlay.style.pointerEvents = "none"
         if (this.reloadTemplatesWhenClosed) {
@@ -201,6 +204,14 @@ export class Settings {
         } else {
             this.close()
         }
+    }
+
+    onToggle(listener: (isOpened: boolean) => void) {
+        this.onToggleListeners.push(listener);
+    }
+
+    callOnToggleListeners(isOpened: boolean) {
+        this.onToggleListeners.forEach(fn => fn(isOpened));
     }
 
     changeMouseEvents(enabled: boolean) {
