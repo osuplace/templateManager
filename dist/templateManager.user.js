@@ -15,6 +15,7 @@
 // @match			https://8q5oz45uh8llq89kny7vkt7phuxr0b.ext-twitch.tv/*
 // @match			https://place.ludwig.gg/*
 // @match			https://pixelplace.io/*
+// @match			https://canvas.calamitymod.com/*
 // @grant			GM.xmlHttpRequest
 // @grant			GM.setValue
 // @grant			GM.getValue

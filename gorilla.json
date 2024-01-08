@@ -14,7 +14,8 @@
         "https://www.twitch.tv/vedal987",
         "https://8q5oz45uh8llq89kny7vkt7phuxr0b.ext-twitch.tv/*",
         "https://place.ludwig.gg/*",
-        "https://pixelplace.io/*"
+        "https://pixelplace.io/*",
+        "https://canvas.calamitymod.com/*"
     ],
     "grant": [
         "GM.xmlHttpRequest",
